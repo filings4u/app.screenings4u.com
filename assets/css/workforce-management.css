@@ -1,0 +1,17 @@
+/* Unified NON-DOT management layout; isolated from existing DOT pages */
+.dot-page .wf-management-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.dot-page .wf-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:18px}
+.dot-page .wf-toolbar input,.dot-page .wf-editor input,.dot-page .wf-editor select,.dot-page .wf-editor textarea{min-height:42px;padding:10px 12px;border:1px solid var(--dot-line);border-radius:8px;background:#fff;max-width:100%;color:var(--dot-text)}
+.dot-page .wf-toolbar input{width:min(340px,100%)}
+.dot-page .wf-editor{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;padding:22px}
+.dot-page .wf-editor label{display:grid;gap:6px;font-size:12px;font-weight:700;color:var(--dot-navy)}
+.dot-page .wf-editor .wf-actions{grid-column:1/-1;display:flex;gap:10px;justify-content:flex-end;border-top:1px solid var(--dot-line);padding-top:16px}
+.dot-page .wf-btn{display:inline-flex;align-items:center;justify-content:center;min-height:40px;border-radius:8px;padding:9px 14px;border:1px solid var(--dot-blue);color:#fff;background:var(--dot-blue);font-weight:750;text-decoration:none;cursor:pointer}
+.dot-page .wf-btn.secondary{color:var(--dot-blue);background:#fff}
+.dot-page .wf-table-scroll{overflow:auto;max-width:100%}
+.dot-page .wf-table{width:100%;border-collapse:collapse;min-width:720px}
+.dot-page .wf-table th,.dot-page .wf-table td{padding:13px 14px;border-bottom:1px solid var(--dot-line-soft);text-align:left;vertical-align:middle;font-size:12px}
+.dot-page .wf-table th{background:#f5f8fc;text-transform:uppercase;letter-spacing:.045em;color:var(--dot-muted);font-weight:800}
+.dot-page .wf-table tr:hover td{background:#fafcff}
+.dot-page .wf-status{padding:12px 14px;min-height:20px;color:#9a2525}
+@media(max-width:760px){.dot-page .wf-editor{grid-template-columns:1fr;padding:16px}.dot-page .wf-table{min-width:620px}}
