@@ -46,7 +46,7 @@ function renderRows(){
       const saved=(latest.user_access||[]).find(x=>String(x.user_id)===userId&&String(x.organization_id)===orgId&&String(x.portal_code)===String(code));
       if(!saved||Boolean(saved.enabled)!==enabled||String(saved.access_level??'standard')!==accessLevel)
         throw Error('The server did not confirm these permissions. Refresh and try again.');
-      grants=latest.user_access||[];organizationGrants=latest.organization_access||[];
+      grants=latest.user_access||[];orgGrants=latest.organization_access||[];organizationGrants=latest.organization_access||[];
       renderRows();
       feedback((port.name||code)+' access saved and verified.');
     }catch(e){
@@ -63,7 +63,7 @@ async function start(){
  const d=await request('list');const membership=(d.memberships||[]).find(x=>x.user_id===userId&&x.organization_id===orgId);
  if(!membership)throw Error('The requested membership was not found.');
  const u=(d.users||[]).find(x=>(x.user_id||x.id)===userId)||{},o=(d.organizations||[]).find(x=>x.id===orgId)||{};
- portals=(d.portals||[]).filter(x=>x.active!==false);grants=d.user_access||[];organizationGrants=d.organization_access||[];
+ portals=(d.portals||[]).filter(x=>x.active!==false);grants=d.user_access||[];orgGrants=d.organization_access||[];ctpas=d.ctpas||[];employers=d.employers||[];subscriptions=d.subscriptions||[];organizationGrants=d.organization_access||[];
  host().innerHTML=`<section class="nd-page wa-user-detail"><header class="nd-page-head"><div><span class="nd-eyebrow">NON-DOT / ACCOUNTS & PEOPLE</span><h1>User Portal Access</h1><p>${esc(u.display_name||u.email||userId)} · ${esc(o.legal_name||o.dba_name||orgId)}</p></div><div class="nd-actions"><a class="nd-btn" href="workforce-user-access.html">Back to User Access</a></div></header><div id="msg" class="nd-page-message" role="status" hidden></div><section class="nd-card wa-portal-access"><div class="nd-card-head"><div><h2>Portal Access Management</h2><p>Grant, revoke, or change permission levels for this user's NON-DOT portals.</p></div></div><div class="nd-table-wrap"><table class="nd-table"><thead><tr><th scope="col">Portal</th><th scope="col">Current Access</th><th scope="col">Permission Level</th><th scope="col">Manage Access</th></tr></thead><tbody id="portalRows"></tbody></table></div></section></section>`;
  renderRows();
 }
