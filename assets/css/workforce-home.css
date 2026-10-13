@@ -1,0 +1,24 @@
+/* NON-DOT management landing — standalone content styling, shared application chrome. */
+.wf-home.dot-page{width:min(100%,1450px);padding:34px 34px 65px}
+.wf-home-head{display:flex;align-items:center;justify-content:space-between;gap:24px;margin-bottom:28px}
+.wf-kicker{font-size:11px;letter-spacing:.1em;color:#e76007;font-weight:800}
+.wf-home-head h1{font-size:33px;line-height:1.15;letter-spacing:-.035em;color:#153765;margin:9px 0 9px}
+.wf-home-head p{margin:0;max-width:680px;color:#61728b;font-size:14px;line-height:1.65}
+.wf-home-primary{flex-shrink:0;display:inline-flex;align-items:center;gap:20px;background:#f26a0a;border:1px solid #f26a0a;border-radius:9px;padding:12px 17px;color:white;text-decoration:none;font-weight:750}
+.wf-home-primary:hover{background:#da5a00;color:white}
+.wf-feature{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:37px}
+.wf-feature a{min-height:109px;display:flex;align-items:center;gap:14px;padding:20px;background:#fff;border:1px solid #dce4ef;border-radius:12px;text-decoration:none;color:#17365f;transition:border-color .15s,box-shadow .15s}
+.wf-feature a:hover,.wf-section-links a:hover{border-color:#a9bfdd;box-shadow:0 5px 16px #17365f0b}
+.wf-feature-icon{display:grid;place-items:center;flex-shrink:0;width:43px;height:43px;border-radius:10px;background:#eef3fa;color:#315b9d;font-size:21px}
+.wf-feature a>span:nth-child(2){min-width:0;display:grid;gap:4px}.wf-feature strong{font-size:15px}.wf-feature small{font-size:12px;color:#708098}.wf-feature b{margin-left:auto;font-size:19px;color:#e76410;font-weight:400}
+.wf-home-section-heading{margin-bottom:17px}.wf-home-section-heading h2{font-size:21px;letter-spacing:-.02em;color:#183b6d;margin:0 0 5px}.wf-home-section-heading p{margin:0;color:#6b7890}
+.wf-home-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:20px}
+.wf-section{min-width:0;background:#fff;border:1px solid #dce4ef;border-radius:12px;overflow:hidden}
+.wf-section-head{padding:20px 23px 16px;border-bottom:1px solid #eaf0f7}
+.wf-section-head h3{font-size:17px;color:#17365f;margin:0 0 5px}.wf-section-head p{font-size:12px;color:#7b8899;margin:0}
+.wf-section-links{padding:7px 11px}
+.wf-section-links a{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid transparent;border-radius:8px;padding:12px 12px;text-decoration:none;color:#213f69}
+.wf-section-links a+a{border-top-color:#f0f3f8}.wf-section-links strong{display:block;font-size:13px}.wf-section-links small{display:block;color:#78879a;margin-top:3px;font-size:11px}.wf-arrow{color:#e76410;font-size:17px}
+@media(max-width:1180px){.wf-feature{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.wf-home.dot-page{padding:23px 16px 42px}.wf-home-head{align-items:flex-start;flex-direction:column}.wf-home-head h1{font-size:28px}.wf-home-grid{grid-template-columns:1fr}.wf-feature{grid-template-columns:1fr 1fr;gap:9px}.wf-feature a{min-height:100px;padding:13px;gap:9px}.wf-feature-icon{width:36px;height:36px}.wf-feature a b{display:none}}
+@media(max-width:430px){.wf-feature{grid-template-columns:1fr}}
