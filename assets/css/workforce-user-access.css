@@ -30,3 +30,19 @@
 .wa-dialog-foot button{padding:11px 17px;border:1px solid #cbd8e8;border-radius:8px;background:#fff;cursor:pointer;font-weight:700;color:#24467f}
 .wa-dialog-foot .wa-primary{background:#ff6b00;color:#fff;border-color:#ff6b00}
 @media(max-width:740px){.wa-list-stats{grid-template-columns:1fr}.wa-list-toolbar{align-items:stretch;flex-direction:column}.wa-page{padding:16px!important}}
+
+/* Match the shared management page rhythm and action system. */
+.dot-page .wa-page{box-sizing:border-box;width:100%;max-width:1450px!important;margin:0 auto!important;padding:28px 30px 56px!important}
+.dot-page .wa-access{gap:20px!important}
+.dot-page .wa-list-head{padding:0 0 2px}
+.dot-page .wa-list-head h1{font-size:28px!important;line-height:1.2;margin:8px 0 8px}
+.dot-page .wa-eyebrow{color:#eb650b;font-size:11px;font-weight:800;letter-spacing:.07em}
+.dot-page .wa-list-stat{min-height:110px;border-radius:12px;padding:20px 22px;align-content:center}
+.dot-page .wa-list-panel{border-radius:12px;box-shadow:0 1px 3px rgba(21,48,83,.04)}
+.dot-page .wa-list-toolbar{padding:22px 24px}
+.dot-page .wa-list-toolbar input{min-height:42px}
+.dot-page .wa-table th,.dot-page .wa-table td{padding:16px 20px}
+.dot-page .wa-table tbody tr:hover{background:#f8fbff}
+.dot-page .wa-manage{min-height:40px;padding:10px 15px;background:#325aa3;border-color:#325aa3;color:#fff}
+.dot-page .wa-manage:hover,.dot-page .wa-manage:focus-visible{background:#24467f;color:#fff;outline:2px solid #ff6b00;outline-offset:2px}
+@media(max-width:740px){.dot-page .wa-page{padding:18px 14px 36px!important}.dot-page .wa-list-toolbar{padding:16px;gap:14px}.dot-page .wa-list-head h1{font-size:24px!important}.dot-page .wa-list-stat{min-height:88px}}
