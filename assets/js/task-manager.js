@@ -57,8 +57,9 @@ async function save(e){
  try{await call("save_task",{task});$("#taskModal").hidden=true;await load();message("Task saved.")}catch(e){alert(e.message)}finally{btn.disabled=false}
 }
 async function load(){try{message("Loading tasks...");state=await call("workspace");render();message("")}catch(e){message(e.message)}}
-document.addEventListener("DOMContentLoaded",async()=>{
+async function initializeTaskManager(){
  try{const auth=await window.DOTAuth.requireAuth();if(!auth)return;window.DOTShell.render(auth);mount();await load()}
  catch(e){const root=$("#dotPageMount")||document.body;root.textContent=e.message||String(e)}
-},{once:true});
+}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",initializeTaskManager,{once:true});else initializeTaskManager();
 })();
