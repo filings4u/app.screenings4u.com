@@ -7,8 +7,10 @@ function field(form,label,value,type='text'){const w=node('label',label);w.style
 function layout(title){const s=node('section');s.style.cssText='padding:28px;max-width:1120px';s.append(node('h1',title));const back=node('a','← NON-DOT Overview');back.href='workforce-dashboard.html';s.append(back);const area=node('div');area.style.cssText='display:grid;gap:12px;margin-top:22px';s.append(area);const status=node('p');status.setAttribute('role','status');s.append(status);mount().replaceChildren(s);return {area,status}}
 function btn(text,action){const b=node('button',text);b.type='button';b.style.cssText='padding:10px 16px;background:#24467f;color:#fff;border:0;border-radius:8px;cursor:pointer';b.onclick=action;return b}
 async function users(){
- const {area,status}=layout('NON-DOT User Access');
- const page=area.parentElement;page.classList.add('wa-page','dot-page','wf-record-management');page.style.maxWidth='none';page.style.width='100%';page.style.padding='0';page.querySelector('h1')?.remove();page.querySelector('a[href="workforce-dashboard.html"]')?.remove();
+ const page=node('section');page.className='dot-page wf-record-management wa-page';
+ const area=node('div');area.className='wa-access';page.append(area);
+ const status=node('p');status.setAttribute('role','status');page.append(status);
+ mount().replaceChildren(page);
  area.classList.add('wa-access');area.replaceChildren(node('p','Loading user access management…'));
  const d=await api('nondot-portal-control',{action:'list'});
  const members=(d.memberships||[]).filter(m=>m.status==='active'),portals=(d.portals||[]).filter(p=>p.active!==false),grants=d.user_access||[];
