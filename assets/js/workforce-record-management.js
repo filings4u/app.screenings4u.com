@@ -147,10 +147,34 @@ function renderSupport(bundle){
  $('#supportManagementForm').onsubmit=async e=>{e.preventDefault();const f=Object.fromEntries(new FormData(e.currentTarget).entries());try{await WorkforceManagementApi.write('update_support_ticket',{ticket_id:id,status:f.status,priority:f.priority});if(f.reply?.trim())await WorkforceManagementApi.write('support_reply',{ticket_id:id,message:f.reply.trim(),status:f.status});message('Support ticket updated.');setTimeout(()=>load(),300)}catch(err){message(err.message,true)}};
 }
 
+async function openSecureDocument(row){
+ const d=await WorkforceManagementApi.write('document_signed_url',{document_id:id});
+ if(!d?.url)throw Error('Secure file link unavailable.');
+ const type=String(row.mime_type||'').toLowerCase();
+ if(type==='text/html'||/\\.html?$/i.test(row.file_name||'')){
+   const response=await fetch(d.url,{cache:'no-store'});
+   if(!response.ok)throw Error('Unable to load the secure HTML document.');
+   const html=await response.text();
+   let overlay=document.getElementById('ndDocumentPreview');
+   if(!overlay){
+     overlay=document.createElement('div');overlay.id='ndDocumentPreview';
+     overlay.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(5,25,50,.75);padding:24px;display:flex;flex-direction:column;gap:10px';
+     const toolbar=document.createElement('div');toolbar.style.cssText='background:#fff;border-radius:10px;padding:12px;display:flex;align-items:center;justify-content:space-between;gap:12px';
+     const title=document.createElement('strong');title.textContent=row.file_name||'Secure Document';
+     const close=document.createElement('button');close.className='nd-btn';close.textContent='Close Preview';close.onclick=()=>overlay.remove();
+     toolbar.append(title,close);
+     const frame=document.createElement('iframe');frame.title='Secure document preview';frame.setAttribute('sandbox','');frame.setAttribute('referrerpolicy','no-referrer');frame.style.cssText='flex:1;width:100%;border:0;background:white;border-radius:10px';
+     overlay.append(toolbar,frame);document.body.append(overlay);
+   }
+   overlay.querySelector('iframe').srcdoc=html;
+   return;
+ }
+ window.open(d.url,'_blank','noopener');
+}
 function render(row){
  const actions=`<a class="nd-btn" href="${c.back}">Back</a>${module==='document'&&!isNew?'<button class="nd-btn primary" id="openDoc">Open Secure File</button><button class="nd-btn" id="archiveDoc">Archive Document</button>':''}`;
- $('#dotPageMount').innerHTML=`<section class="nd-page"><div class="nd-page-head"><div><span class="nd-eyebrow">WORKFORCE NON-DOT MANAGEMENT</span><h1>${isNew?'Create': 'Manage'} ${esc(c.title)}</h1><p>${isNew?'Create a new record.':'Review and manage this record.'}</p></div><div class="nd-actions">${actions}</div></div><div id="recordMessage" class="nd-page-message" hidden></div><div class="nd-card"><div class="nd-card-head"><div><h2>${esc(c.title)} Details</h2><p>${isNew?'Enter the required information.':'Record ID: '+esc(id)}</p></div></div><div class="nd-card-body">${module==='document'?`<div class="nd-detail-grid">${Object.entries(row).filter(([k,v])=>typeof v!=='object').map(([k,v])=>`<div><span>${esc(k.replaceAll('_',' '))}</span><strong>${esc(v??'—')}</strong></div>`).join('')}</div>`:`<form id="recordForm"><div class="nd-field-grid">${c.fields.map(f=>input(f,row)).join('')}</div><div class="nd-form-actions"><button class="nd-btn primary" type="submit">Save ${esc(c.title)}</button></div></form>`}</div></div></section>`;
- if(module==='document'){if($('#openDoc'))$('#openDoc').onclick=async()=>{try{const d=await WorkforceManagementApi.write('document_signed_url',{document_id:id});window.open(d.url,'_blank','noopener')}catch(e){message(e.message,true)}};if($('#archiveDoc'))$('#archiveDoc').onclick=async()=>{try{await WorkforceManagementApi.write('archive_document',{document_id:id});message('Document archived.')}catch(e){message(e.message,true)}};return}
+ $('#dotPageMount').innerHTML=`<section class="nd-page"><div class="nd-page-head"><div><span class="nd-eyebrow">WORKFORCE NON-DOT MANAGEMENT</span><h1>${isNew?'Create': 'Manage'} ${esc(c.title)}</h1><p>${isNew?'Create a new record.':'Review and manage this record.'}</p></div><div class="nd-actions">${actions}</div></div><div id="recordMessage" class="nd-page-message" hidden></div><div class="nd-card"><div class="nd-card-head"><div><h2>${esc(c.title)} Details</h2><p>${isNew?'Enter the required information.':'Record ID: '+esc(id)}</p></div></div><div class="nd-card-body">${module==='document'?`<div class="nd-detail-grid">${[['File Name',row.file_name],['Document Type',row.document_type],['Access Level',row.access_level],['Uploaded',row.uploaded_at],['File Type',row.mime_type],['Size (bytes)',row.size_bytes],['Document ID',row.id]].map(([k,v])=>`<div><span>${esc(k)}</span><strong>${esc(v??'—')}</strong></div>`).join('')}</div><p style="margin:20px 0 0;color:#52677f">Use Open Secure File to preview the approved document in a protected viewer. Archive Document removes it from active listings; it does not edit the original file.</p>`:`<form id="recordForm"><div class="nd-field-grid">${c.fields.map(f=>input(f,row)).join('')}</div><div class="nd-form-actions"><button class="nd-btn primary" type="submit">Save ${esc(c.title)}</button></div></form>`}</div></div></section>`;
+ if(module==='document'){if($('#openDoc'))$('#openDoc').onclick=async()=>{try{await openSecureDocument(row)}catch(e){message(e.message,true)}};if($('#archiveDoc'))$('#archiveDoc').onclick=async()=>{try{await WorkforceManagementApi.write('archive_document',{document_id:id});message('Document archived.')}catch(e){message(e.message,true)}};return}
  $('#recordForm').onsubmit=async e=>{e.preventDefault();const f=Object.fromEntries(new FormData(e.currentTarget).entries());for(const k of ['active','assigned_customers_only','noindex','robots_index','robots_follow'])if(k in f)f[k]=f[k]==='true';if(module==='website_pricing'&&f.features)f.features=f.features.split('\n').map(x=>x.trim()).filter(Boolean);try{let payload={};if(c.payload)payload[c.payload]={...f,...(!isNew?{id}:{})};else if(module==='selection')payload={selection_id:id,...f};else if(module==='testing')payload={testing_order_id:id,...f};else if(module==='result')payload={result_id:id,...f};else if(module==='service')payload={offering_id:id,active:f.active,purchase_mode:f.purchase_mode};else if(module==='billing')payload={subscription_id:id,status:f.status};else if(module==='notification')payload={notification_id:id,status:f.status};else if(module==='support'){payload={ticket_id:id,status:f.status,priority:f.priority};await WorkforceManagementApi.write(c.save,payload);if(f.reply?.trim())await WorkforceManagementApi.write('support_reply',{ticket_id:id,message:f.reply.trim(),status:f.status});message('Support ticket updated.');return}else if(module==='staff')payload=f;else payload=f;await WorkforceManagementApi.write(c.save,payload);message(`${c.title} saved successfully.`);if(isNew)setTimeout(()=>location.href=c.back,500)}catch(e){message(e.message,true)}};
 }
 document.addEventListener('DOMContentLoaded',async()=>{try{const auth=await DOTAuth.requireAuth();if(!auth)return;DOTShell.render(auth);await load()}catch(e){document.getElementById('dotPageMount').textContent=e.message||String(e)}},{once:true});
