@@ -8,7 +8,7 @@ function layout(title){const s=node('section');s.style.cssText='padding:28px;max
 function btn(text,action){const b=node('button',text);b.type='button';b.style.cssText='padding:10px 16px;background:#24467f;color:#fff;border:0;border-radius:8px;cursor:pointer';b.onclick=action;return b}
 async function users(){
  const {area,status}=layout('NON-DOT User Access');
- const page=area.parentElement;page.classList.add('wa-page','dot-page','wf-record-management');page.querySelector('h1')?.remove();page.querySelector('a[href="workforce-dashboard.html"]')?.remove();
+ const page=area.parentElement;page.classList.add('wa-page','dot-page','wf-record-management');page.style.maxWidth='none';page.style.width='100%';page.style.padding='0';page.querySelector('h1')?.remove();page.querySelector('a[href="workforce-dashboard.html"]')?.remove();
  area.classList.add('wa-access');area.replaceChildren(node('p','Loading user access management…'));
  const d=await api('nondot-portal-control',{action:'list'});
  const members=(d.memberships||[]).filter(m=>m.status==='active'),portals=(d.portals||[]).filter(p=>p.active!==false),grants=d.user_access||[];
