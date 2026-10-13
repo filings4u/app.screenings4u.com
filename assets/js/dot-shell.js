@@ -4,6 +4,7 @@
 const page=location.pathname.split('/').pop()||'dot-dashboard.html';
 const business=page.startsWith('workforce-')?'nondot':'dot';
 const groups=[
+ ['NON-DOT Workspace',[['workforce-dashboard.html','Management Home','⌂'],['workforce-portal-control.html','Portal Network Management','◎']]],
  ['Management Workspace',[['dot-dashboard.html','Management Home','⌂'],['dot-portal-control.html','DOT Portal Management','◎'],['workforce-portal-control.html','NON-DOT Portal Management','◎']]],
  ['DOT Accounts & People',[['dot-ctpas.html','C/TPA Management','◈'],['dot-employers.html','Employer Management','▣'],['dot-owner-operators.html','Owner-Operator Management','◇'],['dot-drivers.html','Driver Management','◉'],['dot-users-access.html','DOT User Access','♙']]],
  ['DOT Programs & Testing',[['dot-programs.html','Program Management','≡'],['dot-pools.html','Consortium Management','⊙'],['dot-random-selections.html','Random Selection Management','⌁'],['dot-testing-orders.html','Testing Order Management','✚'],['dot-results.html','Results Management','✓'],['dot-follow-up-testing.html','Follow-Up Management','⟳']]],
