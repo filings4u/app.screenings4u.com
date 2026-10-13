@@ -7,6 +7,6 @@ const request=async action=>{const r=await fetch(endpoint,{method:"POST",headers
 const row=(label,value)=>{const d=document.createElement("div");d.className="detail";const l=document.createElement("div");l.className="label";l.textContent=label;const v=document.createElement("div");v.textContent=value||"Not provided";d.append(l,v);return d};
 try{const d=await request("view");info.replaceChildren(row("Event",d.event.title),row("Date & time",d.event.start_at?new Date(d.event.start_at).toLocaleString():"Not provided"),row("Location",d.event.location),row("Details",d.event.description));if(d.status==="confirmed"){status.textContent="Your appointment is already confirmed."}else if(d.status==="pending"){btn.hidden=false}else status.textContent="This confirmation request is "+d.status}
 catch(e){info.textContent=e.message}
-btn.onclick=async()=>{btn.disabled=true;try{const d=await request("confirm");btn.hidden=true;status.textContent="Your appointment is confirmed. Your coordinator has a record of your response."}catch(e){status.textContent=e.message;btn.disabled=false}}
+btn.onclick=async()=>{btn.disabled=true;try{const d=await request("confirm");btn.hidden=true;status.textContent=d.confirmation_email_status==="sent"?"Your appointment is confirmed. A confirmation receipt was sent to your email.":"Your appointment is confirmed and recorded. The receipt email could not be delivered; contact screenings4u if you need a copy."}catch(e){status.textContent=e.message;btn.disabled=false}}
 })();
 </script></body></html>
