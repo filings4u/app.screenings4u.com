@@ -151,7 +151,7 @@ async function openSecureDocument(row){
  const d=await WorkforceManagementApi.write('document_signed_url',{document_id:id});
  if(!d?.url)throw Error('Secure file link unavailable.');
  const type=String(row.mime_type||'').toLowerCase();
- if(type==='text/html'||/\\.html?$/i.test(row.file_name||'')){
+ if(type==='text/html'||['.html','.htm'].some(ext=>String(row.file_name||'').toLowerCase().endsWith(ext))){
    const response=await fetch(d.url,{cache:'no-store'});
    if(!response.ok)throw Error('Unable to load the secure HTML document.');
    const html=await response.text();
