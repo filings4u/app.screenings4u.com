@@ -1,5 +1,5 @@
 /* User Access follows the same management layout as NON-DOT account records. */
-#dotPageMount .wa-page.wf-record-management{width:min(100%,1450px);max-width:1450px;margin:0 auto;padding:32px;box-sizing:border-box}
+#dotPageMount .wa-page.wf-record-management{width:100%;max-width:none;margin:0;padding:28px 30px 56px;box-sizing:border-box}
 #dotPageMount .wa-access{display:grid;gap:20px}
 #dotPageMount .wa-list-head{display:flex;justify-content:space-between;align-items:center;gap:20px}
 #dotPageMount .wa-list-head h1{font-size:30px;color:#17365f;margin:6px 0}
