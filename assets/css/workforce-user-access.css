@@ -28,3 +28,31 @@
 #dotPageMount .wa-feedback.error{color:#a12828}
 @media(max-width:900px){#dotPageMount .wa-list-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:760px){#dotPageMount .wa-page.wf-record-management{padding:18px}#dotPageMount .wa-list-head,#dotPageMount .wa-list-toolbar{align-items:stretch;flex-direction:column}#dotPageMount .wa-list-toolbar input{width:100%}#dotPageMount .wa-list-stats{grid-template-columns:1fr}}
+
+/* NON-DOT user detail: a single portal-permission management surface. */
+#dotPageMount .wa-user-detail{width:100%;max-width:1450px;margin:0 auto;padding:24px 28px 48px;box-sizing:border-box}
+#dotPageMount .wa-user-detail .nd-page-head{align-items:center;margin-bottom:20px}
+#dotPageMount .wa-user-detail .nd-page-head h1{font-size:28px;line-height:1.2}
+#dotPageMount .wa-user-detail .wa-portal-access{margin:0;border-radius:12px}
+#dotPageMount .wa-user-detail .wa-portal-access .nd-card-head{padding:20px 22px}
+#dotPageMount .wa-user-detail .wa-portal-access .nd-card-head p{font-size:13px;line-height:1.5}
+#dotPageMount .wa-user-detail .nd-table{width:100%;min-width:790px;table-layout:fixed}
+#dotPageMount .wa-user-detail .nd-table th,#dotPageMount .wa-user-detail .nd-table td{padding:14px 16px;text-align:left;vertical-align:middle;border-bottom:1px solid #e8eef5;font-size:13px}
+#dotPageMount .wa-user-detail .nd-table th{font-size:12px;font-weight:700;white-space:nowrap;background:#f5f7fa;color:#536883}
+#dotPageMount .wa-user-detail .nd-table th:nth-child(1){width:40%}
+#dotPageMount .wa-user-detail .nd-table th:nth-child(2){width:13%}
+#dotPageMount .wa-user-detail .nd-table th:nth-child(3){width:19%}
+#dotPageMount .wa-user-detail .nd-table th:nth-child(4){width:28%}
+#dotPageMount .wa-user-detail .nd-table td strong{display:block;font-weight:700;line-height:1.4;color:#183861}
+#dotPageMount .wa-user-detail .nd-table td small{display:block;margin-top:4px;font-size:12px;overflow-wrap:anywhere;color:#6d7f98}
+#dotPageMount .wa-user-detail .nd-table td select{display:block;width:100%;max-width:185px;min-height:42px;background:#fff;border:1px solid #cbd9e8;border-radius:8px;padding:9px 10px;color:#183861;font-size:13px}
+#dotPageMount .wa-user-detail .wa-access-controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+#dotPageMount .wa-user-detail .wa-access-toggle{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;font-size:13px;color:#24467f;cursor:pointer}
+#dotPageMount .wa-user-detail .wa-access-toggle input{width:16px;height:16px;margin:0;accent-color:#325aa3}
+#dotPageMount .wa-user-detail .nd-btn.primary{min-height:40px;padding:9px 13px;border-radius:8px;background:#ff6b00;border-color:#ff6b00;font-size:13px}
+#dotPageMount .wa-user-detail .nd-btn.primary:hover{background:#e85f00;border-color:#e85f00}
+#dotPageMount .wa-user-detail .nd-btn:disabled{opacity:.6;cursor:wait}
+#dotPageMount .wa-user-detail #msg[hidden]{display:none}
+#dotPageMount .wa-user-detail #msg:not([hidden]){margin-bottom:14px;border:1px solid #cbd9e8;border-radius:9px;background:#f8fbff}
+#dotPageMount .wa-user-detail #msg.error{border-color:#efc4c4;background:#fff7f7}
+@media(max-width:900px){#dotPageMount .wa-user-detail{padding:20px 16px 36px}#dotPageMount .wa-user-detail .nd-table{min-width:790px}}
