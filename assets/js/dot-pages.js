@@ -549,13 +549,11 @@ async function loadOrders(){
  redraw();
 }
 async function loadManagementHome(){
- renderBase({eyebrow:'SCREENINGS4U OPERATIONS',title:'DOT & NON-DOT Management',copy:'Choose a management area to administer accounts, testing, compliance, access, subscriptions, and operations.',actions:'<a class="dot-btn primary" href="dot-portal-control.html">Manage DOT Portals</a><a class="dot-btn" href="workforce-portal-control.html">Manage NON-DOT Portals</a>'});
+ renderBase({eyebrow:'SCREENINGS4U OPERATIONS',title:'DOT Management',copy:'Manage DOT accounts, programs, testing, compliance, portal access, billing and operations.',actions:'<a class="dot-btn primary" href="dot-portal-control.html">Manage DOT Portals</a>'});
  const sections=[
   ['DOT Account Management',[['C/TPAs','dot-ctpas.html'],['Employers','dot-employers.html'],['Owner-Operators','dot-owner-operators.html'],['Drivers','dot-drivers.html'],['User Access','dot-users-access.html']]],
   ['DOT Testing & Compliance',[['Programs','dot-programs.html'],['Consortiums','dot-pools.html'],['Testing Orders','dot-testing-orders.html'],['Test Results','dot-results.html'],['Compliance Cases','dot-compliance.html'],['Return-to-Duty','dot-return-to-duty.html']]],
-  ['NON-DOT Account Management',[['C/TPAs','workforce-ctpas.html'],['Employers','workforce-employers.html'],['Employees','workforce-people.html'],['User Access','workforce-user-access.html']]],
-  ['NON-DOT Testing & Compliance',[['Programs','workforce-programs.html'],['Pools','workforce-pools.html'],['Testing Orders','workforce-testing.html'],['Test Results','workforce-results.html'],['Compliance','workforce-compliance.html']]],
-  ['Business & System Management',[['NON-DOT Subscriptions','workforce-subscriptions.html'],['DOT Pricing','dot-catalog.html'],['Orders','dot-orders.html'],['Invoices','dot-invoices.html'],['Documents','dot-documents.html'],['Support','dot-support.html'],['Audit History','dot-audit.html']]]
+  ['Business & System Management',[['DOT Pricing','dot-catalog.html'],['Orders','dot-orders.html'],['Invoices','dot-invoices.html'],['Documents','dot-documents.html'],['Support','dot-support.html'],['Audit History','dot-audit.html']]]
  ];
  $('#dotPageBody').innerHTML='<div class="dot-management-directory">'+sections.map(([heading,links])=>'<section class="dot-card"><div class="dot-card-head"><div><h2>'+esc(heading)+'</h2><p>Open a management page to view and work with records.</p></div></div><div class="dot-card-body"><div class="dot-management-links">'+links.map(([label,url])=>'<a class="dot-btn" href="'+url+'">'+esc(label)+' →</a>').join('')+'</div></div></section>').join('')+'</div>';
 }
