@@ -6,7 +6,7 @@ const host=()=>document.getElementById('dotPageMount');
 const request=(action,extra={})=>WorkforceManagementApi.portalAccess(action,extra);
 let grants=[],portals=[];
 function feedback(message,error=false){const n=document.getElementById('msg');n.hidden=false;n.className='nd-page-message '+(error?'error':'success');n.textContent=message;}
-function grantFor(code){return grants.find(x=>x.user_id===userId&&x.organization_id===orgId&&x.portal_code===code)}
+function grantFor(code){return grants.find(x=>String(x.user_id)===userId&&String(x.organization_id)===orgId&&String(x.portal_code)===String(code))}
 function renderRows(){
  const body=document.getElementById('portalRows');body.replaceChildren();
  for(const port of portals){
@@ -17,16 +17,44 @@ function renderRows(){
   const state=document.createElement('td');state.textContent=g?(g.enabled?'Granted':'Revoked'):'Not assigned';
   const levelTd=document.createElement('td'),level=document.createElement('select');level.setAttribute('aria-label','Access level for '+(port.name||code));
   for(const [value,label] of [['standard','Standard'],['manager','Manager'],['admin','Administrator'],['view','View only']]){const opt=document.createElement('option');opt.value=value;opt.textContent=label;level.append(opt)}
-  level.value=g?.access_level||'standard';levelTd.append(level);
+  const storedLevel=String(g?.access_level??'standard');
+  if(![...level.options].some(option=>option.value===storedLevel)){
+    const existing=document.createElement('option');
+    existing.value=storedLevel;existing.textContent='Current: '+(storedLevel||'Unspecified');
+    level.prepend(existing);
+  }
+  level.value=storedLevel;levelTd.append(level);
   const action=document.createElement('td'),toggle=document.createElement('input');toggle.type='checkbox';toggle.checked=!!g?.enabled;toggle.setAttribute('aria-label','Enable '+(port.name||code));
   const save=document.createElement('button');save.type='button';save.className='nd-btn primary';save.textContent='Save Access';
-  save.onclick=async()=>{save.disabled=true;save.textContent='Saving…';try{
-   const changed=await request('set_user_access',{user_id:userId,organization_id:orgId,portal_code:code,enabled:toggle.checked,access_level:level.value});
-   if(!changed.user_access)throw Error('No update returned by server');
-   const latest=await request('list');const saved=(latest.user_access||[]).find(x=>x.user_id===userId&&x.organization_id===orgId&&x.portal_code===code);
-   if(!saved||saved.enabled!==toggle.checked||saved.access_level!==level.value)throw Error('Update could not be verified. Reload before trying again.');
-   grants=latest.user_access||[];renderRows();feedback((port.name||code)+' access saved and verified.');
-  }catch(e){feedback(e.message||'Unable to save portal access.',true);save.disabled=false;save.textContent='Save Access';}};
+  const initialEnabled=!!g?.enabled;
+  const initialLevel=storedLevel;
+  const updateDirty=()=>{
+    const dirty=toggle.checked!==initialEnabled||level.value!==initialLevel;
+    save.textContent=dirty?'Save Changes':'Saved';
+    save.disabled=!dirty;
+    tr.classList.toggle('wa-unsaved',dirty);
+    state.textContent=dirty?'Unsaved changes':g?(initialEnabled?'Granted':'Revoked'):'Not assigned';
+  };
+  toggle.addEventListener('change',updateDirty);
+  level.addEventListener('change',updateDirty);
+  save.onclick=async()=>{
+    const enabled=toggle.checked,accessLevel=level.value;
+    save.disabled=true;toggle.disabled=true;level.disabled=true;save.textContent='Saving…';
+    try{
+      await request('set_user_access',{user_id:userId,organization_id:orgId,portal_code:code,enabled,access_level:accessLevel});
+      const latest=await request('list');
+      const saved=(latest.user_access||[]).find(x=>String(x.user_id)===userId&&String(x.organization_id)===orgId&&String(x.portal_code)===String(code));
+      if(!saved||Boolean(saved.enabled)!==enabled||String(saved.access_level??'standard')!==accessLevel)
+        throw Error('The server did not confirm these permissions. Refresh and try again.');
+      grants=latest.user_access||[];
+      renderRows();
+      feedback((port.name||code)+' access saved and verified.');
+    }catch(e){
+      feedback((port.name||code)+': '+(e?.message||'Unable to save portal access.'),true);
+      toggle.disabled=false;level.disabled=false;updateDirty();
+    }
+  };
+  updateDirty();
   const toggleLabel=document.createElement('label');toggleLabel.className='wa-access-toggle';toggleLabel.append(toggle,document.createTextNode('Enable'));const controls=document.createElement('div');controls.className='wa-access-controls';controls.append(toggleLabel,save);action.append(controls);tr.append(info,state,levelTd,action);body.append(tr);
  }
 }
