@@ -6,7 +6,7 @@ const business=(['task-manager.html','task-automations.html','global-work-orders
 const groups=[
  ['Global Customer Management',[['global-customer-360.html','Customer 360','◎'],['global-work-orders.html','Work Orders','▤'],['task-manager.html','Task Manager','✓'],['task-automations.html','Task Automations','◷']]],
  ['NON-DOT Workspace',[['workforce-dashboard.html','Management Home','⌂'],['workforce-portal-control.html','Portal Network Management','◎']]],
- ['Management Workspace',[['dot-dashboard.html','Management Home','⌂'],['dot-portal-control.html','DOT Portal Management','◎']]],
+ ['Management Workspace',[['dot-dashboard.html','Management Home','⌂'],['dot-portal-control.html','DOT Portal Management','◎'],['ic-pricing.html','IC Pricing & Rates','▤'],['results-management.html','Central Results Management','✓']]],
  ['DOT Accounts & People',[['dot-ctpas.html','C/TPA Management','◈'],['dot-employers.html','Employer Management','▣'],['dot-owner-operators.html','Owner-Operator Management','◇'],['dot-drivers.html','Driver Management','◉'],['dot-users-access.html','DOT User Access','♙']]],
  ['DOT Programs & Testing',[['dot-programs.html','Program Management','≡'],['dot-pools.html','Consortium Management','⊙'],['dot-random-selections.html','Random Selection Management','⌁'],['dot-testing-orders.html','Testing Order Management','✚'],['dot-results.html','Results Management','✓'],['dot-follow-up-testing.html','Follow-Up Management','⟳']]],
  ['DOT Compliance',[['dot-compliance.html','Compliance Management','⚑'],['dot-clearinghouse.html','Clearinghouse Management','⇄'],['dot-return-to-duty.html','Return-to-Duty / SAP','↺'],['dot-agencies.html','DOT Agency Management','✦']]],
