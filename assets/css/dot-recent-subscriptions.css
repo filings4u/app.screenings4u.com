@@ -1,0 +1,40 @@
+
+/* Recent DOT subscriptions — focused management layout */
+.dot-page:has(#subRows) {max-width:1600px;margin:0 auto;padding:28px 30px 48px;}
+.dot-page:has(#subRows) .dot-page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:28px;margin-bottom:24px}
+.dot-page:has(#subRows) .dot-page-head>div:first-child{max-width:710px;min-width:0}
+.dot-page:has(#subRows) .dot-page-head h1{font-size:clamp(26px,2.3vw,34px);line-height:1.15;letter-spacing:-.035em;margin:7px 0 10px}
+.dot-page:has(#subRows) .dot-page-head p{font-size:14px;line-height:1.6;margin:0;color:#526781}
+.dot-page:has(#subRows) .dot-page-head .dot-actions{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:10px;flex-shrink:0}
+.dot-page:has(#subRows) .dot-page-head .dot-btn{min-height:40px;padding:10px 16px;border-radius:9px;font-size:13px;font-weight:700;white-space:nowrap}
+.dot-page:has(#subRows) .dot-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin:0 0 22px}
+.dot-page:has(#subRows) .dot-metric{padding:19px 20px;min-width:0;border:1px solid #dce5f0;border-radius:12px;background:#fff}
+.dot-page:has(#subRows) .dot-metric span{font-size:11px;letter-spacing:.07em;font-weight:800}
+.dot-page:has(#subRows) .dot-metric strong{font-size:30px;line-height:1.35}
+.dot-page:has(#subRows) .dot-metric small{font-size:12px;line-height:1.5}
+.dot-page:has(#subRows) .dot-card{overflow:hidden;border:1px solid #dce5f0;border-radius:12px;box-shadow:0 3px 12px rgba(22,52,91,.035)}
+.dot-page:has(#subRows) .dot-card-head{padding:22px 24px;display:flex;justify-content:space-between;align-items:center;gap:16px}
+.dot-page:has(#subRows) .dot-card-head h2{font-size:19px;line-height:1.3;margin:0 0 5px}
+.dot-page:has(#subRows) .dot-card-head p{font-size:13px;line-height:1.55;margin:0;color:#60738d}
+.dot-page:has(#subRows) .dot-card-body{padding:16px 24px;background:#fbfcfe;border-top:1px solid #e8edf4}
+.dot-page:has(#subRows) .dot-filter-row{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.dot-page:has(#subRows) .dot-filter-row input,
+.dot-page:has(#subRows) .dot-filter-row select{height:42px;min-height:42px;border:1px solid #ced9e7;border-radius:8px;background:#fff;padding:0 13px;font-size:13px;line-height:1.4;color:#18385e}
+.dot-page:has(#subRows) .dot-filter-row input{width:min(100%,380px);min-width:250px;flex:1 1 290px}
+.dot-page:has(#subRows) .dot-filter-row select{min-width:210px;flex:0 1 250px}
+.dot-page:has(#subRows) .dot-table-wrap{width:100%;overflow-x:auto}
+.dot-page:has(#subRows) .dot-table{width:100%;min-width:960px;table-layout:fixed;border-collapse:collapse}
+.dot-page:has(#subRows) .dot-table th{padding:14px 16px;font-size:11px;letter-spacing:.065em;white-space:nowrap;vertical-align:middle;background:#f6f8fb;color:#506686}
+.dot-page:has(#subRows) .dot-table td{padding:15px 16px;font-size:13px;line-height:1.5;vertical-align:middle;color:#27466c;overflow-wrap:anywhere}
+.dot-page:has(#subRows) .dot-table td strong{display:block;font-weight:700;color:#17365e;font-size:13px;overflow-wrap:anywhere}
+.dot-page:has(#subRows) .dot-table td small{display:block;margin-top:4px;color:#667a95;font-size:11px;overflow-wrap:anywhere}
+.dot-page:has(#subRows) .dot-table th:first-child{width:105px}
+.dot-page:has(#subRows) #subRows tr td:nth-child(2){width:20%}
+.dot-page:has(#subRows) .dot-table th:nth-child(4){width:21%}
+.dot-page:has(#subRows) .dot-table th:nth-child(5){width:110px}
+.dot-page:has(#subRows) .dot-table th:nth-child(6){width:100px}
+.dot-page:has(#subRows) .dot-table th:last-child{width:170px}
+.dot-page:has(#subRows) .dot-table .dot-btn.small{display:inline-flex;align-items:center;justify-content:center;min-height:36px;height:auto;padding:8px 12px;border-radius:8px;line-height:1.3;font-size:12px;text-align:center;white-space:normal;max-width:100%}
+.dot-page:has(#subRows) .dot-status-pill{display:inline-block;padding:6px 10px;border-radius:20px;font-size:11px;font-weight:800}
+@media(max-width:1150px){.dot-page:has(#subRows) .dot-page-head{flex-wrap:wrap}.dot-page:has(#subRows) .dot-page-head .dot-actions{justify-content:flex-start}.dot-page:has(#subRows) .dot-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.dot-page:has(#subRows){padding:18px 14px 32px}.dot-page:has(#subRows) .dot-page-head{gap:16px}.dot-page:has(#subRows) .dot-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.dot-page:has(#subRows) .dot-metric{padding:14px}.dot-page:has(#subRows) .dot-metric strong{font-size:25px}.dot-page:has(#subRows) .dot-card-head,.dot-page:has(#subRows) .dot-card-body{padding:16px}.dot-page:has(#subRows) .dot-filter-row input,.dot-page:has(#subRows) .dot-filter-row select{width:100%;flex:1 1 100%;min-width:0}}
