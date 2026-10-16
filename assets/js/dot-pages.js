@@ -704,9 +704,9 @@ async function loadRecentSubscriptions(){
 }
 
 async function loadRecentOrders(){
- renderBase({title:'Recent Orders',copy:'Review and manage screenings4u service orders created from Workforce DOT management. View order details, resend customer receipts, and maintain carrier tracking numbers.',actions:'<a class="dot-btn primary" href="dot-orders.html">Create Service Order</a><a class="dot-btn" href="dot-invoices.html">Invoices</a>'});
+ renderBase({title:'Recent Orders',copy:'Review and manage DOT website purchases and management-created service orders. View order details, resend customer receipts, and maintain carrier tracking numbers.',actions:'<a class="dot-btn primary" href="dot-orders.html">Create Service Order</a><a class="dot-btn" href="dot-invoices.html">Invoices</a>'});
  const d=await DOTApi.call('orders');
- const all=get(d,'orders','service_orders').filter(x=>x.metadata?.created_by_business==='screenings4u_workforce_dot'||x.metadata?.source==='screenings4u_workforce_dot_admin_order'||x.source==='admin');
+ const all=get(d,'orders','service_orders').filter(x=>x.metadata?.created_by_business==='screenings4u_workforce_dot'||x.metadata?.source==='screenings4u_workforce_dot_admin_order'||['admin','website'].includes(String(x.source||'').toLowerCase()));
  all.sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
  const orders=all.slice(0,100);
  const paid=orders.filter(x=>String(x.payment_status||'').toLowerCase()==='paid').length;
