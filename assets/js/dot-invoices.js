@@ -61,12 +61,66 @@ function view(inv){$('#invoiceMount').innerHTML=`<div class="invoice-record-view
  if($('#pushInvoice'))$('#pushInvoice').onclick=async()=>{const btn=$('#pushInvoice');btn.disabled=true;try{const r=await api('push',{id:inv.id});flash(r.email_error?'Invoice pushed to portal, but email failed: '+r.email_error:'Invoice pushed to portal and email sent successfully.');go('dot-invoice-detail.html?id='+encodeURIComponent(inv.id))}catch(e){notice(errorMessage(e),true);btn.disabled=false}};
  if($('#voidInvoice'))$('#voidInvoice').onclick=async()=>{if(!confirm('Void this invoice? This action cannot be undone.'))return;const btn=$('#voidInvoice');btn.disabled=true;try{await api('void',{id:inv.id,reason:'Voided by DOT management'});flash('Invoice voided successfully.');go('dot-invoice-detail.html?id='+encodeURIComponent(inv.id))}catch(e){notice(errorMessage(e),true);btn.disabled=false}};}
 async function logoData(){try{const r=await fetch('images/logo.png',{cache:'no-store'});const b=await r.blob();return await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.onerror=rej;fr.readAsDataURL(b)})}catch{return null}}
-async function pdf(inv){if(!window.jspdf?.jsPDF)throw new Error('PDF library is not available.');const {jsPDF}=window.jspdf,doc=new jsPDF({unit:'pt',format:'letter'}),navy=[16,47,85],orange=[249,115,0];doc.setFillColor(...navy);doc.rect(0,0,612,105,'F');const logo=await logoData();if(logo){try{doc.addImage(logo,'PNG',42,28,145,46)}catch{doc.setTextColor(255);doc.setFontSize(20);doc.text('screenings4u DOT',42,54)}}else{doc.setTextColor(255);doc.setFontSize(20);doc.text('screenings4u DOT',42,54)}doc.setTextColor(255);doc.setFontSize(28);doc.text('INVOICE',550,48,{align:'right'});doc.setFontSize(11);doc.text(inv.invoice_number||'',550,70,{align:'right'});doc.setTextColor(...navy);doc.setFontSize(9);doc.text('BILL TO',42,138);doc.setFontSize(15);doc.setFont(undefined,'bold');doc.text(inv.customer_name||inv.recipient_name||'Customer',42,159,{maxWidth:270});doc.setFont(undefined,'normal');doc.setFontSize(9);if(inv.recipient_email)doc.text(inv.recipient_email,42,176);doc.setFont(undefined,'bold');doc.text('Issue Date',382,135);doc.text('Due Date',382,154);doc.text('Terms',382,173);doc.setFont(undefined,'normal');doc.text(fmt(inv.issued_at||inv.created_at),550,135,{align:'right'});doc.text(fmt(inv.due_at),550,154,{align:'right'});doc.text(inv.payment_terms||'Due on receipt',550,173,{align:'right'});
- let y=215;doc.setFillColor(242,246,250);doc.rect(42,y-17,508,25,'F');doc.setFont(undefined,'bold');doc.setFontSize(9);doc.text('DESCRIPTION',50,y);doc.text('QTY',382,y,{align:'right'});doc.text('RATE',462,y,{align:'right'});doc.text('AMOUNT',542,y,{align:'right'});doc.setFont(undefined,'normal');y+=28;for(const x of inv.invoice_items||[]){const desc=doc.splitTextToSize(String(x.description||''),280);doc.text(desc,50,y);doc.text(String(x.quantity||0),382,y,{align:'right'});doc.text(money(x.unit_amount,inv.currency),462,y,{align:'right'});doc.text(money(x.amount,inv.currency),542,y,{align:'right'});y+=Math.max(24,desc.length*12);doc.setDrawColor(225,232,240);doc.line(42,y-10,550,y-10)}
- y+=12;const totals=[['Subtotal',inv.subtotal],['Tax',inv.tax],['Credits',-Number(inv.credits||0)]];for(const [k,v] of totals){doc.setFontSize(10);doc.text(k,435,y);doc.text(money(v,inv.currency),550,y,{align:'right'});y+=18}doc.setFillColor(...navy);doc.roundedRect(405,y-4,145,36,5,5,'F');doc.setTextColor(255);doc.setFont(undefined,'bold');doc.text('BALANCE DUE',417,y+17);doc.text(money(inv.amount_due,inv.currency),542,y+17,{align:'right'});doc.setFont(undefined,'normal');doc.setTextColor(...navy);y+=58;
- if(inv.notes){doc.setFont(undefined,'bold');doc.setFontSize(9);doc.text('NOTES',42,y);doc.setFont(undefined,'normal');y+=15;doc.text(doc.splitTextToSize(inv.notes,330),42,y);y+=35}
- if(!['paid','void'].includes(String(inv.status))&&Number(inv.amount_due||0)>0){const pay=customerPayUrl(inv);doc.setFillColor(...orange);doc.roundedRect(405,y-10,145,36,6,6,'F');doc.setTextColor(255);doc.setFont(undefined,'bold');doc.text('PAY INVOICE',477,y+13,{align:'center'});doc.link(405,y-10,145,36,{url:pay});doc.setFont(undefined,'normal');doc.setTextColor(...navy)}
- doc.setDrawColor(220,228,237);doc.line(42,742,550,742);doc.setFontSize(8);doc.text('screenings4u DOT · support@screenings4u.com · screenings4u.com',42,760);doc.save(`${inv.invoice_number||'invoice'}.pdf`)}
+async function pdf(inv){
+ if(!window.jspdf?.jsPDF)throw new Error('PDF library is not available.');
+ const {jsPDF}=window.jspdf,doc=new jsPDF({unit:'pt',format:'letter'});
+ const W=612,H=792,L=48,R=564,navy=[19,48,84],ink=[30,52,79],muted=[103,122,144],line=[225,233,241],pale=[244,247,251],orange=[235,92,12];
+ const moneyText=v=>money(v,inv.currency);
+ const txt=(t,x,y,size=10,color=ink,weight='normal',opt={})=>{doc.setFont('helvetica',weight);doc.setFontSize(size);doc.setTextColor(...color);doc.text(String(t??''),x,y,opt)};
+ const rule=(y)=>{doc.setDrawColor(...line);doc.line(L,y,R,y)};
+ const footer=(page)=>{rule(739);txt('screenings4u DOT  |  DOT Compliance & Testing Services',L,755,8,muted);txt('screenings4u.com',R,755,8,muted,'normal',{align:'right'});txt('Page '+page,R,771,8,muted,'normal',{align:'right'})};
+ const header=(continued=false)=>{
+  doc.setFillColor(...navy);doc.rect(0,0,W,119,'F');
+  doc.setFillColor(255,255,255);doc.roundedRect(L,27,176,61,7,7,'F');
+  txt('Workforce DOT',L+13,53,15,navy,'bold');
+  txt('screenings4u',L+13,73,12,ink,'bold');txt('4u',L+99,73,12,orange,'bold');
+  txt(continued?'INVOICE / CONTINUED':'INVOICE',R,51,25,[255,255,255],'bold',{align:'right'});
+  txt(inv.invoice_number||'',R,75,11,[225,235,247],'normal',{align:'right'});
+  doc.setFillColor(...orange);doc.rect(0,119,W,4,'F');
+ };
+ const details=()=>{
+  txt('BILL TO',L,155,9,muted,'bold');
+  const customer=doc.splitTextToSize(String(inv.customer_name||inv.recipient_name||'Customer'),260);
+  txt(customer,L,178,17,navy,'bold');
+  let cy=178+customer.length*20;
+  if(inv.recipient_name&&inv.recipient_name!==inv.customer_name){txt(inv.recipient_name,L,cy,10,ink);cy+=16}
+  if(inv.recipient_email)txt(inv.recipient_email,L,cy+2,10,muted);
+  doc.setFillColor(...pale);doc.roundedRect(337,146,227,109,6,6,'F');
+  [['ISSUED',fmt(inv.issued_at||inv.created_at)],['DUE DATE',fmt(inv.due_at)],['TERMS',inv.payment_terms||'Due on receipt']].forEach((row,i)=>{const y=168+i*31;txt(row[0],349,y,9,muted,'bold');const v=doc.splitTextToSize(String(row[1]),120);txt(v,552,y,9,ink,'bold',{align:'right'})});
+  if(inv.purchase_order){txt('REFERENCE',L,271,9,muted,'bold');txt(doc.splitTextToSize(String(inv.purchase_order),470),L,286,10,ink)}
+ };
+ let page=1;header();details();
+ const tableHead=y=>{doc.setFillColor(...navy);doc.roundedRect(L,y-17,R-L,30,4,4,'F');txt('SERVICE / DESCRIPTION',L+12,y+2,9,[255,255,255],'bold');txt('QTY',377,y+2,9,[255,255,255],'bold',{align:'right'});txt('RATE',460,y+2,9,[255,255,255],'bold',{align:'right'});txt('AMOUNT',R-12,y+2,9,[255,255,255],'bold',{align:'right'});return y+30};
+ let y=tableHead(321);
+ const items=Array.isArray(inv.invoice_items)?inv.invoice_items:[];
+ for(const [i,item] of items.entries()){
+  const description=doc.splitTextToSize(String(item.description||'Service'),242);
+  const rowHeight=Math.max(34,description.length*13+16);
+  if(y+rowHeight>684){footer(page++);doc.addPage();header(true);y=tableHead(166)}
+  if(i%2===0){doc.setFillColor(...pale);doc.rect(L,y-14,R-L,rowHeight,'F')}
+  txt(description,L+12,y+3,10,ink);
+  txt(item.quantity??0,377,y+3,10,ink,'normal',{align:'right'});
+  txt(moneyText(item.unit_amount),460,y+3,10,ink,'normal',{align:'right'});
+  txt(moneyText(item.amount??(Number(item.quantity||0)*Number(item.unit_amount||0))),R-12,y+3,10,navy,'bold',{align:'right'});
+  y+=rowHeight;
+ }
+ if(!items.length){txt('No line items',L+12,y+5,10,muted);y+=36}
+ y+=23;
+ if(y+160>702){footer(page++);doc.addPage();header(true);y=173}
+ rule(y-16);
+ const totals=[['Subtotal',inv.subtotal],['Tax',inv.tax],['Credits',-Number(inv.credits||0)]];
+ totals.forEach(([label,value],i)=>{txt(label,414,y+i*26,10,muted);txt(moneyText(value),R,y+i*26,11,ink,'bold',{align:'right'})});
+ y+=94;doc.setFillColor(...navy);doc.roundedRect(402,y-15,162,47,6,6,'F');
+ txt('BALANCE DUE',414,y+4,9,[228,236,245],'bold');txt(moneyText(inv.amount_due),R-12,y+23,16,[255,255,255],'bold',{align:'right'});
+ y+=69;
+ const notes=inv.notes?doc.splitTextToSize(String(inv.notes),470):[];
+ if(notes.length){if(y+notes.length*12+36>715){footer(page++);doc.addPage();header(true);y=164}txt('CUSTOMER NOTES',L,y,9,muted,'bold');y+=18;txt(notes,L,y,10,ink);y+=notes.length*13+17}
+ if(!['paid','void'].includes(String(inv.status))&&Number(inv.amount_due||0)>0){
+  if(y+55>721){footer(page++);doc.addPage();header(true);y=173}
+  const pay=customerPayUrl(inv);doc.setFillColor(...orange);doc.roundedRect(L,y,192,39,6,6,'F');txt('PAY INVOICE ONLINE',L+96,y+24,11,[255,255,255],'bold',{align:'center'});doc.link(L,y,192,39,{url:pay});txt('Secure payment through screenings4u checkout',L+205,y+23,8,muted);
+ }
+ footer(page);doc.save((inv.invoice_number||'invoice')+'.pdf');
+}
 async function start(){const page=location.pathname.split('/').pop(),q=new URLSearchParams(location.search);if(page==='dot-record.html'&&q.get('module')==='billing'){const id=q.get('id'),edit=q.get('edit');window.DOTRouter?.navigate(id?`dot-invoice-detail.html?id=${encodeURIComponent(id)}${edit?'&edit=1':''}`:'dot-invoice-new.html',{replace:true});return}if(!['dot-invoices.html','dot-invoice-new.html','dot-invoice-detail.html'].includes(page))return;const s=await DOTAuth.requireAuth();if(!s)return;window.DOT_AUTH_STATE=s;try{state=await api('list')}catch(e){state={invoices:[],ctpas:[],direct_employers:[],owner_operators:[]};window.invoiceInitialError=errorMessage(e);console.error('Invoice list could not load',e)}
  if(page==='dot-invoices.html'){shell('DOT Billing & Invoices','Create and manage detailed invoices for C/TPAs, Direct Employers, and Owner-Operators.','<a class="dot-btn primary" href="dot-invoice-new.html">Create Invoice</a>');list();restoreFlash();return}
  if(page==='dot-invoice-new.html'){shell('Create Invoice','Create a detailed screenings4u DOT invoice. Saving creates a locked invoice record.','<a class="dot-btn" href="dot-invoices.html">Back to Invoices</a>');form({});restoreFlash();if(window.invoiceInitialError)notice('Unable to load customers: '+window.invoiceInitialError,true);return}
