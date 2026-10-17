@@ -1178,3 +1178,10 @@ body.dot-modal-open{overflow:hidden}
 .invoice-admin-page .invoice-record-paper .invoice-document{width:100%;max-width:none}
 .invoice-admin-page .invoice-record-actions{justify-content:flex-start;gap:10px;flex-wrap:wrap}
 @media(max-width:720px){.invoice-admin-page:has(.invoice-record-view){padding-left:12px;padding-right:12px}.invoice-admin-page .invoice-record-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* Full-width invoice preview: use one explicit expanding grid track. */
+.invoice-admin-page .invoice-record-view{grid-template-columns:minmax(0,1fr);justify-items:stretch;min-width:0}
+.invoice-admin-page .invoice-record-toolbar,
+.invoice-admin-page .invoice-record-paper,
+.invoice-admin-page .invoice-record-paper>.invoice-document{display:block;box-sizing:border-box;width:100%;min-width:0;max-width:100%;justify-self:stretch}
+.invoice-admin-page .invoice-record-paper{margin-left:0;margin-right:0}
