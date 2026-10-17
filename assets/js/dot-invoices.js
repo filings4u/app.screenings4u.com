@@ -72,7 +72,7 @@ async function pdf(inv){
  const drawHeader=async(first=false)=>{
   if(first){
    const logo=await logoData();
-   if(logo){try{doc.addImage(logo,'PNG',left,37,159,43)}catch{ text('screenings4u DOT',left,58,16,C.navy,true)}}
+   if(logo){try{const info=doc.getImageProperties(logo);const maxW=175,maxH=48;const scale=Math.min(maxW/info.width,maxH/info.height);const w=info.width*scale,h=info.height*scale;doc.addImage(logo,'PNG',left,37+(maxH-h)/2,w,h)}catch{ text('screenings4u DOT',left,58,16,C.navy,true)}}
    else text('screenings4u DOT',left,58,16,C.navy,true);
    text('DOT Compliance & Testing Services',left,96,9,C.gray);
   }else text('screenings4u DOT',left,55,15,C.navy,true);
