@@ -62,62 +62,63 @@ function view(inv){$('#invoiceMount').innerHTML=`<div class="invoice-record-view
  if($('#voidInvoice'))$('#voidInvoice').onclick=async()=>{if(!confirm('Void this invoice? This action cannot be undone.'))return;const btn=$('#voidInvoice');btn.disabled=true;try{await api('void',{id:inv.id,reason:'Voided by DOT management'});flash('Invoice voided successfully.');go('dot-invoice-detail.html?id='+encodeURIComponent(inv.id))}catch(e){notice(errorMessage(e),true);btn.disabled=false}};}
 async function logoData(){try{const r=await fetch('images/logo.png',{cache:'no-store'});const b=await r.blob();return await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.onerror=rej;fr.readAsDataURL(b)})}catch{return null}}
 async function pdf(inv){
- if(!window.jspdf?.jsPDF)throw new Error('PDF library is not available.');
+ if(!window.jspdf?.jsPDF)throw Error('PDF library is unavailable.');
  const {jsPDF}=window.jspdf,doc=new jsPDF({unit:'pt',format:'letter'});
- const W=612,H=792,L=48,R=564,navy=[19,48,84],ink=[30,52,79],muted=[103,122,144],line=[225,233,241],pale=[244,247,251],orange=[235,92,12];
- const moneyText=v=>money(v,inv.currency);
- const txt=(t,x,y,size=10,color=ink,weight='normal',opt={})=>{doc.setFont('helvetica',weight);doc.setFontSize(size);doc.setTextColor(...color);doc.text(Array.isArray(t)?t:String(t??''),x,y,opt)};
- const rule=(y)=>{doc.setDrawColor(...line);doc.line(L,y,R,y)};
- const footer=(page)=>{rule(739);txt('screenings4u DOT  |  DOT Compliance & Testing Services',L,755,8,muted);txt('screenings4u.com',R,755,8,muted,'normal',{align:'right'});txt('Page '+page,R,771,8,muted,'normal',{align:'right'})};
- const header=(continued=false)=>{
-  doc.setFillColor(...navy);doc.rect(0,0,W,119,'F');
-  doc.setFillColor(255,255,255);doc.roundedRect(L,27,176,61,7,7,'F');
-  txt('Workforce DOT',L+13,53,15,navy,'bold');
-  txt('screenings4u',L+13,73,12,ink,'bold');txt('4u',L+99,73,12,orange,'bold');
-  txt(continued?'INVOICE / CONTINUED':'INVOICE',R,51,25,[255,255,255],'bold',{align:'right'});
-  txt(inv.invoice_number||'',R,75,11,[225,235,247],'normal',{align:'right'});
-  doc.setFillColor(...orange);doc.rect(0,119,W,4,'F');
+ const C={navy:[19,48,84],ink:[35,48,64],gray:[103,117,132],rule:[216,225,234],light:[245,248,251],orange:[238,91,13]};
+ const left=44,right=568,width=524;
+ const text=(value,x,y,size=10,color=C.ink,bold=false,options={})=>{doc.setFont('helvetica',bold?'bold':'normal');doc.setFontSize(size);doc.setTextColor(...color);doc.text(Array.isArray(value)?value:String(value??''),x,y,options)};
+ const stroke=y=>{doc.setDrawColor(...C.rule);doc.line(left,y,right,y)};
+ const small=(value,x,y)=>text(value,x,y,9,C.gray);
+ const drawHeader=async(first=false)=>{
+  if(first){
+   const logo=await logoData();
+   if(logo){try{doc.addImage(logo,'PNG',left,37,159,43)}catch{ text('screenings4u DOT',left,58,16,C.navy,true)}}
+   else text('screenings4u DOT',left,58,16,C.navy,true);
+   text('DOT Compliance & Testing Services',left,96,9,C.gray);
+  }else text('screenings4u DOT',left,55,15,C.navy,true);
+  text('INVOICE',right,56,27,C.navy,true,{align:'right'});
+  text(inv.invoice_number||'',right,77,10,C.gray,false,{align:'right'});
+  doc.setDrawColor(...C.orange);doc.setLineWidth(2);doc.line(left,111,right,111);doc.setLineWidth(1);
  };
- const details=()=>{
-  txt('BILL TO',L,155,9,muted,'bold');
-  const customer=doc.splitTextToSize(String(inv.customer_name||inv.recipient_name||'Customer'),260);
-  txt(customer,L,178,17,navy,'bold');
-  let cy=178+customer.length*20;
-  if(inv.recipient_name&&inv.recipient_name!==inv.customer_name){txt(inv.recipient_name,L,cy,10,ink);cy+=16}
-  if(inv.recipient_email)txt(inv.recipient_email,L,cy+2,10,muted);
-  doc.setFillColor(...pale);doc.roundedRect(337,146,227,109,6,6,'F');
-  [['ISSUED',fmt(inv.issued_at||inv.created_at)],['DUE DATE',fmt(inv.due_at)],['TERMS',inv.payment_terms||'Due on receipt']].forEach((row,i)=>{const y=168+i*31;txt(row[0],349,y,9,muted,'bold');const v=doc.splitTextToSize(String(row[1]),120);txt(v,552,y,9,ink,'bold',{align:'right'})});
-  if(inv.purchase_order){txt('REFERENCE',L,271,9,muted,'bold');txt(doc.splitTextToSize(String(inv.purchase_order),470),L,286,10,ink)}
- };
- let page=1;header();details();
- const tableHead=y=>{doc.setFillColor(...navy);doc.roundedRect(L,y-17,R-L,30,4,4,'F');txt('SERVICE / DESCRIPTION',L+12,y+2,9,[255,255,255],'bold');txt('QTY',377,y+2,9,[255,255,255],'bold',{align:'right'});txt('RATE',460,y+2,9,[255,255,255],'bold',{align:'right'});txt('AMOUNT',R-12,y+2,9,[255,255,255],'bold',{align:'right'});return y+30};
- let y=tableHead(321);
- const items=Array.isArray(inv.invoice_items)?inv.invoice_items:[];
- for(const [i,item] of items.entries()){
-  const description=doc.splitTextToSize(String(item.description||'Service'),242);
-  const rowHeight=Math.max(34,description.length*13+16);
-  if(y+rowHeight>684){footer(page++);doc.addPage();header(true);y=tableHead(166)}
-  if(i%2===0){doc.setFillColor(...pale);doc.rect(L,y-14,R-L,rowHeight,'F')}
-  txt(description,L+12,y+3,10,ink);
-  txt(item.quantity??0,377,y+3,10,ink,'normal',{align:'right'});
-  txt(moneyText(item.unit_amount),460,y+3,10,ink,'normal',{align:'right'});
-  txt(moneyText(item.amount??(Number(item.quantity||0)*Number(item.unit_amount||0))),R-12,y+3,10,navy,'bold',{align:'right'});
-  y+=rowHeight;
+ const footer=(n)=>{stroke(735);small('screenings4u DOT  |  screenings4u.com',left,752);small('Page '+n,right-34,752)};
+ let page=1;await drawHeader(true);
+ text('BILL TO',left,146,9,C.gray,true);
+ const customer=doc.splitTextToSize(String(inv.customer_name||inv.recipient_name||'Customer'),260);
+ text(customer,left,166,14,C.navy,true);
+ let cy=166+customer.length*17;
+ if(inv.recipient_name&&inv.recipient_name!==inv.customer_name){text(inv.recipient_name,left,cy,10);cy+=15}
+ if(inv.recipient_email){text(inv.recipient_email,left,cy,10,C.gray);cy+=15}
+ text('INVOICE DETAILS',343,146,9,C.gray,true);
+ const detail=[['Issued',fmt(inv.issued_at||inv.created_at)],['Due',fmt(inv.due_at)],['Terms',inv.payment_terms||'Due on receipt']];
+ if(inv.purchase_order)detail.push(['Reference',String(inv.purchase_order)]);
+ detail.forEach(([label,value],i)=>{const y=166+i*21;small(label,343,y);text(doc.splitTextToSize(String(value),130),right,y,9,C.ink,true,{align:'right'})});
+ const tableStart=Math.max(260,cy+28,166+detail.length*21+18);
+ const tableHeader=y=>{doc.setFillColor(...C.light);doc.rect(left,y,width,31,'F');text('DESCRIPTION',left+10,y+20,9,C.navy,true);text('QTY',386,y+20,9,C.navy,true,{align:'right'});text('UNIT PRICE',473,y+20,9,C.navy,true,{align:'right'});text('AMOUNT',right-8,y+20,9,C.navy,true,{align:'right'});stroke(y+31);return y+49};
+ let y=tableHeader(tableStart),items=Array.isArray(inv.invoice_items)?inv.invoice_items:[];
+ for(const item of items){
+  const description=doc.splitTextToSize(String(item.description||'Service'),225),h=Math.max(31,description.length*13+9);
+  if(y+h>655){footer(page++);doc.addPage();await drawHeader();y=tableHeader(133)}
+  text(description,left+10,y,10);text(String(item.quantity??0),386,y,10,C.ink,false,{align:'right'});
+  text(money(item.unit_amount,inv.currency),473,y,10,C.ink,false,{align:'right'});
+  text(money(item.amount??Number(item.quantity||0)*Number(item.unit_amount||0),inv.currency),right-8,y,10,C.ink,true,{align:'right'});
+  y+=h;stroke(y-12);
  }
- if(!items.length){txt('No line items',L+12,y+5,10,muted);y+=36}
- y+=23;
- if(y+160>702){footer(page++);doc.addPage();header(true);y=173}
- rule(y-16);
- const totals=[['Subtotal',inv.subtotal],['Tax',inv.tax],['Credits',-Number(inv.credits||0)]];
- totals.forEach(([label,value],i)=>{txt(label,414,y+i*26,10,muted);txt(moneyText(value),R,y+i*26,11,ink,'bold',{align:'right'})});
- y+=94;doc.setFillColor(...navy);doc.roundedRect(402,y-15,162,47,6,6,'F');
- txt('BALANCE DUE',414,y+4,9,[228,236,245],'bold');txt(moneyText(inv.amount_due),R-12,y+23,16,[255,255,255],'bold',{align:'right'});
- y+=69;
- const notes=inv.notes?doc.splitTextToSize(String(inv.notes),470):[];
- if(notes.length){if(y+notes.length*12+36>715){footer(page++);doc.addPage();header(true);y=164}txt('CUSTOMER NOTES',L,y,9,muted,'bold');y+=18;txt(notes,L,y,10,ink);y+=notes.length*13+17}
+ if(!items.length){small('No line items',left+10,y);y+=35}
+ y+=18;
+ const notes=inv.notes?doc.splitTextToSize(String(inv.notes),235):[];
+ const reserve=153+notes.length*12;
+ if(y+reserve>712){footer(page++);doc.addPage();await drawHeader();y=141}
+ const subtotal=Number(inv.subtotal??items.reduce((sum,i)=>sum+Number(i.amount??Number(i.quantity||0)*Number(i.unit_amount||0)),0));
+ const rows=[['Subtotal',money(subtotal,inv.currency)],['Tax',money(inv.tax,inv.currency)],['Credits','-'+money(inv.credits,inv.currency)]];
+ rows.forEach(([label,value],i)=>{small(label,398,y+i*23);text(value,right-8,y+i*23,10,C.ink,true,{align:'right'})});
+ y+=79;stroke(y-11);
+ text('TOTAL DUE',398,y+8,11,C.navy,true);text(money(inv.amount_due??inv.total,inv.currency),right-8,y+8,16,C.navy,true,{align:'right'});y+=48;
+ if(notes.length){text('NOTES',left,y,9,C.gray,true);y+=15;text(notes,left,y,9);y+=notes.length*12+12}
  if(!['paid','void'].includes(String(inv.status))&&Number(inv.amount_due||0)>0){
-  if(y+55>721){footer(page++);doc.addPage();header(true);y=173}
-  const pay=customerPayUrl(inv);doc.setFillColor(...orange);doc.roundedRect(L,y,192,39,6,6,'F');txt('PAY INVOICE ONLINE',L+96,y+24,11,[255,255,255],'bold',{align:'center'});doc.link(L,y,192,39,{url:pay});txt('Secure payment through screenings4u checkout',L+205,y+23,8,muted);
+  if(y+57>722){footer(page++);doc.addPage();await drawHeader();y=153}
+  text('PAYMENT',left,y,9,C.gray,true);y+=16;
+  const url=customerPayUrl(inv);text('Pay securely online: screenings4u checkout',left,y,10,C.navy);
+  doc.link(left,y-13,330,18,{url});y+=17;small('Payment reference: '+String(inv.invoice_number||''),left,y);
  }
  footer(page);doc.save((inv.invoice_number||'invoice')+'.pdf');
 }
