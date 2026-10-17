@@ -66,7 +66,7 @@ async function pdf(inv){
  const {jsPDF}=window.jspdf,doc=new jsPDF({unit:'pt',format:'letter'});
  const W=612,H=792,L=48,R=564,navy=[19,48,84],ink=[30,52,79],muted=[103,122,144],line=[225,233,241],pale=[244,247,251],orange=[235,92,12];
  const moneyText=v=>money(v,inv.currency);
- const txt=(t,x,y,size=10,color=ink,weight='normal',opt={})=>{doc.setFont('helvetica',weight);doc.setFontSize(size);doc.setTextColor(...color);doc.text(String(t??''),x,y,opt)};
+ const txt=(t,x,y,size=10,color=ink,weight='normal',opt={})=>{doc.setFont('helvetica',weight);doc.setFontSize(size);doc.setTextColor(...color);doc.text(Array.isArray(t)?t:String(t??''),x,y,opt)};
  const rule=(y)=>{doc.setDrawColor(...line);doc.line(L,y,R,y)};
  const footer=(page)=>{rule(739);txt('screenings4u DOT  |  DOT Compliance & Testing Services',L,755,8,muted);txt('screenings4u.com',R,755,8,muted,'normal',{align:'right'});txt('Page '+page,R,771,8,muted,'normal',{align:'right'})};
  const header=(continued=false)=>{
