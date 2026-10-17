@@ -30,7 +30,7 @@ async function save(inv){
  for(const row of rows){
   const desc=row.querySelector('.line-desc'),qty=row.querySelector('.line-qty'),rate=row.querySelector('.line-rate');
   const description=desc.value.trim(),quantity=Number(qty.value),unit_amount=Number(rate.value);
-  const blank=!description&&!rate.value.trim()&&(qty.value.trim()===''||qty.value==='1');
+  const blank=!description&&(rate.value.trim()===''||rate.value==='0')&&(qty.value.trim()===''||qty.value==='1');
   if(blank)continue;
   if(!description)return fail('Enter a description for each used line item.',desc);
   if(!qty.value.trim()||!Number.isFinite(quantity)||quantity<=0)return fail('Quantity must be greater than zero.',qty);
