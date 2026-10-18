@@ -12,21 +12,33 @@
   const base = 'https://elpbnytpciqnbexiaebp.supabase.co/functions/v1/';
   const supabase = window.dotSupabase;
   if (!supabase) throw Error('Management sign-in is unavailable');
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) throw Error('Please sign in');
   const call = async (name, payload) => {
-    const response = await fetch(base + name, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        apikey: 'sb_publishable_xVI6Mjkk1bNVMGHZCPuK6w_8FSHKdkC',
-        authorization: 'Bearer ' + session.access_token
-      },
-      body: JSON.stringify(payload)
-    });
-    const body = await response.json().catch(() => ({}));
-    if (!response.ok || body.error) throw Error(body.error || 'Request failed');
-    return body;
+    const request = async (token) => {
+      const response = await fetch(base + name, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          apikey: 'sb_publishable_xVI6Mjkk1bNVMGHZCPuK6w_8FSHKdkC',
+          authorization: 'Bearer ' + token
+        },
+        body: JSON.stringify(payload)
+      });
+      const body = await response.json().catch(() => ({}));
+      return {response, body};
+    };
+    let {data:{session},error:sessionError} = await supabase.auth.getSession();
+    if(sessionError || !session) throw Error('Your management session has expired. Please sign in again.');
+    let result = await request(session.access_token);
+    if(result.response.status === 401) {
+      const refreshed = await supabase.auth.refreshSession();
+      if(refreshed.error || !refreshed.data.session) {
+        throw Error('Your management session has expired. Please sign in again.');
+      }
+      result = await request(refreshed.data.session.access_token);
+    }
+    if(!result.response.ok || result.body.error)
+      throw Error(result.body.error || 'Request failed (' + result.response.status + ')');
+    return result.body;
   };
   const api = payload => call(backend, payload);
   const documents = payload => call('management-mro-documents', {
