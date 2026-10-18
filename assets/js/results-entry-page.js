@@ -205,7 +205,7 @@
     }catch(e){feedback(e.message,'error')}finally{button.disabled=false}
   };
   $('publish').onclick=async()=>{
-    if(!confirm('Publish these donor results to the customer portal and request an email notification?'))return;
+    if(!await window.DOTDialog.confirm('Publish these donor results to the customer portal and request an email notification?',{title:'Publish donor results',confirmText:'Publish & Notify'}))return;
     const button=$('publish');button.disabled=true;
     try{if(!$('employer').value||!rows.length)throw Error('Choose employer and add donors');
       if(!$('pdf').files[0])throw Error('Select the official MRO PDF before publishing');
