@@ -254,7 +254,7 @@
   $('employer').onchange=()=>Promise.all([loadPublished(),loadDrafts()]).catch(e=>feedback(e.message,'error'));
   $('saveDraft').onclick=async()=>{const button=$('saveDraft');button.disabled=true;
     try{if(!$('employer').value||!rows.length)throw Error('Choose employer and add donors');
-      const file=$('pdf').files[0]?await upload():(activeDocument||{document_path:'',filename:''});const result=await api({action:'save_draft',employer_id:$('employer').value,rows,workflow_stage:$('workflowStage').value,...file});
+      const file=$('pdf').files[0]?await upload():(activeDocument||{document_path:'',filename:''});const result=await api({action:'save_draft',employer_id:$('employer').value,rows,draft_id:activeDraftId||undefined,workflow_stage:$('workflowStage').value,...file});
       if(!result.ok)throw Error('Draft save not confirmed');activeDraftId=null;activeDocument=null;rows=[];render();await loadDrafts();feedback('Draft saved successfully. No customer notification was sent.','success');
     }catch(e){feedback(e.message,'error')}finally{button.disabled=false}
   };
