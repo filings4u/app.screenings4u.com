@@ -51,7 +51,7 @@
     <section class="re-form"><div id="resultsFeedback" class="re-feedback" role="status" aria-live="polite">Loading records…</div>
     <div class="re-fields">
       <label class="re-wide">Employer<select id="employer"><option value="">Choose employer</option></select></label>
-      <label class="re-wide">Existing employee<select id="employeeSelect"><option value="">Choose existing employee</option></select></label><button type="button" id="viewEmployee">View Employee History</button><label>First name *<input id="firstName"></label><label>Middle initial<input id="middleInitial" maxlength="1"></label>
+      <label class="re-wide">Existing employee<select id="employeeSelect"><option value="">Choose existing employee</option></select></label><label>First name *<input id="firstName"></label><label>Middle initial<input id="middleInitial" maxlength="1"></label>
       <label>Last name *<input id="lastName"></label><label>Birthdate *<input type="date" id="birthdate"></label>
       <label>CDL number<input id="cdlNumber"></label><label>State ID number<input id="stateIdNumber"></label>
       <label>Test date *<input type="date" id="testDate"></label>
@@ -282,9 +282,8 @@
       await loadPublished();await loadDrafts();feedback(`${result.count||0} donor results published to the portal. MRO PDF saved: ${file.filename}.`, 'success');await offerNotification(result.ids,$('employer').value);
     }catch(e){feedback(e.message,'error')}finally{button.disabled=false}
   };
-async function loadEmployees(){employees=[];const pick=$('employeeSelect');pick.replaceChildren(new Option('Choose existing employee',''));if(!$('employer').value)return;const data=await api({action:'employees',employer_id:$('employer').value});employees=data.employees||[];for(const e of employees)pick.add(new Option([e.first_name,e.middle_name,e.last_name].filter(Boolean).join(' '),e.id));}
+async function loadEmployees(){employees=[];const pick=$('employeeSelect');pick.replaceChildren(new Option('Choose existing employee',''));if(!$('employer').value)return;const data=await api({action:'employees',employer_id:$('employer').value});employees=data.employees||[];for(const e of employees)pick.add(new Option([e.first_name,e.middle_name,e.last_name].filter(Boolean).join(' '),e.id));const target=parameters.get('employee_id');if(target&&employees.some(e=>e.id===target)){pick.value=target;pick.dispatchEvent(new Event('change'));}}
 $('employeeSelect').onchange=()=>{const e=employees.find(x=>x.id===$('employeeSelect').value);if(!e)return;$('firstName').value=e.first_name||'';$('middleInitial').value=(e.middle_name||'').slice(0,1);$('lastName').value=e.last_name||'';$('birthdate').value=e.date_of_birth||'';};
-$('viewEmployee').onclick=async()=>{try{const id=$('employeeSelect').value;if(!id)throw Error('Choose employee');const d=await api({action:'employee_profile',employer_id:$('employer').value,employee_id:id});const panel=$('employeeHistory');panel.hidden=false;panel.replaceChildren();const h=document.createElement('h2');h.textContent=[d.employee.first_name,d.employee.last_name].join(' ')+' — Test History';panel.append(h);const info=document.createElement('p');info.textContent='Employee # '+(d.employee.employee_number||'—')+' · '+(d.employee.employment_status||'');panel.append(info);for(const t of d.tests||[]){const line=document.createElement('p');line.textContent=[t.test_type,t.test_date,t.result||'Pending',t.workflow_stage||''].join(' · ');panel.append(line)}if(!d.tests?.length){const empty=document.createElement('p');empty.textContent='No linked tests yet';panel.append(empty)}}catch(e){feedback(e.message,'error')}};
   render();
   try {
     const response=await api({action:'employers'});
