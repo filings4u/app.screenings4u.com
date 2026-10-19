@@ -62,7 +62,7 @@
     <div class="re-actions"><button id="add" type="button">Add Donor</button>
       <button id="downloadTemplate" type="button" class="re-secondary">Download Spreadsheet Template</button>
       <label class="re-upload">Import Spreadsheet<input id="sheet" type="file" accept=".xlsx,.xls,.csv"></label></div>
-    <div class="re-table"><table><thead><tr><th>Donor</th><th>Birthdate</th><th>CDL / State ID</th><th>Test Date</th><th>Result</th><th>Remove</th></tr></thead><tbody id="rows"></tbody></table></div>
+    <div class="re-table"><table><thead><tr><th>Donor</th><th>Birthdate</th><th>CDL / State ID</th><th>Test Date</th><th>Result</th><th>Actions</th></tr></thead><tbody id="rows"></tbody></table></div>
     <div class="re-published"><h2>Published Donor Results</h2><p id="publishedCount">Loading…</p>
       <div class="re-table"><table><thead><tr><th>Donor</th><th>Birthdate</th><th>CDL / State ID</th><th>Test Date</th><th>Result</th><th>Workflow</th><th>MRO Document</th><th>Email Status</th><th>Actions</th></tr></thead>
       <tbody id="publishedRows"></tbody></table></div></div>
@@ -83,7 +83,21 @@
     /^\d{4}-\d{2}-\d{2}$/.test(test) && dob >= '1900-01-01' &&
     dob < test && test <= new Date().toISOString().slice(0, 10);
   $('birthdate').max = $('testDate').max = new Date().toISOString().slice(0, 10);
-  let rows = [], previewURL = null;
+  let rows = [], previewURL = null, editingIndex = -1, publishedRecords = [];
+  const donorKey = r => [String(r.cdl_number||r.state_id_number||r.identity_number||'').trim().toUpperCase(),String(r.test_date||'')].join('|');
+  const sameDonor = (a,b) => donorKey(a) === donorKey(b);
+  const setEditor = (r,index) => {
+    editingIndex=index;
+    for(const [field,key] of [['firstName','first_name'],['middleInitial','middle_initial'],['lastName','last_name'],['birthdate','birthdate'],['cdlNumber','cdl_number'],['stateIdNumber','state_id_number'],['testDate','test_date'],['mroResult','result']]) $(field).value=r[key]||'';
+    $('add').textContent='Update Donor';
+    feedback('Editing donor details. Click Update Donor to save changes in the list.');
+    $('firstName').focus();
+  };
+  const clearEditor = () => {
+    editingIndex=-1;$('add').textContent='Add Donor';
+    for(const id of ['firstName','middleInitial','lastName','birthdate','cdlNumber','stateIdNumber']) $(id).value='';
+    $('mroResult').value='';
+  };
   const cell = (tr, value = '') => {
     const td = document.createElement('td');
     td.textContent = value == null || value === '' ? '—' : String(value);
@@ -103,9 +117,10 @@
       cell(tr, r.birthdate);cell(tr, r.cdl_number || r.state_id_number);cell(tr, r.test_date);
       const result = select(['', 'Negative', 'Positive'], r.result, 'Pending MRO');
       result.onchange = () => {r.result = result.value || null};cell(tr, '').replaceChildren(result);
+      const edit = document.createElement('button');edit.type='button';edit.textContent='Edit';edit.onclick=()=>setEditor(r,i);
       const remove = document.createElement('button');remove.type = 'button';remove.textContent = 'Remove';
       remove.onclick = () => {rows.splice(i, 1);render();feedback('Donor removed from unsaved list.')};
-      cell(tr, '').replaceChildren(remove);body.append(tr);
+      const actions=cell(tr,'');actions.append(edit,document.createTextNode(' '),remove);body.append(tr);
     });
   };
   $('add').onclick = () => {
@@ -118,9 +133,12 @@
     if (!r.first_name || !r.last_name || !validDob(r.birthdate, r.test_date) || (!r.cdl_number && !r.state_id_number)) {
       feedback('Complete first and last names, birthdate, test date, and CDL or State ID.', 'error');return;
     }
-    if (rows.length >= 200) {feedback('Maximum 200 donors per submission.', 'error');return}
-    rows.push(r);render();feedback('Donor added to the unsaved list.', 'success');
-    for (const id of ['firstName','middleInitial','lastName','birthdate','cdlNumber','stateIdNumber']) $(id).value = '';
+    if(rows.some((x,i)=>i!==editingIndex&&sameDonor(x,r))){feedback('This donor and test date are already in the unsaved list. Edit the existing donor instead.','error');return}
+    if(publishedRecords.some(x=>sameDonor(x,r))){feedback('This donor and test date already have a published record. Edit the published record instead.','error');return}
+    if (rows.length >= 200 && editingIndex === -1) {feedback('Maximum 200 donors per submission.', 'error');return}
+    const editing=editingIndex>=0;
+    if(editing)rows[editingIndex]=r;else rows.push(r);
+    render();clearEditor();feedback(editing?'Donor updated in the unsaved list.':'Donor added to the unsaved list.', 'success');
   };
   $('pdf').onchange = () => {
     if (previewURL) URL.revokeObjectURL(previewURL);
@@ -157,6 +175,9 @@
         test_date:date(x['Test Date *']||x['Test Date']),result:null
       }));
       if (!imported.length || rows.length+imported.length > 200 || imported.some(x=>!x.first_name||!x.last_name||!validDob(x.birthdate,x.test_date)||(!x.cdl_number&&!x.state_id_number))) throw Error('Spreadsheet has invalid donor data or exceeds 200 donors');
+      const keys=[...rows,...imported].map(donorKey);
+      if(new Set(keys).size!==keys.length)throw Error('Spreadsheet contains duplicate donors for the same test date.');
+      if(imported.some(r=>publishedRecords.some(p=>sameDonor(p,r))))throw Error('One or more donors have already been published for this test date. Edit their published results instead.');
       rows.push(...imported);render();feedback(`${imported.length} donors imported into unsaved list.`, 'success');
     } catch(e) {feedback(e.message,'error')}
   };
@@ -177,7 +198,7 @@
       documents({action:'list'}).catch(e=>({records:[],metadata_error:e.message}))
     ]);
     const meta = new Map((metadata.records||[]).map(x=>[x.id,x]));
-    const published = response.records||[],body=$('publishedRows');body.replaceChildren();
+    const published = response.records||[],body=$('publishedRows');publishedRecords=published;body.replaceChildren();
     $('publishedCount').textContent=published.length+' published donors';
     for (const r of published) {
       const m=meta.get(r.id)||{},tr=document.createElement('tr');
@@ -220,6 +241,8 @@
     if(!await window.DOTDialog.confirm('Publish these donor results to the customer portal and request an email notification?',{title:'Publish donor results',confirmText:'Publish & Notify'}))return;
     const button=$('publish');button.disabled=true;
     try{if(!$('employer').value||!rows.length)throw Error('Choose employer and add donors');
+      await loadPublished();
+      if(rows.some(r=>publishedRecords.some(p=>sameDonor(r,p))))throw Error('Donor/test date already published. Edit the existing record; no new email was sent.');
       if(!$('pdf').files[0])throw Error('Select the official MRO PDF before publishing');
       const file=await upload();feedback('Publishing results to customer records…');
       const result=await api({action:'publish',employer_id:$('employer').value,rows,workflow_stage:$('workflowStage').value,...file});
