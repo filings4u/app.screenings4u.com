@@ -242,6 +242,7 @@
       edit.onclick=()=>{activeDraftId=draft.id;activeDocument={document_path:draft.document_path||'',filename:draft.document_name||''};rows=(draft.records||[]).map(x=>({...x}));render();$('workflowStage').value=draft.workflow_stage||'Ordered';feedback('Draft loaded. Edit donor information, then Save Draft or Publish.','success');window.scrollTo({top:0,behavior:'smooth'})};
       const send=document.createElement('button');send.type='button';send.textContent='Publish & Email';
       send.onclick=async()=>{if(!await window.DOTDialog.confirm('Publish this saved draft and request an email notification?',{title:'Publish saved donor results',confirmText:'Publish & Notify'}))return;send.disabled=true;try{
+        await loadPublished();if((draft.records||[]).some(r=>publishedRecords.some(p=>sameDonor(r,p))))throw Error('One or more donor test results are already published. No duplicate results or emails were created.');
         const result=await api({action:'push_draft',employer_id,draft_id:draft.id});
         if(!result.ok)throw Error('Publish was not confirmed');
         activeDraftId=null;activeDocument=null;rows=[];render();await loadPublished();await loadDrafts();
