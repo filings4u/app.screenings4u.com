@@ -63,7 +63,7 @@
       <button id="downloadTemplate" type="button" class="re-secondary">Download Spreadsheet Template</button>
       <label class="re-upload">Import Spreadsheet<input id="sheet" type="file" accept=".xlsx,.xls,.csv"></label></div>
     <div class="re-table"><table><thead><tr><th>Donor</th><th>Birthdate</th><th>CDL / State ID</th><th>Test Date</th><th>Result</th><th>Actions</th></tr></thead><tbody id="rows"></tbody></table></div>
-    <div class="re-published"><h2>Published Donor Results</h2><p id="publishedCount">Loading…</p>
+    <div class="re-published"><h2>Saved Drafts — Review Before Sending</h2><p>Drafts are not published or emailed until you explicitly send them.</p><div id="draftList" role="region" aria-label="Saved donor drafts"></div><h2>Published Donor Results</h2><p id="publishedCount">Loading…</p>
       <div class="re-table"><table><thead><tr><th>Donor</th><th>Birthdate</th><th>CDL / State ID</th><th>Test Date</th><th>Result</th><th>Workflow</th><th>MRO Document</th><th>Email Status</th><th>Actions</th></tr></thead>
       <tbody id="publishedRows"></tbody></table></div></div>
     <div class="re-bottom"><div class="re-submit"><button id="saveDraft" type="button" class="re-secondary">Save &amp; Exit</button>
@@ -83,7 +83,7 @@
     /^\d{4}-\d{2}-\d{2}$/.test(test) && dob >= '1900-01-01' &&
     dob < test && test <= new Date().toISOString().slice(0, 10);
   $('birthdate').max = $('testDate').max = new Date().toISOString().slice(0, 10);
-  let rows = [], previewURL = null, editingIndex = -1, publishedRecords = [];
+  let rows = [], previewURL = null, editingIndex = -1, publishedRecords = [], activeDraftId = null, activeDocument = null;
   const donorKey = r => [String(r.cdl_number||r.state_id_number||r.identity_number||'').trim().toUpperCase(),String(r.test_date||'')].join('|');
   const sameDonor = (a,b) => donorKey(a) === donorKey(b);
   const setEditor = (r,index) => {
@@ -229,12 +229,32 @@
     }
     if(metadata.metadata_error) feedback('Results loaded. Document/status service unavailable: '+metadata.metadata_error,'error');
   }
-  $('employer').onchange=()=>loadPublished().catch(e=>feedback(e.message,'error'));
+  async function loadDrafts(){
+    const employer_id=$('employer').value,container=$('draftList');container.replaceChildren();
+    if(!employer_id)return;
+    const response=await api({action:'drafts',employer_id});
+    const drafts=response.drafts||[];
+    if(!drafts.length){container.textContent='No saved drafts.';return}
+    for(const draft of drafts){
+      const row=document.createElement('div');row.className='re-draft-row';
+      const info=document.createElement('span');info.textContent=(draft.records?.length||0)+' donor(s) • '+(draft.document_name||'No PDF')+' • Saved draft';
+      const edit=document.createElement('button');edit.type='button';edit.textContent='Load & Edit';
+      edit.onclick=()=>{activeDraftId=draft.id;activeDocument={document_path:draft.document_path||'',filename:draft.document_name||''};rows=(draft.records||[]).map(x=>({...x}));render();$('workflowStage').value=draft.workflow_stage||'Ordered';feedback('Draft loaded. Edit donor information, then Save Draft or Publish.','success');window.scrollTo({top:0,behavior:'smooth'})};
+      const send=document.createElement('button');send.type='button';send.textContent='Publish & Email';
+      send.onclick=async()=>{if(!await window.DOTDialog.confirm('Publish this saved draft and request an email notification?',{title:'Publish saved donor results',confirmText:'Publish & Notify'}))return;send.disabled=true;try{
+        const result=await api({action:'push_draft',employer_id,draft_id:draft.id});
+        if(!result.ok)throw Error('Publish was not confirmed');
+        activeDraftId=null;activeDocument=null;rows=[];render();await loadPublished();await loadDrafts();
+        feedback((result.count||0)+' donor(s) published. '+emailStatus(result.notification)+'.','success');
+      }catch(e){feedback(e.message,'error')}finally{send.disabled=false}};
+      row.append(info,edit,send);container.append(row)
+    }
+  }
+  $('employer').onchange=()=>Promise.all([loadPublished(),loadDrafts()]).catch(e=>feedback(e.message,'error'));
   $('saveDraft').onclick=async()=>{const button=$('saveDraft');button.disabled=true;
     try{if(!$('employer').value||!rows.length)throw Error('Choose employer and add donors');
-      const file=await upload();const result=await api({action:'save_draft',employer_id:$('employer').value,rows,workflow_stage:$('workflowStage').value,...file});
-      if(!result.ok)throw Error('Draft save not confirmed');feedback('Draft saved successfully. Customer not notified.', 'success');
-      setTimeout(()=>location.assign('/results-management.html'),1300);
+      const file=$('pdf').files[0]?await upload():(activeDocument||{document_path:'',filename:''});const result=await api({action:'save_draft',employer_id:$('employer').value,rows,workflow_stage:$('workflowStage').value,...file});
+      if(!result.ok)throw Error('Draft save not confirmed');activeDraftId=null;activeDocument=null;rows=[];render();await loadDrafts();feedback('Draft saved successfully. No customer notification was sent.','success');
     }catch(e){feedback(e.message,'error')}finally{button.disabled=false}
   };
   $('publish').onclick=async()=>{
@@ -243,12 +263,12 @@
     try{if(!$('employer').value||!rows.length)throw Error('Choose employer and add donors');
       await loadPublished();
       if(rows.some(r=>publishedRecords.some(p=>sameDonor(r,p))))throw Error('Donor/test date already published. Edit the existing record; no new email was sent.');
-      if(!$('pdf').files[0])throw Error('Select the official MRO PDF before publishing');
-      const file=await upload();feedback('Publishing results to customer records…');
+      if(!$('pdf').files[0]&&!activeDocument?.document_path)throw Error('Select the official MRO PDF before publishing');
+      const file=$('pdf').files[0]?await upload():activeDocument;feedback('Publishing results to customer records…');
       const result=await api({action:'publish',employer_id:$('employer').value,rows,workflow_stage:$('workflowStage').value,...file});
       if(!result.ok)throw Error('Publishing was not confirmed');
-      rows=[];render();$('pdf').value='';$('selectedDocument').textContent='No PDF selected.';
-      await loadPublished();feedback(`${result.count||0} donor results published. MRO PDF saved: ${file.filename}. ${emailStatus(result.notification)}.`, 'success');
+      rows=[];activeDraftId=null;activeDocument=null;render();$('pdf').value='';$('selectedDocument').textContent='No PDF selected.';
+      await loadPublished();await loadDrafts();feedback(`${result.count||0} donor results published. MRO PDF saved: ${file.filename}. ${emailStatus(result.notification)}.`, 'success');
     }catch(e){feedback(e.message,'error')}finally{button.disabled=false}
   };
   render();
@@ -257,7 +277,7 @@
     for(const employer of response.employers||[]){const opt=new Option(employer.legal_name+' — '+(employer.primary_contact_email||'No contact email'),employer.id);$('employer').add(opt)}
     const selected=parameters.get('employer_id');
     if(selected&&[...$('employer').options].some(x=>x.value===selected)){$('employer').value=selected;$('employer').disabled=true}
-    if($('employer').value)await loadPublished();
+    if($('employer').value)await Promise.all([loadPublished(),loadDrafts()]);
     feedback('Ready. View published documents and notification status below.');
   }catch(e){feedback(e.message,'error')}
 })().catch(error=>{const mount=document.getElementById('dotPageMount');if(mount)mount.textContent=error.message||String(error)});
