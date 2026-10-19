@@ -28,7 +28,14 @@ function initials(v){return String(v||'DOT').split(/\s+|@/).filter(Boolean).slic
 function nav(){
  const allowed=groups.filter(([label])=>label==='Shared Operations'||(business==='nondot'?label.startsWith('NON-DOT'):!label.startsWith('NON-DOT')));
  return allowed.map(([label,links])=>{
-  const visible=links.filter(([href])=>label==='Shared Operations'||(business==='nondot'?href.startsWith('workforce-'):!href.startsWith('workforce-')));
+  const visible=links.filter(([href])=>{
+   if(label==='Shared Operations'){
+    if(href==='dot-recent-subscriptions.html')return business==='dot';
+    if(href==='workforce-subscriptions.html')return business==='nondot';
+    return true;
+   }
+   return business==='nondot'?href.startsWith('workforce-'):!href.startsWith('workforce-');
+  });
   if(!visible.length)return '';
   const items=visible.map(([href,name,icon])=>{
    const url=sharedPages.has(href)&&business==='nondot'?href+'?workspace=workforce':href;
