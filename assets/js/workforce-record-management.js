@@ -49,6 +49,7 @@ async function load(){
  }
  let row={};
  if(!isNew){if(module==='support'){const d=await WorkforceManagementApi.read('support_detail',{id});renderSupport(d);return}else if(c.siteKey){const d=await WorkforceManagementApi.read('website_management');row=(d[c.siteKey]||[]).find(x=>x.id===id)||{}}else{const d=await WorkforceManagementApi.read(c.read);row=(d[c.key]||[]).find(x=>x.id===id)||{}}}
+ if(!isNew&&module==='person'&&!row.id){document.getElementById('dotPageMount').innerHTML='<section class="nd-page"><div class="nd-card"><div class="nd-card-body"><h1>Employee archived or unavailable</h1><p>This employee is not in the active management list. Existing records remain retained.</p><a class="nd-btn" href="workforce-people.html">Back to Employee Management</a></div></div></section>';return;}
  render(row)
 }
 
