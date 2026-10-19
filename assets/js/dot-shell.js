@@ -2,11 +2,11 @@
 (()=>{
 "use strict";
 const page=location.pathname.split('/').pop()||'dot-dashboard.html';
-const sharedPages=new Set(['global-customer-360.html','global-work-orders.html','task-manager.html','task-automations.html','results-management.html','dot-invoices.html','dot-invoice-detail.html','dot-invoice-new.html','dot-recent-subscriptions.html']);
+const sharedPages=new Set(['global-customer-360.html','global-work-orders.html','task-manager.html','task-automations.html','results-management.html','dot-invoices.html','dot-invoice-detail.html','dot-invoice-new.html','dot-recent-subscriptions.html','subscription-management.html']);
 const requestedWorkspace=new URLSearchParams(location.search).get('workspace');
 const business=page.startsWith('workforce-')||(sharedPages.has(page)&&requestedWorkspace==='workforce')?'nondot':'dot';
 const groups=[
- ['Shared Operations',[['global-customer-360.html','Customer 360','◎'],['global-work-orders.html','Work Orders','▤'],['results-management.html','Results Management','✓'],['dot-invoices.html','Invoice Management','▧'],['dot-recent-subscriptions.html','DOT Subscriptions','▧'],['workforce-subscriptions.html','NON-DOT Subscriptions','▧'],['task-manager.html','Task Manager','✓'],['task-automations.html','Task Automations','◷']]],
+ ['Shared Operations',[['global-customer-360.html','Customer 360','◎'],['global-work-orders.html','Work Orders','▤'],['results-management.html','Results Management','✓'],['dot-invoices.html','Invoice Management','▧'],['subscription-management.html','Subscription Management','▧'],['dot-recent-subscriptions.html','DOT Subscription History','◷'],['workforce-subscriptions.html','NON-DOT Subscription History','◷'],['task-manager.html','Task Manager','✓'],['task-automations.html','Task Automations','◷']]],
  ['NON-DOT Workspace',[['workforce-dashboard.html','Management Home','⌂'],['workforce-portal-control.html','Portal Network Management','◎']]],
  ['Management Workspace',[['dot-dashboard.html','Management Home','⌂'],['dot-portal-control.html','DOT Portal Management','◎'],['ic-pricing.html','IC Pricing & Rates','▤']]],
  ['DOT Accounts & People',[['dot-ctpas.html','C/TPA Management','◈'],['dot-employers.html','Employer Management','▣'],['dot-owner-operators.html','Owner-Operator Management','◇'],['dot-drivers.html','Driver Management','◉'],['dot-users-access.html','DOT User Access','♙']]],
