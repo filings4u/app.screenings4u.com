@@ -51,7 +51,7 @@
     <section class="re-form"><div id="resultsFeedback" class="re-feedback" role="status" aria-live="polite">Loading records…</div>
     <div class="re-fields">
       <label class="re-wide">Employer<select id="employer"><option value="">Choose employer</option></select></label>
-      <label>First name *<input id="firstName"></label><label>Middle initial<input id="middleInitial" maxlength="1"></label>
+      <label class="re-wide">Existing employee<select id="employeeSelect"><option value="">Choose existing employee</option></select></label><button type="button" id="viewEmployee">View Employee History</button><label>First name *<input id="firstName"></label><label>Middle initial<input id="middleInitial" maxlength="1"></label>
       <label>Last name *<input id="lastName"></label><label>Birthdate *<input type="date" id="birthdate"></label>
       <label>CDL number<input id="cdlNumber"></label><label>State ID number<input id="stateIdNumber"></label>
       <label>Test date *<input type="date" id="testDate"></label>
@@ -59,7 +59,7 @@
       <label>Workflow stage<select id="workflowStage"><option>Ordered</option><option>Processing</option><option>At Lab</option><option>MRO Confirmation</option></select></label>
       <label class="re-wide">Official MRO document (PDF)<input id="pdf" type="file" accept=".pdf,application/pdf"><div id="selectedDocument" class="re-document-info">No PDF selected.</div></label>
     </div>
-    <div class="re-actions"><button id="add" type="button">Add Donor</button>
+    <div id="employeeHistory" class="re-form" hidden></div><div class="re-actions"><button id="add" type="button">Add Donor</button>
       <button id="downloadTemplate" type="button" class="re-secondary">Download Spreadsheet Template</button>
       <label class="re-upload">Import Spreadsheet<input id="sheet" type="file" accept=".xlsx,.xls,.csv"></label></div>
     <div class="re-table"><table><thead><tr><th>Donor</th><th>Birthdate</th><th>CDL / State ID</th><th>Test Date</th><th>Result</th><th>Actions</th></tr></thead><tbody id="rows"></tbody></table></div>
@@ -83,11 +83,11 @@
     /^\d{4}-\d{2}-\d{2}$/.test(test) && dob >= '1900-01-01' &&
     dob < test && test <= new Date().toISOString().slice(0, 10);
   $('birthdate').max = $('testDate').max = new Date().toISOString().slice(0, 10);
-  let rows = [], previewURL = null, editingIndex = -1, publishedRecords = [], activeDraftId = null, activeDocument = null;
+  let employees = [];let rows = [], previewURL = null, editingIndex = -1, publishedRecords = [], activeDraftId = null, activeDocument = null;
   const donorKey = r => [String(r.cdl_number||r.state_id_number||r.identity_number||'').trim().toUpperCase(),String(r.test_date||'')].join('|');
   const sameDonor = (a,b) => donorKey(a) === donorKey(b);
   const setEditor = (r,index) => {
-    editingIndex=index;
+    editingIndex=index;$('employeeSelect').value=r.employee_id||'';
     for(const [field,key] of [['firstName','first_name'],['middleInitial','middle_initial'],['lastName','last_name'],['birthdate','birthdate'],['cdlNumber','cdl_number'],['stateIdNumber','state_id_number'],['testDate','test_date'],['mroResult','result']]) $(field).value=r[key]||'';
     $('add').textContent='Update Donor';
     feedback('Editing donor details. Click Update Donor to save changes in the list.');
@@ -128,7 +128,7 @@
       first_name: $('firstName').value.trim(),middle_initial: $('middleInitial').value.trim(),
       last_name: $('lastName').value.trim(),birthdate: $('birthdate').value,
       cdl_number: $('cdlNumber').value.trim(),state_id_number: $('stateIdNumber').value.trim(),
-      test_date: $('testDate').value,result: $('mroResult').value || null
+      test_date: $('testDate').value,result: $('mroResult').value || null,employee_id:$('employeeSelect').value||null
     };
     if (!r.first_name || !r.last_name || !validDob(r.birthdate, r.test_date) || (!r.cdl_number && !r.state_id_number)) {
       feedback('Complete first and last names, birthdate, test date, and CDL or State ID.', 'error');return;
@@ -282,13 +282,16 @@
       await loadPublished();await loadDrafts();feedback(`${result.count||0} donor results published to the portal. MRO PDF saved: ${file.filename}.`, 'success');await offerNotification(result.ids,$('employer').value);
     }catch(e){feedback(e.message,'error')}finally{button.disabled=false}
   };
+async function loadEmployees(){employees=[];const pick=$('employeeSelect');pick.replaceChildren(new Option('Choose existing employee',''));if(!$('employer').value)return;const data=await api({action:'employees',employer_id:$('employer').value});employees=data.employees||[];for(const e of employees)pick.add(new Option([e.first_name,e.middle_name,e.last_name].filter(Boolean).join(' '),e.id));}
+$('employeeSelect').onchange=()=>{const e=employees.find(x=>x.id===$('employeeSelect').value);if(!e)return;$('firstName').value=e.first_name||'';$('middleInitial').value=(e.middle_name||'').slice(0,1);$('lastName').value=e.last_name||'';$('birthdate').value=e.date_of_birth||'';};
+$('viewEmployee').onclick=async()=>{try{const id=$('employeeSelect').value;if(!id)throw Error('Choose employee');const d=await api({action:'employee_profile',employer_id:$('employer').value,employee_id:id});const panel=$('employeeHistory');panel.hidden=false;panel.replaceChildren();const h=document.createElement('h2');h.textContent=[d.employee.first_name,d.employee.last_name].join(' ')+' — Test History';panel.append(h);const info=document.createElement('p');info.textContent='Employee # '+(d.employee.employee_number||'—')+' · '+(d.employee.employment_status||'');panel.append(info);for(const t of d.tests||[]){const line=document.createElement('p');line.textContent=[t.test_type,t.test_date,t.result||'Pending',t.workflow_stage||''].join(' · ');panel.append(line)}if(!d.tests?.length){const empty=document.createElement('p');empty.textContent='No linked tests yet';panel.append(empty)}}catch(e){feedback(e.message,'error')}};
   render();
   try {
     const response=await api({action:'employers'});
     for(const employer of response.employers||[]){const opt=new Option(employer.legal_name+' — '+(employer.primary_contact_email||'No contact email'),employer.id);$('employer').add(opt)}
     const selected=parameters.get('employer_id');
     if(selected&&[...$('employer').options].some(x=>x.value===selected)){$('employer').value=selected;$('employer').disabled=true}
-    if($('employer').value)await Promise.all([loadPublished(),loadDrafts()]);
+    if($('employer').value)await Promise.all([loadPublished(),loadDrafts(),loadEmployees()]);
     feedback('Ready. View published documents and notification status below.');
   }catch(e){feedback(e.message,'error')}
 })().catch(error=>{const mount=document.getElementById('dotPageMount');if(mount)mount.textContent=error.message||String(error)});
