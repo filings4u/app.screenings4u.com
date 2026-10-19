@@ -261,7 +261,7 @@
       row.append(info,edit,send);container.append(row)
     }
   }
-  $('employer').onchange=()=>Promise.all([loadPublished(),loadDrafts()]).catch(e=>feedback(e.message,'error'));
+  $('employer').onchange=()=>{rows=[];employees=[];activeDraftId=null;editingIndex=-1;render();$('employeeHistory').hidden=true;Promise.all([loadPublished(),loadDrafts(),loadEmployees()]).catch(e=>feedback(e.message,'error'))};
   $('saveDraft').onclick=async()=>{const button=$('saveDraft');button.disabled=true;
     try{if(!$('employer').value||!rows.length)throw Error('Choose employer and add donors');
       const file=$('pdf').files[0]?await upload():(activeDocument||{document_path:'',filename:''});const result=await api({action:'save_draft',employer_id:$('employer').value,rows,draft_id:activeDraftId||undefined,workflow_stage:$('workflowStage').value,...file});
