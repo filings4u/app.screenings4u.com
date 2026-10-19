@@ -229,6 +229,16 @@
     }
     if(metadata.metadata_error) feedback('Results loaded. Document/status service unavailable: '+metadata.metadata_error,'error');
   }
+  async function offerNotification(ids,employer_id){
+    if(!ids?.length){feedback('Results published. No result IDs returned for email notification.','error');return}
+    if(!await window.DOTDialog.confirm('Results are saved in the customer portal. Send the employer an email notification now?',{title:'Send customer notification',confirmText:'Send Email'})){
+      feedback('Results published to portal. Email notification was not sent.','success');return;
+    }
+    try{const response=await api({action:'send_notification',employer_id,ids});
+      if(!response.ok)throw Error('Email request not confirmed');
+      feedback('Results published. Email accepted by provider; delivery not confirmed.','success');
+    }catch(e){feedback('Results published to portal, but email was not sent: '+e.message,'error')}
+  }
   async function loadDrafts(){
     const employer_id=$('employer').value,container=$('draftList');container.replaceChildren();
     if(!employer_id)return;
@@ -246,7 +256,7 @@
         const result=await api({action:'push_draft',employer_id,draft_id:draft.id});
         if(!result.ok)throw Error('Publish was not confirmed');
         activeDraftId=null;activeDocument=null;rows=[];render();await loadPublished();await loadDrafts();
-        feedback((result.count||0)+' donor(s) published. '+emailStatus(result.notification)+'.','success');
+        feedback((result.count||0)+' donor(s) published to customer portal.','success');await offerNotification(result.ids,employer_id);
       }catch(e){feedback(e.message,'error')}finally{send.disabled=false}};
       row.append(info,edit,send);container.append(row)
     }
@@ -269,7 +279,7 @@
       const result=await api({action:'publish',employer_id:$('employer').value,rows,workflow_stage:$('workflowStage').value,...file});
       if(!result.ok)throw Error('Publishing was not confirmed');
       rows=[];activeDraftId=null;activeDocument=null;render();$('pdf').value='';$('selectedDocument').textContent='No PDF selected.';
-      await loadPublished();await loadDrafts();feedback(`${result.count||0} donor results published. MRO PDF saved: ${file.filename}. ${emailStatus(result.notification)}.`, 'success');
+      await loadPublished();await loadDrafts();feedback(`${result.count||0} donor results published to the portal. MRO PDF saved: ${file.filename}.`, 'success');await offerNotification(result.ids,$('employer').value);
     }catch(e){feedback(e.message,'error')}finally{button.disabled=false}
   };
   render();
