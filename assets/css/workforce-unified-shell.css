@@ -26,10 +26,11 @@
 .wf-chevron{font-size:18px;color:#647a96;margin-left:4px}
 .wf-account-menu{position:absolute;right:0;top:calc(100% + 9px);z-index:500;width:265px;padding:8px;background:#fff;border:1px solid var(--wf-border);border-radius:13px;box-shadow:0 18px 45px #16355c35}
 .wf-account-menu[hidden]{display:none!important}
+.wf-account-trigger:focus-visible,.wf-account-menu a:focus-visible,.wf-account-menu button:focus-visible,#dotBusinessSelect:focus-visible{outline:3px solid #f56a0a!important;outline-offset:2px}
 .wf-account-heading{display:flex;flex-direction:column;gap:3px;padding:12px;border-bottom:1px solid var(--wf-border);margin-bottom:5px;overflow-wrap:anywhere}
 .wf-account-heading strong{font-size:13px;color:var(--wf-ink)}
 .wf-account-heading span{color:var(--wf-muted);font-size:12px}
-.wf-account-menu a,.wf-account-menu button{display:block;width:100%;text-align:left;padding:11px 12px;color:var(--wf-ink);background:transparent;border:0;border-radius:8px;text-decoration:none;font:600 13px/1.4 inherit;cursor:pointer}
+.wf-account-menu a,.wf-account-menu button{display:block;width:100%;text-align:left;padding:11px 12px;color:var(--wf-ink);background:transparent;border:0;border-radius:8px;text-decoration:none;font-family:inherit;font-size:13px;font-weight:600;line-height:1.4;cursor:pointer}
 .wf-account-menu a:hover,.wf-account-menu button:hover{background:#edf3fc}
 .wf-account-separator{height:1px;background:var(--wf-border);margin:7px 2px}
 #wfSignOut{color:#a32222;font-weight:750}
