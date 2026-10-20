@@ -3,7 +3,7 @@
   "use strict";
   const config=Object.freeze({
     portalName:"Workforce | screenings4u Management Portal",
-    portalHost:"workforce.screenings4u.com",
+    portalHost:"app.screenings4u.com",
     managedWebsite:"https://dot.screenings4u.com",
     supabaseUrl:"https://elpbnytpciqnbexiaebp.supabase.co",
     supabaseAnonKey:"sb_publishable_xVI6Mjkk1bNVMGHZCPuK6w_8FSHKdkC",
