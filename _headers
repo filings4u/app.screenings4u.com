@@ -1,5 +1,20 @@
-/*
-  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
-
 /assets/js/dot-shell.js
   Cache-Control: no-cache, must-revalidate
+
+/dot-*
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+
+/workforce-*
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+
+/auth-handoff.html
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+
+/global-*
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+
+/subscription-management.html
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+
+/results-*
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
