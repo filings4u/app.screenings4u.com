@@ -1,8 +1,8 @@
-/* Workforce | screenings4u Management Portal — standalone configuration */
+/* screenings4u DOT Management Portal — standalone configuration */
 (()=>{
   "use strict";
   const config=Object.freeze({
-    portalName:"Workforce | screenings4u Management Portal",
+    portalName:"screenings4u DOT Management Portal",
     portalHost:"app.screenings4u.com",
     managedWebsite:"https://dot.screenings4u.com",
     supabaseUrl:"https://elpbnytpciqnbexiaebp.supabase.co",
