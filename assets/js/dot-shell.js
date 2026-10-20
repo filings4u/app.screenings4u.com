@@ -8,7 +8,7 @@ const business=page.startsWith('workforce-')||(sharedPages.has(page)&&requestedW
 const workspaceHome=business==='nondot'?'workforce-dashboard.html':'dot-dashboard.html';
 const workspaceHref=href=>sharedPages.has(href)?href+(href.includes('?')?'&':'?')+'workspace='+(business==='nondot'?'workforce':'dot'):href;
 const groups=[
- ['Shared Operations',[['global-customer-360.html','Customer 360','◎'],['global-work-orders.html','Work Orders','▤'],['results-management.html','Results Management','✓'],['dot-invoices.html','Invoice Management','▧'],['subscription-management.html','Subscription Management','▧'],['dot-recent-subscriptions.html','DOT Subscription History','◷'],['workforce-subscriptions.html','NON-DOT Subscription History','◷'],['task-manager.html','Task Manager','✓'],['task-automations.html','Task Automations','◷']]],
+ ['Shared Operations',[['global-customer-360.html','Customer 360','◎'],['global-work-orders.html','Work Orders','▤'],['results-management.html','Results Management','✓'],['dot-invoices.html','Invoice Management','▧'],['subscription-management.html','Subscription Management','▧'],['dot-settings.html','Settings Management','⚙'],['dot-notifications.html','Notification Management','●'],['dot-integrations.html','Integration Management','⌘'],['dot-support.html','Support Management','?'],['dot-recent-subscriptions.html','Subscription History','◷'],['task-manager.html','Task Manager','✓'],['task-automations.html','Task Automations','◷']]],
  ['NON-DOT Workspace',[['workforce-dashboard.html','Management Home','⌂'],['workforce-portal-control.html','Portal Network Management','◎']]],
  ['Management Workspace',[['dot-dashboard.html','Management Home','⌂'],['dot-portal-control.html','DOT Portal Management','◎'],['ic-pricing.html','IC Pricing & Rates','▤']]],
  ['DOT Accounts & People',[['dot-ctpas.html','C/TPA Management','◈'],['dot-employers.html','Employer Management','▣'],['dot-owner-operators.html','Owner-Operator Management','◇'],['dot-drivers.html','Driver Management','◉'],['dot-users-access.html','DOT User Access','♙']]],
@@ -17,10 +17,10 @@ const groups=[
  ['NON-DOT Accounts & People',[['workforce-ctpas.html','C/TPA Management','◈'],['workforce-employers.html','Employer Management','▣'],['workforce-people.html','Employee Management','◉'],['workforce-access.html','Organization Access','♙'],['workforce-user-access.html','User Access','♙']]],
  ['NON-DOT Programs & Testing',[['workforce-programs.html','Program Management','≡'],['workforce-pools.html','Pool Management','⊙'],['workforce-testing.html','Testing Order Management','✚'],['workforce-compliance.html','Compliance Management','⚑']]],
  ['NON-DOT Operations & Services',[['workforce-selections.html','Random Selection Management','⌁'],['workforce-documents.html','Document Management','▱'],['workforce-services.html','Service Catalog Management','▤'],['workforce-reports.html','Report Management','☷']]],
- ['NON-DOT Administration',[['workforce-website.html','Website Management','◫'],['workforce-notifications.html','Notification Management','●'],['workforce-integrations.html','Integration Management','⌘'],['workforce-support.html','Support Management','?'],['workforce-staff.html','Staff Management','♙'],['workforce-settings.html','Settings Management','⚙']]],
+ ['NON-DOT Administration',[['workforce-website.html','Website Management','◫'],['workforce-staff.html','Staff Management','♙'],]],
  ['DOT Catalog & Orders',[['dot-catalog.html','DOT Plans & Pricing','$'],['dot-ctpa-pricing.html','DOT C/TPA Pricing','¢'],['dot-orders.html','Service Order Management','▤'],['dot-recent-orders.html','Recent Order Management','◷']]],
  ['Documents & Services',[['dot-documents.html','Document Management','▱'],['dot-training.html','Training Management','△'],['dot-distribution.html','Distribution Management','⇧'],['dot-website.html','DOT Website Management','◫']]],
- ['System Administration',[['dot-notifications.html','Notification Management','●'],['dot-demo-management.html','Demo Management','◫'],['dot-support.html','Support Management','?'],['dot-integrations.html','Integration Management','⌘'],['dot-settings.html','Settings Management','⚙'],['dot-audit.html','Audit History','☷']]]
+ ['System Administration',[['dot-demo-management.html','Demo Management','◫'],['dot-audit.html','Audit History','☷']]]
 ];
 const prefetchActions={
  'dot-dashboard.html':'overview','dot-ctpas.html':'ctpas','dot-employers.html':'employers','dot-owner-operators.html':'owner_operators','dot-drivers.html':'drivers','dot-users-access.html':'portal_access','dot-programs.html':'programs','dot-pools.html':'pools','dot-random-selections.html':'selections','dot-testing-orders.html':'testing','dot-results.html':'results','dot-compliance.html':'compliance','dot-clearinghouse.html':'clearinghouse','dot-return-to-duty.html':'rtd','dot-follow-up-testing.html':'follow_up_testing','dot-catalog.html':'services','dot-orders.html':'orders','dot-recent-orders.html':'orders','dot-recent-subscriptions.html':'billing','dot-training.html':'training','dot-integrations.html':'integrations','dot-settings.html':'reports','dot-audit.html':'audit_history'
@@ -32,16 +32,16 @@ function nav(){
  return allowed.map(([label,links])=>{
   const visible=links.filter(([href])=>{
    if(label==='Shared Operations'){
-    if(href==='dot-recent-subscriptions.html')return business==='dot';
-    if(href==='workforce-subscriptions.html')return business==='nondot';
+    if(href==='dot-recent-subscriptions.html')return true;
+    
     return true;
    }
    return business==='nondot'?href.startsWith('workforce-'):!href.startsWith('workforce-');
   });
   if(!visible.length)return '';
   const items=visible.map(([href,name,icon])=>{
-   const url=workspaceHref(href);
-   return `<a href="${url}" class="${page===href?'active':''}"><i class="dot-nav-icon">${icon}</i><b>${esc(name)}</b></a>`;
+   const sharedTargets={'dot-settings.html':'workforce-settings.html','dot-notifications.html':'workforce-notifications.html','dot-integrations.html':'workforce-integrations.html','dot-support.html':'workforce-support.html','dot-recent-subscriptions.html':'workforce-subscriptions.html'};const routed=business==='nondot'&&sharedTargets[href]?sharedTargets[href]:href;const url=workspaceHref(routed);
+   return `<a href="${url}" class="${page===routed?'active':''}"><i class="dot-nav-icon">${icon}</i><b>${esc(name)}</b></a>`;
   }).join('');
   return `<div class="dot-nav-group"><span>${esc(label)}</span>${items}</div>`;
  }).join('');
