@@ -225,7 +225,10 @@
         const update=await api({action:'update_published',employer_id,id:r.id,changes:{result:result.value||null,workflow_stage:stage.value}});
         if(!update.ok)throw Error('Save not confirmed');feedback(`Changes saved for ${name}.`, 'success');
       }catch(e){feedback(e.message,'error')}finally{save.disabled=false}};
-      cell(tr,'').replaceChildren(save);body.append(tr);
+      const actions=cell(tr,'');const buttons=document.createElement('div');buttons.style.cssText='display:flex;gap:8px;flex-wrap:wrap;align-items:center';
+      const remove=document.createElement('button');remove.type='button';remove.textContent='Delete';remove.className='re-delete-result';remove.style.cssText='background:#b42318;border:1px solid #b42318;border-radius:7px;color:#fff;font-weight:700;padding:8px 12px;cursor:pointer';
+      remove.onclick=async()=>{const confirmed=await window.DOTDialog.confirm('Permanently delete the published result for '+name+'? This cannot be undone.',{title:'Delete Published Result',confirmText:'Delete Result',cancelText:'Cancel',danger:true});if(!confirmed)return;remove.disabled=true;save.disabled=true;try{const deleted=await api({action:'delete_published',employer_id,id:r.id,confirm_delete:true});if(!deleted.ok)throw Error('Deletion was not confirmed');await loadPublished();feedback('Deleted published result for '+name+'.','success')}catch(e){feedback(e.message||String(e),'error');remove.disabled=false;save.disabled=false}};
+      buttons.append(save,remove);actions.append(buttons);body.append(tr);
     }
     if(metadata.metadata_error) feedback('Results loaded. Document/status service unavailable: '+metadata.metadata_error,'error');
   }
