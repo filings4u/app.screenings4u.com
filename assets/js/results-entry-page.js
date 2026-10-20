@@ -233,14 +233,14 @@
     if(metadata.metadata_error) feedback('Results loaded. Document/status service unavailable: '+metadata.metadata_error,'error');
   }
   async function offerNotification(ids,employer_id){
-    if(!ids?.length){feedback('Results published. No result IDs returned for email notification.','error');return}
+    if(!ids?.length){feedback('Results published. No result IDs returned for email notification.','error');return false}
     if(!await window.DOTDialog.confirm('Results are saved in the customer portal. Send the employer an email notification now?',{title:'Send customer notification',confirmText:'Send Email'})){
-      feedback('Results published to portal. Email notification was not sent.','success');return;
+      feedback('Results published to portal. Email notification was not sent.','success');return false;
     }
     try{const response=await api({action:'send_notification',employer_id,ids});
       if(!response.ok)throw Error('Email request not confirmed');
-      feedback('Results published. Email accepted by provider; delivery not confirmed.','success');
-    }catch(e){feedback('Results published to portal, but email was not sent: '+e.message,'error')}
+      feedback('Results published. Email accepted by provider; delivery not confirmed.','success');return true;
+    }catch(e){feedback('Results published to portal, but email was not sent: '+e.message,'error');return false}
   }
   async function loadDrafts(){
     const employer_id=$('employer').value,container=$('draftList');container.replaceChildren();
@@ -258,10 +258,14 @@
         await loadPublished();if((draft.records||[]).some(r=>publishedRecords.some(p=>sameDonor(r,p))))throw Error('One or more donor test results are already published. No duplicate results or emails were created.');
         const result=await api({action:'push_draft',employer_id,draft_id:draft.id});
         if(!result.ok)throw Error('Publish was not confirmed');
-        activeDraftId=null;activeDocument=null;rows=[];render();await loadPublished();await loadDrafts();
-        feedback((result.count||0)+' donor(s) published to customer portal.','success');await offerNotification(result.ids,employer_id);
+        activeDraftId=null;activeDocument=null;rows=[];render();await loadPublished();
+        feedback((result.count||0)+' donor(s) published to customer portal.','success');const delivered=await offerNotification(result.ids,employer_id);
+        if(delivered){const cleared=await api({action:'delete_draft',employer_id,draft_id:draft.id});if(!cleared.ok)throw Error('Notification sent, but draft cleanup failed.');feedback('Notification accepted; completed draft removed.','success')}
+        else feedback('Results published. Draft retained until notification is sent or you delete it.');
+        await loadDrafts();
       }catch(e){feedback(e.message,'error')}finally{send.disabled=false}};
-      row.append(info,edit,send);container.append(row)
+      const remove=document.createElement('button');remove.type='button';remove.textContent='Delete Draft';remove.className='re-secondary';remove.onclick=async()=>{if(!await window.DOTDialog.confirm('Permanently delete this saved draft? This cannot be undone.',{title:'Delete Draft',confirmText:'Delete Draft',cancelText:'Cancel',danger:true}))return;remove.disabled=true;try{const result=await api({action:'delete_draft',employer_id,draft_id:draft.id});if(!result.ok)throw Error('Draft deletion was not confirmed');if(activeDraftId===draft.id){activeDraftId=null;activeDocument=null;rows=[];render()}await loadDrafts();feedback('Draft deleted. No notification was sent.','success')}catch(e){feedback(e.message,'error');remove.disabled=false}};
+      row.append(info,edit,send,remove);container.append(row)
     }
   }
   $('employer').onchange=()=>{rows=[];employees=[];activeDraftId=null;editingIndex=-1;render();$('employeeHistory').hidden=true;Promise.all([loadPublished(),loadDrafts(),loadEmployees()]).catch(e=>feedback(e.message,'error'))};
