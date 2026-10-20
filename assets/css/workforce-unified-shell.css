@@ -4,7 +4,7 @@
 .dot-sidebar{background:#fff;min-width:0;border-right:1px solid var(--wf-border)}
 .dot-brand{padding:17px 18px!important;background:#17365f!important;border-bottom:0!important}
 .dot-brand a{display:flex!important;align-items:center!important;justify-content:center!important;min-height:64px}
-.dot-brand-logo{width:225px!important;max-width:100%!important;max-height:72px!important;object-fit:contain!important}
+.dot-brand-logo{display:block!important;width:225px!important;max-width:100%!important;max-height:72px!important;object-fit:contain!important;filter:brightness(0) invert(1)!important;opacity:1!important}
 .dot-business-switcher{padding:16px 18px!important;background:#f8fafc;border-bottom:1px solid var(--wf-border)!important}
 .dot-business-switcher label{color:#486078!important;letter-spacing:.055em}
 #dotBusinessSelect{background:#fff!important;min-height:44px!important;border:1px solid #bfcee1!important;font-size:14px!important;color:var(--wf-ink)!important}
