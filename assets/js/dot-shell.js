@@ -8,7 +8,7 @@ const activeWorkspace=requestedWorkspace==='workforce'||requestedWorkspace==='no
 const business=activeWorkspace;
 const workspaceHome='index.html?workspace='+ (business==='nondot'?'workforce':'dot');
 const routes=[
- ['Overview','dot-dashboard.html','workforce-dashboard.html','⌂'],
+ ['Overview','index.html','index.html','⌂'],
  ['Customer 360','global-customer-360.html','global-customer-360.html','◎'],
  ['C/TPA Management','dot-ctpas.html','workforce-ctpas.html','◈'],
  ['Employer Management','dot-employers.html','workforce-employers.html','▣'],
