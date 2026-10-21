@@ -1,0 +1,138 @@
+/* Workforce NON-DOT — mobile/responsive hardening */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;overflow-x:hidden}
+body{max-width:100%;overflow-x:hidden}
+img,svg,video,canvas{max-width:100%;height:auto}
+input,select,textarea,button{max-width:100%}
+.nd-main,.nd-page,.nd-card,.nd-card-body,.nd-grid,.nd-table-wrap{min-width:0;max-width:100%}
+.nd-table-wrap{-webkit-overflow-scrolling:touch;overflow-x:auto}
+.nd-table{max-width:100%}
+.nd-overlay{position:fixed;inset:0;z-index:55;background:rgba(13,34,58,.48);display:none}
+
+@media(max-width:900px){
+  :root{--nd-topbar:58px}
+  .nd-sidebar{height:100dvh;max-height:100dvh;overflow:hidden}
+  .nd-nav{overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding-bottom:max(22px,env(safe-area-inset-bottom))}
+  .nd-topbar{min-height:58px;height:auto;padding:8px 12px;gap:9px}
+  .nd-topbar-left{gap:8px;flex:1;min-width:0}
+  .nd-topbar-title{min-width:0}
+  .nd-topbar-title strong,.nd-topbar-title small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:48vw}
+  .nd-topbar-actions{gap:6px;flex:0 0 auto}
+  .nd-icon-button,.nd-user-button,.nd-menu-button{min-height:40px;height:40px}
+  .nd-page{width:100%;padding:20px 14px calc(40px + env(safe-area-inset-bottom))}
+  .nd-page-head{gap:14px;margin-bottom:16px}
+  .nd-page-head h1{font-size:26px;overflow-wrap:anywhere}
+  .nd-page-head p{font-size:13px;line-height:1.55}
+  .nd-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .nd-actions .nd-btn{width:100%;min-width:0;white-space:normal;text-align:center}
+  .nd-banner{align-items:flex-start;flex-direction:column}
+  .nd-card-head{align-items:flex-start;flex-direction:column;padding:14px}
+  .nd-card-head>.nd-btn,.nd-card-head>.nd-actions{width:100%}
+  .nd-card-body{padding:14px}
+  .nd-module-grid{grid-template-columns:1fr}
+  .nd-field-grid{grid-template-columns:1fr}
+  .nd-field input,.nd-field select,.nd-field textarea{font-size:16px}
+  .nd-form-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .nd-form-actions .nd-btn{width:100%}
+  .nd-inline-actions{flex-wrap:wrap}
+  .nd-table th,.nd-table td{padding:10px 11px}
+  .nd-table td{font-size:12px}
+  .nd-customer-savebar{left:0;right:0;bottom:6px}
+  .domain-search{width:100%}
+}
+
+@media(max-width:640px){
+  .nd-topbar-title strong{font-size:12px}.nd-topbar-title small{font-size:9px}
+  .nd-topbar-title strong,.nd-topbar-title small{max-width:42vw}
+  .nd-user-button{padding:5px}.nd-user-copy{display:none}
+  .nd-page{padding-left:12px;padding-right:12px}
+  .nd-page-head h1{font-size:24px}
+  .nd-actions,.nd-form-actions{grid-template-columns:1fr}
+  .nd-actions .nd-btn,.nd-form-actions .nd-btn{min-height:42px}
+  .nd-metric{padding:14px}.nd-metric strong{font-size:22px}
+  .nd-card{border-radius:10px}
+  .nd-card-head,.nd-card-body{padding:13px}
+  .nd-detail-grid,.nd-portal-access-grid,.nd-order-grid,.nd-website-sections,.nd-portal-card-grid{grid-template-columns:1fr!important}
+  .nd-record-link{align-items:flex-start;flex-direction:column}
+  .nd-support-message>div{align-items:flex-start;flex-direction:column;gap:3px}
+  .nd-support-files .nd-btn{width:100%}
+  .nd-site-tabs{padding:0 6px;scrollbar-width:none}.nd-site-tabs::-webkit-scrollbar{display:none}
+  .nd-site-tabs button{padding:13px 11px 10px}
+  .nd-login-shell{min-height:100dvh}
+  .nd-login-brand{min-height:190px;padding:26px 22px}
+  .nd-login-brand h1{font-size:32px;line-height:1.03}
+  .nd-login-logo img{max-width:240px}
+  .nd-login-panel{padding:22px 12px 30px}
+  .nd-login-card{width:100%;max-width:none}
+  .nd-login-form .nd-field>div[style*="display:flex"]{align-items:stretch}
+  .nd-login-form .nd-field>div[style*="display:flex"] .nd-btn{flex:0 0 auto}
+}
+
+@media(max-width:420px){
+  .nd-page{padding-left:10px;padding-right:10px}
+  .nd-menu-button,.nd-icon-button{width:38px}
+  .nd-topbar{padding-left:9px;padding-right:9px}
+  .nd-topbar-title small{display:none}
+  .nd-topbar-title strong{max-width:45vw}
+  .nd-page-head h1{font-size:22px}
+  .nd-btn{padding-left:10px;padding-right:10px}
+}
+
+/* Proposal editor */
+@media(max-width:900px){
+  .nd-proposal-editor-main{min-width:0}
+  .nd-proposal-editor-main .nd-field input,.nd-proposal-editor-main .nd-field select,.nd-proposal-editor-main .nd-field textarea{font-size:16px}
+  .nd-custom-note-head{align-items:flex-start;flex-direction:column}
+  .nd-custom-note-actions{width:100%;display:grid;grid-template-columns:1fr 1fr}
+  .nd-custom-note-actions .nd-btn{width:100%}
+  .nd-proposal-price-total{width:100%!important}
+}
+@media(max-width:520px){
+  .nd-custom-note-row{padding:14px 13px}
+  .nd-custom-note-actions{grid-template-columns:1fr}
+  .nd-proposal-price-total{grid-template-columns:1fr 116px!important;gap:10px!important}
+  .nd-proposal-price-total input{width:116px!important;max-width:116px!important}
+}
+
+/* Public proposal */
+@media(max-width:780px){
+  .proposal-shell{overflow-x:hidden}
+  .proposal-top-inner{width:calc(100% - 24px)!important;padding:18px 0!important;gap:14px!important}
+  .proposal-top img{max-width:min(270px,78vw)!important;max-height:64px!important}
+  .proposal-top-actions{width:100%;display:grid;grid-template-columns:1fr 1fr}
+  .proposal-top-actions .proposal-btn{width:100%;min-width:0;padding:0 10px;text-align:center}
+  .proposal-wrap{width:calc(100% - 20px)!important;margin:18px auto 34px!important}
+  .proposal-paper,.proposal-accept{border-radius:12px!important}
+  .proposal-hero{padding:26px 18px 22px!important}
+  .proposal-hero h1{font-size:clamp(29px,9vw,40px)!important;overflow-wrap:anywhere}
+  .proposal-hero>p{font-size:14px!important;line-height:1.6!important}
+  .proposal-section,.proposal-company{padding:24px 18px!important}
+  .proposal-section h2{font-size:21px!important}
+  .proposal-section p{font-size:14px!important;line-height:1.7!important}
+  .proposal-custom-note{margin:0!important;padding:24px 18px!important;border-radius:0!important;background:#fff!important;border-left:0!important}
+  .proposal-meta{grid-template-columns:1fr!important}
+  .proposal-meta-card{min-height:0!important}
+  .proposal-pricing{font-size:13px}
+  .proposal-totals{width:100%;grid-template-columns:minmax(0,1fr) auto;padding:14px}
+  .proposal-form{padding:20px 16px!important}
+  .proposal-field input,.proposal-field select,.proposal-field textarea{font-size:16px}
+  .proposal-form-actions{display:grid;grid-template-columns:1fr}
+  .proposal-form-actions .proposal-btn{width:100%}
+  .proposal-company{grid-template-columns:1fr!important;align-items:start!important}
+  .proposal-success{padding:26px 16px!important}
+  .proposal-success h1{font-size:27px!important;line-height:1.15!important}
+  .proposal-success p{font-size:15px!important;line-height:1.55!important}
+}
+@media(max-width:440px){
+  .proposal-top-actions{grid-template-columns:1fr}
+  .proposal-hero h1{font-size:29px!important}
+  .proposal-pricing th,.proposal-pricing td{padding:11px 9px}
+  .proposal-totals{grid-template-columns:1fr auto;gap:7px 10px}
+  .proposal-footer{width:calc(100% - 24px)!important}
+}
+
+/* Safer text wrapping everywhere */
+.nd-card,.nd-banner,.nd-detail-item,.nd-module,.nd-record-link,.nd-portal-card,.proposal-paper,.proposal-section,.proposal-custom-note{overflow-wrap:anywhere;word-break:normal}
+
+/* Mobile navigation and content safety */
+@media(max-width:900px){main,.content,.main-content,.container{max-width:100%;min-width:0}.table-wrap,.table-responsive{overflow-x:auto;-webkit-overflow-scrolling:touch}input,select,textarea{max-width:100%}}
+@media(max-width:640px){main,.main-content,.content{padding-left:14px;padding-right:14px}.grid,.card-grid,.form-grid{grid-template-columns:1fr!important}.toolbar,.topbar-actions,.filters,.actions{flex-wrap:wrap;gap:8px}.card,.panel{min-width:0;max-width:100%}input,select,button,textarea{font-size:16px}}
