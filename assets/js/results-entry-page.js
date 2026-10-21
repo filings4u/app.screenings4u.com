@@ -64,7 +64,7 @@
       <label class="re-upload">Import Spreadsheet<input id="sheet" type="file" accept=".xlsx,.xls,.csv"></label></div>
     <div class="re-table"><table><thead><tr><th>Donor</th><th>Birthdate</th><th>CDL / State ID</th><th>Test Date</th><th>Result</th><th>Actions</th></tr></thead><tbody id="rows"></tbody></table></div>
     <div class="re-published"><h2>Saved Drafts — Review Before Sending</h2><p>Drafts are not published or emailed until you explicitly send them.</p><div id="draftList" role="region" aria-label="Saved donor drafts"></div><h2>Published Donor Results</h2><p id="publishedCount">Loading…</p>
-      <div class="re-table"><table><thead><tr><th>Donor</th><th>Birthdate</th><th>CDL / State ID</th><th>Test Date</th><th>Result</th><th>Workflow</th><th>MRO Document</th><th>Email Status</th><th>Actions</th></tr></thead>
+      <div class="re-table"><table><thead><tr><th>Donor</th><th>Birthdate</th><th>CDL / State ID</th><th>Test Date</th><th>Result</th><th>Workflow</th><th>MRO Document</th><th>Actions</th></tr></thead>
       <tbody id="publishedRows"></tbody></table></div></div>
     <div class="re-bottom"><div class="re-submit"><button id="saveDraft" type="button" class="re-secondary">Save &amp; Exit</button>
       <button id="publish" type="button">Save &amp; Send Results</button></div></div></section></div>`;
@@ -207,8 +207,8 @@
       const result=select(['','Negative','Positive'],r.result,'Pending MRO');cell(tr,'').replaceChildren(result);
       const stage=select(['Ordered','Processing','At Lab','MRO Confirmation'],r.workflow_stage||'Ordered');cell(tr,'').replaceChildren(stage);
       const docCell=cell(tr,'');
-      if (m.has_document) {
-        const button=document.createElement('button');button.type='button';button.textContent='View MRO PDF';
+      if (m.has_document || r.document_path) {
+        const button=document.createElement('button');button.type='button';button.textContent='View';button.className='re-secondary';
         button.onclick=async()=>{
           // Open on the direct click to avoid popup blockers; never render confidential PDF into public HTML.
           const viewer=window.open('about:blank','_blank');button.disabled=true;
@@ -218,8 +218,7 @@
           finally{button.disabled=false}
         };
         docCell.replaceChildren(button,document.createTextNode(' '+(m.document_name||r.document_name||'')));
-      } else docCell.textContent=r.document_name ? `${r.document_name} (preview unavailable)` : 'No attached document';
-      cell(tr,emailStatus(m.notification_status));
+      } else docCell.textContent=r.document_name ? `${r.document_name} (document link unavailable)` : 'No attached document';
       const save=document.createElement('button');save.type='button';save.textContent='Save Changes';
       save.onclick=async()=>{save.disabled=true;try{
         const update=await api({action:'update_published',employer_id,id:r.id,changes:{result:result.value||null,workflow_stage:stage.value}});
