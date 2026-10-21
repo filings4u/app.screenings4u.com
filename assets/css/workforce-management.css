@@ -49,3 +49,6 @@
 .wf-access-message{min-height:0;color:#24467f;font-size:12px;font-weight:700}
 @media(max-width:950px){.wf-access-stats{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:700px){.wf-access-page{padding:20px 15px 45px!important}.wf-access-fields{grid-template-columns:1fr}.wf-access-stats{grid-template-columns:repeat(2,1fr)}.wf-access-directory-toolbar{flex-wrap:wrap}.wf-access-directory-toolbar input{max-width:none}}
+
+/* Employee management searchable company selector */
+.wf-record-toolbar .wf-company-filter{flex:1 1 260px;min-width:210px;max-width:360px}.wf-record-toolbar .wf-company-filter input{width:100%;height:46px;box-sizing:border-box;border:1px solid #cdd9e8;border-radius:8px;background:#fff;color:#17365f;padding:10px 14px;font:inherit}.wf-record-toolbar .wf-company-filter input:focus{outline:2px solid #f28a42;outline-offset:1px}@media(max-width:700px){.wf-record-toolbar .wf-company-filter{flex:1 1 100%;max-width:none}}
