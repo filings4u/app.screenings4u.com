@@ -68,9 +68,9 @@ window.DOTDialog=Object.freeze({
    const no=createButton(cancelText,false),yes=createButton(confirmText,true);
    const prior=document.activeElement;
    const close=value=>{document.removeEventListener('keydown',onKey,true);backdrop.remove();if(prior&&prior.isConnected&&prior.focus)prior.focus();resolve(value)};
-   const onKey=e=>{if(e.key==='Escape'){e.preventDefault();close(input?null:false)}if(e.key==='Tab'){const focusables=field?[field,no,yes]:[no,yes];const index=focusables.indexOf(document.activeElement);if(e.shiftKey&&index===0){e.preventDefault();yes.focus()}else if(!e.shiftKey&&index===focusables.length-1){e.preventDefault();focusables[0].focus()}}};
+   const onKey=e=>{if(e.key==='Escape'){e.preventDefault();close(input?null:false)}if(e.key==='Tab'){const focusables=field?(cancelText?[field,no,yes]:[field,yes]):(cancelText?[no,yes]:[yes]);const index=focusables.indexOf(document.activeElement);if(e.shiftKey&&index===0){e.preventDefault();yes.focus()}else if(!e.shiftKey&&index===focusables.length-1){e.preventDefault();focusables[0].focus()}}};
    no.onclick=()=>close(input?null:false);yes.onclick=()=>close(input?field.value:true);
-   if(cancelText)actions.append(no);actions.append(yes);panel.append(stripe,heading,copy);if(field)panel.append(field);panel.append(actions);backdrop.append(panel);document.body.append(backdrop);document.addEventListener('keydown',onKey,true);(field||no).focus();
+   if(cancelText)actions.append(no);actions.append(yes);panel.append(stripe,heading,copy);if(field)panel.append(field);panel.append(actions);backdrop.append(panel);document.body.append(backdrop);document.addEventListener('keydown',onKey,true);(field||(cancelText?no:yes)).focus();
   });
  },
  confirm(message,options={}){return this.open({message,...options})},
