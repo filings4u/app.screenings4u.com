@@ -9,7 +9,7 @@ const business=page.startsWith('workforce-')||(sharedPages.has(page)&&requestedW
 const workspaceHome=business==='nondot'?'workforce-dashboard.html':'dot-dashboard.html';
 const workspaceHref=href=>sharedPages.has(href)?href+(href.includes('?')?'&':'?')+'workspace='+(business==='nondot'?'workforce':'dot'):href;
 const groups=[
-['Overview',[['Dashboard','/dashboard/','⌂'],['Customer 360','global-customer-360.html','◎'],['IC Work Orders','ic-work-orders.html','▤'],['Task Manager','task-manager.html','✓'],['Task Automations','task-automations.html','◷']]],
+['Overview',[['Dashboard','/dashboard/','⌂'],['Customer 360','global-customer-360.html','◎'],['Task Manager','task-manager.html','✓'],['Task Automations','task-automations.html','◷']]],
 ['People & Programs',[['Employers','workforce-employers.html','▣'],['C/TPAs','workforce-ctpas.html','◈'],['People & Drivers','workforce-people.html','◉'],['Programs','workforce-programs.html','≡'],['Pools & Consortium','workforce-pools.html','⊙']]],
 ['Testing & Compliance',[['Random Selections','workforce-selections.html','⌁'],['Testing Orders','workforce-testing.html','✚'],['Results','results-management.html','✓'],['Compliance','workforce-compliance.html','⚑'],['Clearinghouse','dot-clearinghouse.html','⇄'],['Return-to-Duty / SAP','dot-return-to-duty.html','↺'],['Follow-Up Testing','dot-follow-up-testing.html','⟳'],['Regulatory Agencies','dot-agencies.html','✦'],['Owner-Operators','dot-owner-operators.html','◇']]],
 ['Independent Contractors',[['IC Directory','ic-contractors.html','♙'],['IC Work Orders','ic-work-orders.html','▤'],['IC Pricing & Rates','ic-pricing.html','$']]],
