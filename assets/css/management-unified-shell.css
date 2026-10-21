@@ -87,3 +87,13 @@ html:has(#managementApp) body.dot-modal-open{overflow:hidden!important}
 #managementApp .wf-module-content{height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important}
 #managementApp .wf-side{overflow-y:auto!important;overflow-x:hidden!important}
 @media(max-width:900px){#managementApp .wf-main{min-height:100dvh!important}}
+
+/* Global management scrolling: fixed viewport shell; separate sidebar and content scroll. */
+html:has(#managementApp),html:has(#managementApp) body{height:100%!important;min-height:0!important;max-height:100%!important;overflow:hidden!important}
+html:has(#managementApp) body.dot-modal-open{overflow:hidden!important}
+#managementApp.wf-app{height:100dvh!important;min-height:0!important;max-height:100dvh!important;overflow:hidden!important;display:grid!important;grid-template-columns:276px minmax(0,1fr);align-items:stretch!important}
+#managementApp .wf-side{position:relative!important;top:auto!important;height:100dvh!important;max-height:100dvh!important;min-height:0!important;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior:contain!important}
+#managementApp .wf-main{height:100dvh!important;min-height:0!important;max-height:100dvh!important;overflow-y:auto!important;overflow-x:hidden!important;overscroll-behavior-y:contain!important;display:block!important}
+#managementApp .wf-module-content{height:auto!important;min-height:0!important;max-height:none!important;overflow:visible!important}
+body.s4u-sidebar-hidden #managementApp.wf-app{grid-template-columns:minmax(0,1fr)!important}
+@media(max-width:900px){#managementApp.wf-app{display:block!important}#managementApp .wf-side{position:fixed!important;top:0!important;left:0!important;z-index:1100!important;width:min(276px,86vw)!important}#managementApp .wf-main{height:100dvh!important;max-height:100dvh!important}}
