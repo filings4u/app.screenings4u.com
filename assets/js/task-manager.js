@@ -54,7 +54,7 @@ async function save(e){
  task.tags=String(fd.get("tags")||"").split(",").map(x=>x.trim()).filter(Boolean);
  task.notify_portal=f.elements.notify_portal.checked;task.notify_email=f.elements.notify_email.checked;
  const btn=$("#saveTask");btn.disabled=true;
- try{await call("save_task",{task});$("#taskModal").hidden=true;await load();message("Task saved.")}catch(e){alert(e.message)}finally{btn.disabled=false}
+ try{await call("save_task",{task});$("#taskModal").hidden=true;await load();message("Task saved.")}catch(e){void window.DOTDialog.alert(e.message,{title:'Unable to Save Task'})}finally{btn.disabled=false}
 }
 async function load(){try{message("Loading tasks...");state=await call("workspace");render();message("")}catch(e){message(e.message)}}
 async function initializeTaskManager(){
