@@ -6,3 +6,45 @@
 
 /* Consistent sidebar visibility, sizing and accessibility */
 .s4u-sidebar-toggle{flex:none;background:#fff;border:1px solid #d4dfea;border-radius:8px;color:#17365f;padding:9px 13px;font-size:12px;font-weight:700;cursor:pointer;margin-right:15px}.s4u-sidebar-toggle:hover,.s4u-sidebar-toggle:focus-visible{border-color:#e96000;outline-offset:2px}.s4u-sidebar-hidden .dot-app{grid-template-columns:minmax(0,1fr)}.s4u-sidebar-hidden .dot-sidebar{display:none!important}.s4u-sidebar-hidden .dot-main{min-width:0}.dot-topbar-title{min-width:0}.dot-nav a:focus-visible,.wf-nav-link:focus-visible{outline:2px solid #e96000;outline-offset:2px}@media(max-width:900px){.s4u-sidebar-hidden .dot-sidebar{display:block!important;transform:translateX(-100%)}.dot-menu-open:not(.s4u-sidebar-hidden) .dot-sidebar{transform:translateX(0)}.s4u-sidebar-toggle{margin-right:10px;padding:8px 10px}.dot-topbar-title{font-size:14px}.dot-account-toggle{max-width:145px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
+
+/* Layout corrections — explicitly override legacy portal layout, scoped to management shell */
+body:has(.dot-app){margin:0;background:#fff;overflow-x:hidden}
+body:has(.dot-app) .dot-app{width:100%;min-width:0;min-height:100dvh;align-items:stretch;grid-template-columns:276px minmax(0,1fr)}
+body:has(.dot-app) .dot-sidebar{box-sizing:border-box;width:276px;min-width:0;max-height:100dvh;height:100dvh;background:#fff;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;position:sticky;top:0;border-right:1px solid #e0e6ef}
+body:has(.dot-app) .dot-main{box-sizing:border-box;width:auto;min-width:0;max-width:none;margin:0;padding:0;background:#fff;overflow:visible}
+body:has(.dot-app) .dot-topbar{box-sizing:border-box;min-height:74px;height:auto;padding:14px clamp(16px,2vw,28px);gap:12px;display:flex;align-items:center;justify-content:space-between;position:relative;z-index:30}
+body:has(.dot-app) .dot-topbar-title{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body:has(.dot-app) .dot-topbar-actions{flex:0 0 auto;min-width:0;margin-left:auto}
+body:has(.dot-app) .dot-account-menu{z-index:1000}
+body:has(.dot-app) .dot-brand{min-height:97px;box-sizing:border-box}
+body:has(.dot-app) .dot-nav{display:block;overflow:visible;height:auto;padding:0 0 24px}
+body:has(.dot-app) #dotPageMount{box-sizing:border-box;width:100%;max-width:1450px;min-width:0;margin-inline:auto;padding:clamp(18px,2vw,34px) clamp(16px,2vw,30px) 76px;overflow:visible}
+body:has(.dot-app) #dotPageMount>*{max-width:100%;min-width:0;box-sizing:border-box}
+body:has(.dot-app) #dotPageMount :is(.dot-page,.dot-content,.dot-page-content,.page-content){min-width:0;max-width:100%}
+body:has(.dot-app) :is(.dot-table-wrap,.table-wrap,.re-table,.table-responsive){max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+body:has(.dot-app) :is(input,textarea,select){max-width:100%;box-sizing:border-box}
+body.s4u-sidebar-hidden:has(.dot-app) .dot-app{grid-template-columns:minmax(0,1fr)}
+body.s4u-sidebar-hidden:has(.dot-app) .dot-sidebar{display:none!important}
+body:has(.dot-app) .s4u-sidebar-toggle{white-space:nowrap}
+@media(max-width:900px){
+ body:has(.dot-app) .dot-app{display:block;min-width:0}
+ body:has(.dot-app) .dot-sidebar{position:fixed;top:0;left:0;width:min(276px,86vw);height:100dvh;max-height:100dvh;z-index:1100;transform:translateX(-101%);box-shadow:8px 0 30px #17365f1a}
+ body.dot-menu-open:not(.s4u-sidebar-hidden) .dot-sidebar{display:block!important;transform:translateX(0)}
+ body:has(.dot-app) .dot-overlay{z-index:1090}
+ body:has(.dot-app) .dot-topbar{min-height:66px;padding:12px 16px;gap:8px}
+ body:has(.dot-app) #dotPageMount{padding:18px 14px 52px}
+ body:has(.dot-app) .dot-account-toggle{max-width:min(32vw,175px)}
+ body:has(.dot-app) .s4u-sidebar-toggle{font-size:11px;min-width:0}
+ body:has(.dot-app) .dot-topbar-title{font-size:13px}
+}
+@media(max-width:540px){
+ body:has(.dot-app) .dot-topbar{flex-wrap:wrap}
+ body:has(.dot-app) .dot-topbar-title{order:3;flex-basis:100%;font-size:13px}
+ body:has(.dot-app) .dot-topbar-actions{margin-left:auto}
+ body:has(.dot-app) .dot-account-toggle{max-width:42vw}
+}
+@media print{
+ body:has(.dot-app) .dot-sidebar,body:has(.dot-app) .dot-topbar,body:has(.dot-app) .dot-overlay{display:none!important}
+ body:has(.dot-app) .dot-app{display:block!important}
+ body:has(.dot-app) #dotPageMount{width:100%!important;max-width:none!important;margin:0!important;padding:0!important}
+}
