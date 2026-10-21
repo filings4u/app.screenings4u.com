@@ -11,7 +11,7 @@ const groups=[
  ['Shared Operations',[['global-customer-360.html','Customer 360','◎'],['global-work-orders.html','Work Orders','▤'],['results-management.html','Results Management','✓'],['dot-invoices.html','Invoice Management','▧'],['nondot-proposals.html','Proposals Management','▤'],['subscription-management.html','Subscription Management','▧'],['dot-recent-subscriptions.html','DOT Subscription History','◷'],['workforce-subscriptions.html','NON-DOT Subscription History','◷'],['task-manager.html','Task Manager','✓'],['task-automations.html','Task Automations','◷']]],
  ['Independent Contractors',[['ic-contractors.html','IC Directory','♙'],['ic-work-orders.html','IC Work Orders','▤'],['ic-pricing.html','IC Pricing & Rates','$']]],
  ['NON-DOT Workspace',[['workforce-dashboard.html','Management Home','⌂'],['workforce-portal-control.html','Portal Network Management','◎']]],
- ['Management Workspace',[['dot-dashboard.html','Management Home','⌂'],['dot-portal-control.html','DOT Portal Management','◎'],['ic-contractors.html','IC Directory','♙']]],
+ ['Management Workspace',[['dot-dashboard.html','Management Home','⌂'],['dot-portal-control.html','DOT Portal Management','◎']]],
  ['DOT Accounts & People',[['dot-ctpas.html','C/TPA Management','◈'],['dot-employers.html','Employer Management','▣'],['dot-owner-operators.html','Owner-Operator Management','◇'],['dot-drivers.html','Driver Management','◉'],['dot-users-access.html','DOT User Access','♙']]],
  ['DOT Programs & Testing',[['dot-programs.html','Program Management','≡'],['dot-pools.html','Consortium Management','⊙'],['dot-random-selections.html','Random Selection Management','⌁'],['dot-testing-orders.html','Testing Order Management','✚'],['dot-follow-up-testing.html','Follow-Up Management','⟳']]],
  ['DOT Compliance',[['dot-compliance.html','Compliance Management','⚑'],['dot-clearinghouse.html','Clearinghouse Management','⇄'],['dot-return-to-duty.html','Return-to-Duty / SAP','↺'],['dot-agencies.html','DOT Agency Management','✦']]],
@@ -29,16 +29,9 @@ const prefetchActions={
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function initials(v){return String(v||'DOT').split(/\s+|@/).filter(Boolean).slice(0,2).map(x=>x[0]?.toUpperCase()).join('')||'DOT'}
 function nav(){
- const allowed=groups.filter(([label])=>label==='Shared Operations'||(business==='nondot'?label.startsWith('NON-DOT'):!label.startsWith('NON-DOT'))).sort((a,b)=>{const rank=label=>label==='Management Workspace'||label==='NON-DOT Workspace'?0:label==='Shared Operations'?1:label.includes('Accounts & People')?2:label.includes('Programs & Testing')?3:label.includes('Compliance')?4:label.includes('Catalog & Orders')||label.includes('Operations & Services')?5:label.includes('Documents & Services')?6:7;return rank(a[0])-rank(b[0]);});
+ const allowed=groups;
  return allowed.map(([label,links])=>{
-  const visible=links.filter(([href])=>{
-   if(label==='Shared Operations'){
-    if(href==='dot-recent-subscriptions.html')return business==='dot';
-    if(href==='workforce-subscriptions.html')return business==='nondot';
-    return true;
-   }
-   return business==='nondot'?href.startsWith('workforce-'):!href.startsWith('workforce-');
-  });
+  const visible=links;
   if(!visible.length)return '';
   const items=visible.map(([href,name,icon])=>{
    const url=workspaceHref(href);
