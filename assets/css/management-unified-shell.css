@@ -48,3 +48,33 @@ body:has(.dot-app) .s4u-sidebar-toggle{white-space:nowrap}
  body:has(.dot-app) .dot-app{display:block!important}
  body:has(.dot-app) #dotPageMount{width:100%!important;max-width:none!important;margin:0!important;padding:0!important}
 }
+
+/* Single Dashboard shell hosts every management module */
+body:has(#managementApp){background:#fff;overflow-x:hidden}
+#managementApp.wf-app{display:grid;grid-template-columns:276px minmax(0,1fr);width:100%;min-height:100dvh}
+#managementApp .wf-side{height:100dvh;max-height:100dvh;top:0;position:sticky;overflow-y:auto;overflow-x:hidden;background:#fff}
+#managementApp .wf-main{min-width:0;max-width:none;width:100%}
+#managementApp .wf-top{height:74px;min-height:74px;display:flex;align-items:center;gap:14px;box-sizing:border-box;padding:0 28px}
+#managementApp .wf-top>strong{flex:1 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#managementApp .wf-profile{position:relative;margin-left:auto;flex:0 0 auto}
+#managementApp .wf-account-menu{z-index:1000}
+#managementApp .wf-nav{padding-bottom:26px}
+#managementApp .wf-nav .dot-nav-group{padding:16px 12px 2px}
+#managementApp .wf-nav .dot-nav-group>span{display:block;margin:0 10px 10px;font-size:10px;letter-spacing:.12em;color:#677b95;text-transform:uppercase;font-weight:700}
+#managementApp .wf-nav .dot-nav-group a{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;font-size:12px;text-decoration:none;color:#24467f}
+#managementApp .wf-nav .dot-nav-group a:hover,#managementApp .wf-nav .dot-nav-group a.active{background:#f1f5fa}
+#managementApp .wf-nav .dot-nav-icon{width:20px;font-style:normal;font-size:16px;color:#e96000;text-align:center}
+#managementApp .wf-module-content{box-sizing:border-box;width:100%;min-width:0;max-width:1450px;margin:0 auto;padding:28px clamp(16px,2vw,32px) 80px}
+#managementApp .wf-module-content>*{max-width:100%;min-width:0;box-sizing:border-box}
+#managementApp .s4u-sidebar-toggle{display:inline-flex;align-items:center;justify-content:center;min-width:120px}
+body.s4u-sidebar-hidden #managementApp.wf-app{grid-template-columns:minmax(0,1fr)}
+body.s4u-sidebar-hidden #managementApp .wf-side{display:none!important}
+@media(max-width:900px){
+#managementApp.wf-app{display:block}
+#managementApp .wf-side{position:fixed;top:0;left:0;width:min(276px,86vw);height:100dvh;z-index:1100;transform:translateX(-105%);transition:transform .18s}
+body:not(.s4u-sidebar-hidden) #managementApp .wf-side{display:block!important;transform:translateX(0)}
+#managementApp .wf-top{min-height:66px;height:auto;padding:12px 16px}
+#managementApp .wf-module-content{padding:18px 14px 50px}
+#managementApp .wf-top>strong{font-size:14px}
+#managementApp .dot-account-toggle{max-width:40vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+}
