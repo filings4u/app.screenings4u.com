@@ -1,0 +1,207 @@
+
+.nd-proposal-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.nd-proposal-summary{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;margin-bottom:18px}.nd-proposal-summary .nd-metric{min-height:100px}.nd-proposal-list-actions{display:flex;gap:7px;flex-wrap:wrap}.nd-proposal-editor-grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(320px,.55fr);gap:18px;align-items:start}.nd-proposal-editor-main,.nd-proposal-editor-side{display:grid;gap:18px}.nd-proposal-section-row{border:1px solid #d9e3ef;border-radius:12px;padding:16px;background:#fff}.nd-proposal-section-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}.nd-proposal-section-head input{font-weight:800}.nd-proposal-section-actions{margin-left:auto;display:flex;gap:6px}.nd-proposal-pricing-table input,.nd-proposal-pricing-table select{min-width:90px}.nd-proposal-price-total{display:grid;grid-template-columns:1fr auto;gap:8px 18px;padding:16px;border-top:1px solid #e4ebf4}.nd-proposal-price-total strong{font-size:18px}.nd-proposal-library{display:grid;gap:8px}.nd-proposal-library button{text-align:left}.nd-preview-paper{max-width:980px;margin:0 auto;background:#fff;border:1px solid #dce5f0;border-radius:16px;overflow:hidden;box-shadow:0 18px 48px rgba(23,54,95,.08)}.nd-preview-brand{background:#17365f;padding:24px 30px}.nd-preview-brand img{max-width:340px;max-height:72px}.nd-preview-body{padding:34px}.nd-preview-kicker{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.09em;color:#f05a00}.nd-preview-body h1{font-size:36px;line-height:1.08;margin:8px 0 10px}.nd-preview-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:24px 0}.nd-preview-meta div,.nd-preview-price-card{border:1px solid #dce5f0;border-radius:12px;padding:14px}.nd-preview-section{padding:22px 0;border-top:1px solid #e3eaf2}.nd-preview-section h2{font-size:22px;margin:0 0 8px}.nd-preview-section p{white-space:pre-wrap;line-height:1.7;color:#536b86}.nd-preview-items{width:100%;border-collapse:collapse}.nd-preview-items th,.nd-preview-items td{padding:12px;border-bottom:1px solid #e5ebf2;text-align:left}.nd-preview-items th:last-child,.nd-preview-items td:last-child{text-align:right}.nd-preview-company{margin-top:26px;padding-top:18px;border-top:1px solid #e4eaf2;color:#687d95;font-size:12px;line-height:1.6}.nd-inline-note{padding:12px 14px;border-radius:9px;background:#eef5ff;color:#1d4f87}.nd-inline-note.error{background:#fff1ef;color:#a63f32}.nd-inline-note.success{background:#eff9f2;color:#267446}@media(max-width:1100px){.nd-proposal-summary{grid-template-columns:repeat(2,1fr)}.nd-proposal-editor-grid{grid-template-columns:1fr}.nd-preview-meta{grid-template-columns:1fr}}@media(max-width:640px){.nd-proposal-summary{grid-template-columns:1fr}.nd-preview-body{padding:22px}.nd-preview-body h1{font-size:28px}}
+@media print{.nd-sidebar,.nd-topbar,.nd-page-head,.nd-proposal-toolbar{display:none!important}.nd-main,.nd-content{margin:0!important;padding:0!important}.nd-preview-paper{max-width:none;border:0;box-shadow:none;border-radius:0}.nd-preview-body{padding:26px}.nd-preview-brand{padding:18px 26px}}
+
+/* Proposal editor usability fixes */
+.nd-proposal-editor-main,.nd-proposal-editor-side,.nd-proposal-section-row,.nd-proposal-section-head{min-width:0}
+.nd-proposal-section-row{display:block;padding:16px 18px}
+.nd-proposal-section-head{width:100%;align-items:flex-start}
+.nd-proposal-section-head>input{flex:1 1 auto;width:100%;min-width:0;max-width:none;min-height:42px;padding:9px 11px;border:1px solid #cfd9e6;border-radius:8px;background:#fff;color:#17365f;font:inherit;font-weight:800}
+.nd-proposal-section-row>textarea{display:block;width:100%!important;max-width:none!important;min-width:0!important;min-height:170px;padding:12px 13px;border:1px solid #cfd9e6;border-radius:8px;background:#fff;color:#26384d;font:inherit;font-size:13px;line-height:1.62;resize:vertical}
+.nd-proposal-section-head>input:focus,.nd-proposal-section-row>textarea:focus{outline:none;border-color:#6f97ca;box-shadow:0 0 0 3px rgba(36,70,127,.08)}
+.nd-proposal-item-name,.nd-proposal-item-desc{width:100%;max-width:none;min-width:0}
+.nd-proposal-item-name{min-height:38px;font-weight:800}
+.nd-proposal-item-desc{margin-top:6px;min-height:58px;resize:vertical}
+.nd-proposal-mini-field{display:grid;gap:4px;min-width:105px}
+.nd-proposal-mini-field span{font-size:9px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;color:#788aa0}
+.nd-proposal-mini-field input{width:110px!important;min-width:0!important}
+.nd-proposal-unit-tag{display:inline-flex;margin-top:6px;padding:3px 7px;border-radius:999px;background:#eef4fb;color:#56708f;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+.nd-proposal-catalog-search{display:grid;gap:6px;margin-bottom:12px}
+.nd-proposal-catalog-search span{font-size:9px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:#6e7f94}
+.nd-proposal-catalog-search input{width:100%;min-width:0;min-height:40px;border:1px solid #d3deea;border-radius:8px;padding:0 11px;background:#fff;color:#17365f}
+.nd-proposal-catalog-groups{display:grid;gap:16px;max-height:720px;overflow:auto;padding-right:3px}
+.nd-proposal-catalog-group{display:grid;gap:7px}
+.nd-proposal-catalog-group h3{position:sticky;top:0;z-index:1;margin:0;padding:7px 4px;background:#fff;color:#6a7d94;font-size:10px;font-weight:900;letter-spacing:.06em;text-transform:uppercase}
+.nd-proposal-service-button{width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;text-align:left;padding:11px 12px;border:1px solid #d5e0ec;border-radius:9px;background:#fff;color:#17365f;cursor:pointer;transition:.15s ease}
+.nd-proposal-service-button:hover{border-color:#8fb0d8;background:#f8fbff;box-shadow:0 6px 16px rgba(16,38,74,.06);transform:translateY(-1px)}
+.nd-proposal-service-button:active{transform:translateY(0)}
+.nd-proposal-service-button span{min-width:0;display:grid;gap:3px}
+.nd-proposal-service-button strong{font-size:11px;line-height:1.25;color:#17427a}
+.nd-proposal-service-button small{display:block;color:#7a8ba0;font-size:9px;line-height:1.35;white-space:normal}
+.nd-proposal-service-button b{white-space:nowrap;color:#f05a00;font-size:10px}
+.nd-proposal-item-added{animation:proposalItemAdded 1.6s ease}
+@keyframes proposalItemAdded{0%,35%{background:#fff5e9;box-shadow:inset 4px 0 #f05a00}100%{background:transparent;box-shadow:none}}
+@media(max-width:1100px){.nd-proposal-section-row>textarea{min-height:150px}.nd-proposal-catalog-groups{max-height:520px}}
+
+/* Proposal pricing layout: keep the editor inside the card with no horizontal scrollbar. */
+.nd-proposal-editor-main .nd-card-body > .nd-table-wrap{
+  width:100%;
+  max-width:100%;
+  overflow-x:hidden;
+  overflow-y:visible;
+}
+.nd-proposal-pricing-table{
+  width:100%;
+  min-width:0!important;
+  table-layout:fixed;
+}
+.nd-proposal-pricing-table th,
+.nd-proposal-pricing-table td{
+  min-width:0!important;
+  padding:10px 9px;
+  overflow-wrap:anywhere;
+}
+.nd-proposal-pricing-table th:nth-child(1),
+.nd-proposal-pricing-table td:nth-child(1){width:34%}
+.nd-proposal-pricing-table th:nth-child(2),
+.nd-proposal-pricing-table td:nth-child(2){width:14%}
+.nd-proposal-pricing-table th:nth-child(3),
+.nd-proposal-pricing-table td:nth-child(3){width:12%}
+.nd-proposal-pricing-table th:nth-child(4),
+.nd-proposal-pricing-table td:nth-child(4){width:15%}
+.nd-proposal-pricing-table th:nth-child(5),
+.nd-proposal-pricing-table td:nth-child(5){width:13%}
+.nd-proposal-pricing-table th:nth-child(6),
+.nd-proposal-pricing-table td:nth-child(6){width:12%}
+.nd-proposal-pricing-table input,
+.nd-proposal-pricing-table select,
+.nd-proposal-pricing-table textarea{
+  display:block;
+  width:100%;
+  max-width:100%;
+  min-width:0!important;
+  box-sizing:border-box;
+}
+.nd-proposal-pricing-table textarea{
+  resize:vertical;
+}
+.nd-proposal-pricing-table td:first-child{min-width:0!important}
+.nd-proposal-mini-field{display:grid;gap:4px;min-width:0}
+.nd-proposal-mini-field span{font-size:9px;line-height:1.2;color:#77899d;font-weight:800;text-transform:uppercase;letter-spacing:.03em}
+.nd-proposal-pricing-table [data-line]{display:block;white-space:nowrap}
+.nd-proposal-pricing-table .nd-btn-small{width:100%;padding-left:7px;padding-right:7px}
+
+.nd-proposal-price-total{
+  width:min(390px,100%);
+  margin:16px 0 0 auto;
+  padding:16px 0 0;
+  border-top:1px solid #e4ebf4;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 150px;
+  align-items:center;
+  gap:10px 18px;
+}
+.nd-proposal-price-total span{color:#405571}
+.nd-proposal-price-total strong{text-align:right;color:#17365f;font-size:18px;white-space:nowrap}
+.nd-proposal-price-total input{
+  width:150px;
+  max-width:100%;
+  min-width:0;
+  justify-self:end;
+  box-sizing:border-box;
+  text-align:right;
+}
+
+@media(max-width:760px){
+  .nd-proposal-editor-main .nd-card-body > .nd-table-wrap{overflow:visible}
+  .nd-proposal-pricing-table,
+  .nd-proposal-pricing-table thead,
+  .nd-proposal-pricing-table tbody,
+  .nd-proposal-pricing-table tr,
+  .nd-proposal-pricing-table th,
+  .nd-proposal-pricing-table td{display:block;width:100%!important}
+  .nd-proposal-pricing-table thead{display:none}
+  .nd-proposal-pricing-table tr{padding:12px 0;border-bottom:1px solid #e4ebf4}
+  .nd-proposal-pricing-table td{border:0;padding:6px 0}
+  .nd-proposal-price-total{grid-template-columns:1fr 130px}
+  .nd-proposal-price-total input{width:130px}
+}
+
+/* Proposal pricing hard override — no horizontal scrollbar */
+.nd-proposal-editor-main .nd-card-body>.nd-table-wrap{
+  display:block!important;
+  width:100%!important;
+  max-width:100%!important;
+  overflow-x:hidden!important;
+  overflow-y:visible!important;
+  scrollbar-width:none!important;
+  -ms-overflow-style:none!important;
+}
+.nd-proposal-editor-main .nd-card-body>.nd-table-wrap::-webkit-scrollbar{display:none!important;width:0!important;height:0!important}
+.nd-proposal-pricing-table{width:100%!important;max-width:100%!important;min-width:0!important;table-layout:fixed!important}
+.nd-proposal-pricing-table th,.nd-proposal-pricing-table td{box-sizing:border-box!important;min-width:0!important;max-width:none!important}
+.nd-proposal-pricing-table th:nth-child(1),.nd-proposal-pricing-table td:nth-child(1){width:36%!important}
+.nd-proposal-pricing-table th:nth-child(2),.nd-proposal-pricing-table td:nth-child(2){width:14%!important}
+.nd-proposal-pricing-table th:nth-child(3),.nd-proposal-pricing-table td:nth-child(3){width:11%!important}
+.nd-proposal-pricing-table th:nth-child(4),.nd-proposal-pricing-table td:nth-child(4){width:15%!important}
+.nd-proposal-pricing-table th:nth-child(5),.nd-proposal-pricing-table td:nth-child(5){width:14%!important}
+.nd-proposal-pricing-table th:nth-child(6),.nd-proposal-pricing-table td:nth-child(6){width:10%!important}
+.nd-proposal-price-total{box-sizing:border-box!important;grid-template-columns:minmax(120px,1fr) 145px!important;column-gap:20px!important}
+.nd-proposal-price-total input{width:145px!important;min-width:0!important}
+
+
+/* Proposal pricing component v4 — purpose-built grid, no table overflow. */
+.nd-proposal-pricing{width:100%;min-width:0;display:grid;gap:0}
+.nd-proposal-pricing-head,.nd-proposal-pricing-row{display:grid;grid-template-columns:minmax(250px,2.5fr) minmax(105px,.85fr) minmax(92px,.7fr) minmax(120px,.9fr) minmax(105px,.75fr) 88px;column-gap:14px;align-items:start;width:100%;box-sizing:border-box}
+.nd-proposal-pricing-head{padding:11px 14px;background:#f6f8fb;border:1px solid #e1e8f1;border-radius:9px 9px 0 0;color:#667990;font-size:10px;font-weight:900;letter-spacing:.06em;text-transform:uppercase}
+.nd-proposal-pricing-rows{display:grid;width:100%;min-width:0}
+.nd-proposal-pricing-row{padding:16px 14px;border:1px solid #e1e8f1;border-top:0;background:#fff}
+.nd-proposal-pricing-row:last-child{border-radius:0 0 9px 9px}
+.nd-proposal-pricing-row>*{min-width:0;box-sizing:border-box}
+.nd-proposal-pricing-item{display:grid;gap:7px;min-width:0}
+.nd-proposal-pricing-item input,.nd-proposal-pricing-item textarea,.nd-proposal-pricing-cell select,.nd-proposal-pricing-cell input{width:100%!important;max-width:100%!important;min-width:0!important;box-sizing:border-box!important;border:1px solid #ced9e7!important;border-radius:8px!important;background:#fff!important;color:#17365f!important;font:inherit!important}
+.nd-proposal-pricing-item input{height:40px!important;padding:0 11px!important;font-weight:800!important}
+.nd-proposal-pricing-item textarea{min-height:72px!important;padding:9px 11px!important;line-height:1.45!important;resize:vertical!important}
+.nd-proposal-pricing-cell select,.nd-proposal-pricing-cell input{height:40px!important;padding:0 10px!important}
+.nd-proposal-pricing-cell .nd-proposal-mini-field{display:grid;gap:5px;min-width:0;margin:0}
+.nd-proposal-pricing-cell .nd-proposal-mini-field>span{font-size:9px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:#71839a}
+.nd-proposal-pricing-total{padding-top:26px;display:flex;align-items:center;justify-content:flex-start;min-height:40px}
+.nd-proposal-pricing-total strong{font-size:14px;color:#17365f;white-space:nowrap}
+.nd-proposal-pricing-action{padding-top:20px;display:flex;justify-content:flex-end}
+.nd-proposal-pricing-action .nd-btn{width:100%;min-width:0;justify-content:center}
+.nd-proposal-unit-tag{justify-self:start;margin-top:0}
+.nd-proposal-pricing-empty{padding:24px;border:1px solid #e1e8f1;border-top:0;border-radius:0 0 9px 9px;text-align:center;color:#74869b;background:#fff}
+.nd-proposal-mobile-label{display:none}
+.nd-proposal-price-total{width:390px!important;max-width:100%!important;margin:22px 0 0 auto!important;padding:18px 0 0!important;border-top:1px solid #dfe7f0!important;display:grid!important;grid-template-columns:minmax(0,1fr) 145px!important;gap:12px 22px!important;align-items:center!important}
+.nd-proposal-price-total span{font-size:13px;color:#405571}
+.nd-proposal-price-total strong{font-size:18px!important;text-align:right!important;color:#17365f!important}
+.nd-proposal-price-total input{height:40px!important;width:145px!important;max-width:145px!important;padding:0 10px!important;border:1px solid #ced9e7!important;border-radius:8px!important;text-align:right!important;background:#fff!important;box-sizing:border-box!important}
+.nd-proposal-pricing-row input:focus,.nd-proposal-pricing-row textarea:focus,.nd-proposal-pricing-row select:focus,.nd-proposal-price-total input:focus{outline:none!important;border-color:#6f97ca!important;box-shadow:0 0 0 3px rgba(36,70,127,.08)!important}
+@media(max-width:1250px){.nd-proposal-pricing-head,.nd-proposal-pricing-row{grid-template-columns:minmax(220px,2fr) minmax(100px,.8fr) minmax(88px,.7fr) minmax(110px,.85fr) minmax(95px,.75fr) 82px;column-gap:10px}}
+@media(max-width:900px){.nd-proposal-pricing-head{display:none}.nd-proposal-pricing-rows{gap:12px}.nd-proposal-pricing-row{grid-template-columns:1fr 1fr;gap:14px;padding:16px;border-top:1px solid #e1e8f1;border-radius:10px!important}.nd-proposal-pricing-item{grid-column:1/-1}.nd-proposal-pricing-total,.nd-proposal-pricing-action{padding-top:0;min-height:40px}.nd-proposal-pricing-total{justify-content:flex-start}.nd-proposal-pricing-action{justify-content:flex-end}.nd-proposal-mobile-label{display:block;margin-bottom:5px;font-size:9px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;color:#71839a}.nd-proposal-pricing-cell .nd-proposal-mini-field>span{display:none}.nd-proposal-price-total{width:100%!important;grid-template-columns:1fr 145px!important}}
+@media(max-width:560px){.nd-proposal-pricing-row{grid-template-columns:1fr}.nd-proposal-pricing-item{grid-column:auto}.nd-proposal-price-total{grid-template-columns:1fr 125px!important}.nd-proposal-price-total input{width:125px!important;max-width:125px!important}}
+
+.nd-catalog-hidden{display:none!important}
+
+/* Proposal preview metadata spacing */
+.nd-preview-meta{gap:16px;margin:26px 0 28px}
+.nd-preview-meta>div{display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:7px;padding:18px 16px;min-height:92px}
+.nd-preview-meta small{display:block;margin:0;font-size:10px;font-weight:800;line-height:1.25;letter-spacing:.04em;text-transform:uppercase;color:#6e7f94}
+.nd-preview-meta strong{display:block;margin:0;font-size:15px;font-weight:800;line-height:1.35;color:#17365f}
+.nd-preview-meta span{display:block;margin:0;font-size:13px;line-height:1.4;color:#536b86;overflow-wrap:anywhere}
+@media(max-width:1100px){.nd-preview-meta>div{min-height:0}}
+
+.nd-custom-note-list{display:grid;gap:14px;margin:16px 0 18px}.nd-custom-note-list:empty{display:none}.nd-custom-note-row{padding:18px;border:1px solid #d9e3ef;border-radius:10px;background:#fff}.nd-custom-note-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;color:#17365f}.nd-custom-note-row .nd-field+.nd-field{margin-top:12px}.nd-custom-note-row input,.nd-custom-note-row textarea{width:100%}
+
+/* Proposal custom-note placement, note saving, and unsaved-change protection */
+.nd-custom-note-list-under-terms{margin:18px 0}.nd-custom-note-actions{display:flex;align-items:center;gap:7px}.nd-proposal-leave-modal[hidden]{display:none}.nd-proposal-leave-modal{position:fixed;inset:0;z-index:20000;display:grid;place-items:center;padding:22px}.nd-proposal-leave-backdrop{position:absolute;inset:0;background:rgba(11,31,54,.64);backdrop-filter:blur(2px)}.nd-proposal-leave-dialog{position:relative;width:min(520px,calc(100vw - 32px));background:#fff;border-radius:14px;padding:26px;box-shadow:0 28px 90px rgba(0,0,0,.3);border:1px solid #d9e3ef}.nd-proposal-leave-dialog h2{margin:6px 0 10px;color:#17365f;font-size:24px;line-height:1.2}.nd-proposal-leave-dialog p{margin:0;color:#5b6f87;line-height:1.6}.nd-proposal-leave-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin-top:22px}@media(max-width:600px){.nd-custom-note-head{align-items:flex-start}.nd-custom-note-actions{flex-wrap:wrap;justify-content:flex-end}.nd-proposal-leave-dialog{padding:22px 18px}.nd-proposal-leave-dialog h2{font-size:21px}.nd-proposal-leave-actions{display:grid;grid-template-columns:1fr}.nd-proposal-leave-actions .nd-btn{width:100%}}
+
+/* 2026-10-07: Terms-area customer notes use the same neutral presentation as Terms. */
+.nd-preview-custom-note{
+  margin:0!important;
+  padding:22px 0!important;
+  border:0!important;
+  border-top:1px solid #e3eaf2!important;
+  border-left:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.nd-preview-custom-note h2{color:inherit!important}
+.nd-preview-custom-note p{color:#536b86!important}
+.nd-custom-note-row{
+  border:1px solid #d9e3ef!important;
+  border-left:1px solid #d9e3ef!important;
+  background:#fff!important;
+  box-shadow:none!important;
+}
