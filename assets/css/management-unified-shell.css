@@ -114,3 +114,11 @@ body.s4u-sidebar-hidden #managementApp .wf-module-content{width:min(100%,1450px)
 #managementApp .wf-top .s4u-back-button{padding:9px 14px;border:1px solid #cedaea;border-radius:8px;background:#fff;color:#17365f;font-weight:700;cursor:pointer;white-space:nowrap}
 #managementApp .wf-top .s4u-back-button:hover{background:#eef5fc}
 @media(max-width:650px){#managementApp .wf-top .s4u-back-button{padding:8px;font-size:12px}}
+
+/* Hidden navigation: every management module uses a 1450px content canvas. */
+@media(min-width:901px){
+body.s4u-sidebar-hidden #managementApp.wf-app{grid-template-columns:minmax(0,1fr)!important;width:100%!important;max-width:none!important}
+body.s4u-sidebar-hidden #managementApp .wf-main{width:100%!important;min-width:0!important;max-width:none!important}
+body.s4u-sidebar-hidden #managementApp #dotPageMount{width:100%!important;max-width:1450px!important;min-width:0!important;margin-inline:auto!important;box-sizing:border-box!important;padding-inline:24px!important}
+body.s4u-sidebar-hidden #managementApp #dotPageMount>*,body.s4u-sidebar-hidden #managementApp #dotPageMount :is(.wo-wrap,.ic,.pm,.nd-page,.dot-page,.wf-customer-editor,.wf-record-page,.dot-content,.dot-page-content,.page-content){width:100%!important;max-width:100%!important;min-width:0!important;margin-inline:auto!important;box-sizing:border-box!important}
+}
