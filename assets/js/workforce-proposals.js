@@ -16,7 +16,7 @@ $('#propNew').onclick=()=>{location.href='admin-proposal.html'};
 $('#propRefresh').onclick=()=>load().catch(e=>note(e.message,true));
 $('#propAddLine').onclick=()=>{items.push({name:'',quantity:1,unit_price:0,billing_type:'one_time'});renderItems()};
 $('#propSave').onclick=async()=>{try{await save()}catch(e){note(e.message,true)}};
-$('#propSend').onclick=async()=>{try{await save();if(!confirm('Send this proposal email to '+current.recipient_email+'?'))return;const r=await api({action:'send',id:current.id});await load();note('Proposal sending completed. Check proposal status.')}catch(e){note(e.message,true)}};
+$('#propSend').onclick=async()=>{try{await save();if(!await window.DOTDialog.confirm('Send this proposal email to '+current.recipient_email+'?',{title:'Send Proposal',confirmText:'Send Proposal'}))return;const r=await api({action:'send',id:current.id});await load();note('Proposal sending completed. Check proposal status.')}catch(e){note(e.message,true)}};
 await load().catch(e=>note(e.message,true));
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
