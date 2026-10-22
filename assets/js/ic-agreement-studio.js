@@ -1,0 +1,70 @@
+(async()=>{
+'use strict';
+const user=await DOTAuth.requireAuth();if(!user)return;DOTShell.render(user);
+const mount=document.getElementById('dotPageMount');if(!mount)return;
+const isEditor=location.pathname.endsWith('ic-agreement-builder.html');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const api=async(action,rest={})=>{const {data,error}=await dotSupabase.functions.invoke('management-ic-agreements',{body:{action,...rest}});if(error||data?.error)throw Error(data?.error||error.message||'Request failed');return data};
+const q=s=>mount.querySelector(s);const notice=s=>{const n=q('#notice');if(n)n.textContent=s||''};
+const links='<a class="btn" href="ic-agreements.html">All Agreements</a><a class="btn primary" href="ic-agreement-builder.html">+ New Agreement</a>';
+const dialog='<dialog class="preview-dialog" id="previewDialog"><div class="preview-top"><strong>Agreement Preview</strong><div class="actions"><button id="printPreview">Print / PDF</button><button id="closePreview">Close</button></div></div><article class="preview-paper" id="previewPaper"></article></dialog>';
+mount.innerHTML='<main class="agreement-app"><header class="topline"><div><h1>'+ (isEditor?'Agreement Builder':'All Agreements') +'</h1><div class="muted">'+(isEditor?'Build, format, preview and publish agreements.':'Create and manage your agreement library.')+'</div></div><nav class="actions">'+links+'</nav></header><p id="notice" role="status"></p><div id="workspace"></div>'+dialog+'</main>';
+q('#closePreview').onclick=()=>q('#previewDialog').close();q('#printPreview').onclick=()=>window.print();
+const block={
+heading:'<h2>Section heading</h2><p>Enter the section content here.</p>',
+text:'<p>Type your agreement terms here.</p>',subheading:'<h3>Subheading</h3>',
+list:'<ul><li>First item</li><li>Second item</li></ul>',
+numbered:'<ol><li>First clause</li><li>Second clause</li></ol>',
+table:'<table><tbody><tr><th>Item</th><th>Details</th></tr><tr><td>Item 1</td><td>Enter details</td></tr></tbody></table>',
+quote:'<blockquote>Important agreement language</blockquote>',
+divider:'<hr>',
+signature:'<h2>Signatures</h2><p>Contractor name: _______________________</p><p>Contractor signature: _______________________</p><p>Date: _______________________</p><p>Authorized representative: _______________________</p>',
+date:'<p>Date: _______________________</p>',
+page:'<div style="break-before:page;border-top:1px dashed #d8e2f0;margin:26px 0;padding-top:18px"></div>',
+terms:'<h2>Terms and Conditions</h2><ol><li>Scope of services: </li><li>Compensation and payment: </li><li>Confidentiality: </li><li>Term and termination: </li></ol>'
+};
+const safeHtml=s=>{let doc=new DOMParser().parseFromString(String(s||''),'text/html');doc.querySelectorAll('script,iframe,object,embed,form,link,meta,svg,math,style').forEach(e=>e.remove());doc.querySelectorAll('*').forEach(el=>{[...el.attributes].forEach(a=>{if(/^on/i.test(a.name)||a.name==='srcdoc'||(/^(href|src)$/i.test(a.name)&&!(/^(https?:|mailto:|\/|#)/i.test(a.value))))el.removeAttribute(a.name)})});return doc.body.innerHTML};
+function preview(title,version,html){q('#previewPaper').innerHTML='<h1>'+esc(title)+'</h1><p style="color:#64748b;font:13px Arial">Version '+esc(version)+'</p>'+safeHtml(html);q('#previewDialog').showModal()}
+if(!isEditor){
+q('#workspace').innerHTML='<section class="panel"><div class="topline"><div><strong>Agreement Library</strong><p class="muted">View, edit drafts, delete drafts, publish and email completed agreements.</p></div><input class="search" type="search" id="search" placeholder="Search agreements"></div><div class="list-wrap"><table class="list"><thead><tr><th>Agreement</th><th>Version</th><th>Status</th><th>Updated</th><th>Actions</th></tr></thead><tbody id="records"><tr><td colspan="5">Loading agreements…</td></tr></tbody></table></div></section>';
+let templates=[];const draw=()=>{const term=q('#search').value.toLowerCase();const filtered=templates.filter(t=>(t.title+' '+t.version+' '+t.status).toLowerCase().includes(term));q('#records').innerHTML=filtered.map(t=>'<tr><td><strong>'+esc(t.title)+'</strong></td><td>'+esc(t.version)+'</td><td><span class="pill">'+esc(t.status)+'</span></td><td>'+esc(t.updated_at?new Date(t.updated_at).toLocaleDateString():'—')+'</td><td><div class="actions"><button data-act="view" data-id="'+esc(t.id)+'">View</button><a class="btn" href="ic-agreement-builder.html?id='+encodeURIComponent(t.id)+'">Edit</a><button class="danger" data-act="delete" data-id="'+esc(t.id)+'">Delete</button>'+(t.status==='draft'?'<button data-act="publish" data-id="'+esc(t.id)+'">Publish</button>':'<button data-act="send" data-id="'+esc(t.id)+'">Email</button>')+'</div></td></tr>').join('')||'<tr><td colspan="5">No matching agreements. Use New Agreement to create one.</td></tr>'};
+q('#search').addEventListener('input',draw);
+const load=async()=>{const data=await api('list');templates=data.templates||[];draw()};
+q('#records').addEventListener('click',async e=>{const b=e.target.closest('[data-act]');if(!b)return;const id=b.dataset.id,act=b.dataset.act;try{
+if(act==='view'){const d=await api('view',{id});preview(d.template.title,d.template.version,d.template.body_html)}
+if(act==='delete'){if(!confirm('Delete this agreement? Published or signed agreements must be retained.'))return;await api('delete',{id});notice('Draft deleted.');await load()}
+if(act==='publish'){if(!confirm('Publish and lock this agreement?'))return;await api('publish',{id});notice('Agreement published.');await load()}
+if(act==='send'){const email=prompt('Recipient email address');if(!email)return;await api('send',{id,email});notice('Agreement invitation sent to '+email)}
+}catch(err){notice(err.message)}});
+try{await load()}catch(e){notice(e.message)}
+return;
+}
+let current=null,dirty=false,lastRange=null,saving=false;
+q('#workspace').innerHTML='<section class="panel"><div class="formgrid"><label>Agreement title<input id="title" maxlength="200" placeholder="Independent Contractor Services Agreement"></label><label>Version<input id="version" maxlength="70" placeholder="2026-10"></label></div><div class="actions" style="margin-top:16px"><button class="primary" id="save">Save Draft</button><button id="preview">Preview Agreement</button><button id="publish">Publish</button><button id="email">Send via Email</button><button id="duplicate">Duplicate as Draft</button><span id="saveState" class="muted" aria-live="polite"></span></div></section><div class="layout"><aside class="panel blocks"><h3>Content blocks</h3><p class="tip">Choose a block to insert at the cursor. Select text to apply formatting.</p>'+Object.entries({heading:'Heading',subheading:'Subheading',text:'Paragraph',list:'Bulleted list',numbered:'Numbered list',table:'Table',quote:'Callout / quote',terms:'Terms & clauses',signature:'Signature fields',date:'Date field',divider:'Divider',page:'Page break'}).map(([key,label])=>'<button data-block="'+key+'">＋ '+label+'</button>').join('')+'</aside><div><div class="toolbar" id="toolbar"><select id="format"><option value="p">Paragraph</option><option value="h1">Title</option><option value="h2">Heading 2</option><option value="h3">Heading 3</option><option value="blockquote">Quote</option></select><button data-command="bold" title="Bold"><b>B</b></button><button data-command="italic" title="Italic"><i>I</i></button><button data-command="underline" title="Underline"><u>U</u></button><button data-command="strikeThrough" title="Strikethrough"><s>S</s></button><button data-command="insertUnorderedList" title="Bullets">• List</button><button data-command="insertOrderedList" title="Numbering">1. List</button><button data-command="justifyLeft" title="Left align">⇤</button><button data-command="justifyCenter" title="Center">≡</button><button data-command="justifyRight" title="Right align">⇥</button><button id="link" title="Insert link">Link</button><button id="image" title="Insert image">Image</button><button id="color" title="Text color">Color</button><button data-command="removeFormat">Clear</button><button data-command="undo">Undo</button><button data-command="redo">Redo</button></div><div id="canvas" class="paper" contenteditable="true" role="textbox" aria-label="Agreement body" aria-multiline="true" spellcheck="true"></div><p class="tip">Agreement content is edited here. Use Preview to see the finished document without editing controls.</p></div><aside class="panel settings"><h3>Document settings</h3><label>Paper style<select id="paperStyle"><option value="classic">Classic</option><option value="modern">Modern</option></select></label><p class="tip">Drafts remain editable. Publishing locks the version for email invitations. Duplicate a published agreement to revise it.</p><div class="actions"><button id="print">Print / Save PDF</button></div></aside></div>';
+const canvas=q('#canvas');
+function mark(){dirty=true;q('#saveState').textContent='Unsaved changes'}
+canvas.addEventListener('input',mark);q('#title').addEventListener('input',mark);q('#version').addEventListener('input',mark);
+document.addEventListener('selectionchange',()=>{const sel=window.getSelection();if(sel&&sel.rangeCount&&canvas.contains(sel.anchorNode))lastRange=sel.getRangeAt(0).cloneRange()});
+function focusRange(){canvas.focus();const sel=window.getSelection();if(lastRange&&canvas.contains(lastRange.commonAncestorContainer)){sel.removeAllRanges();sel.addRange(lastRange)}}
+function command(c,val=null){focusRange();document.execCommand(c,false,val);mark()}
+q('#toolbar').addEventListener('mousedown',e=>{if(e.target.closest('button'))e.preventDefault()});
+q('#toolbar').addEventListener('click',e=>{const b=e.target.closest('[data-command]');if(b)command(b.dataset.command)});
+q('#format').onchange=e=>command('formatBlock',e.target.value);
+q('.blocks').addEventListener('mousedown',e=>{if(e.target.closest('button'))e.preventDefault()});
+q('.blocks').onclick=e=>{const b=e.target.closest('[data-block]');if(b)command('insertHTML',block[b.dataset.block])};
+q('#link').onclick=()=>{const url=prompt('URL (https://...)');if(url&&/^https?:\/\//i.test(url))command('createLink',url)};
+q('#image').onclick=()=>{const url=prompt('Public image URL (https://...)');if(url&&/^https:\/\//i.test(url))command('insertImage',url)};
+q('#color').onclick=()=>{const value=prompt('Text color, e.g. #2256a2','#2256a2');if(value&&/^#[0-9a-f]{6}$/i.test(value))command('foreColor',value)};
+q('#paperStyle').onchange=e=>canvas.style.fontFamily=e.target.value==='modern'?'Arial,sans-serif':'Georgia,serif';
+const content=()=>({id:current,title:q('#title').value.trim(),version:q('#version').value.trim(),body_html:safeHtml(canvas.innerHTML)});
+async function save(){if(saving)return;const data=content();if(!data.title||!data.version||!canvas.textContent.trim())throw Error('Provide title, version and agreement text.');saving=true;try{const r=await api('save',data);current=r.id;dirty=false;q('#saveState').textContent='Draft saved';history.replaceState({},'', 'ic-agreement-builder.html?id='+encodeURIComponent(current));return current}finally{saving=false}}
+q('#save').onclick=async()=>{try{await save();notice('Draft saved successfully.')}catch(e){notice(e.message)}};
+q('#preview').onclick=()=>preview(q('#title').value,q('#version').value,canvas.innerHTML);
+q('#print').onclick=()=>{preview(q('#title').value,q('#version').value,canvas.innerHTML);window.print()};
+q('#publish').onclick=async()=>{try{if(dirty||!current)await save();if(!confirm('Publish this agreement version? It will no longer be editable.'))return;await api('publish',{id:current});notice('Agreement published and ready to email.');q('#save').disabled=true}catch(e){notice(e.message)}};
+q('#email').onclick=async()=>{try{if(!current)throw Error('Save and publish the agreement before sending.');const email=prompt('Recipient email address');if(!email)return;await api('send',{id:current,email});notice('Agreement invitation sent to '+email)}catch(e){notice(e.message)}};
+q('#duplicate').onclick=()=>{current=null;dirty=true;q('#title').value=q('#title').value+' (Copy)';q('#version').value=q('#version').value+'-revision';q('#save').disabled=false;history.replaceState({},'','ic-agreement-builder.html');notice('Working on a new draft copy. Save to create it.')};
+window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}});
+const id=new URLSearchParams(location.search).get('id');
+if(id){try{const d=await api('view',{id});const t=d.template;current=t.id;q('#title').value=t.title;q('#version').value=t.version;canvas.innerHTML=safeHtml(t.body_html);if(t.status!=='draft'){canvas.contentEditable='false';q('#save').disabled=true;q('#publish').disabled=true;q('.blocks').classList.add('hide');q('#toolbar').classList.add('hide');notice('Published agreement is read-only. Duplicate it to make a revision.')}else notice('Draft loaded.');}catch(e){notice(e.message)}}
+})();
