@@ -12,3 +12,11 @@
 .agreement-app .layout .agreement-editor-brand{width:100%;min-width:0;overflow:hidden}
 @media(max-width:1200px){.agreement-app .layout{grid-template-columns:190px minmax(0,1fr)!important}.agreement-app .layout>.settings{grid-column:2;position:static}.agreement-app .layout>div:nth-child(2){grid-column:2}}
 @media(max-width:780px){.agreement-app .layout{display:flex!important;flex-direction:column!important}.agreement-app .layout>.blocks,.agreement-app .layout>div:nth-child(2),.agreement-app .layout>.settings{width:100%!important;position:static}.agreement-app .layout .paper{padding:22px!important}}
+
+/* Keep editor controls visible in the management portal's unified shell. */
+.agreement-app .layout>.blocks:not(.hide){display:block!important;visibility:visible!important;opacity:1!important;grid-column:1;grid-row:1;align-self:start}
+.agreement-app .layout>div:nth-child(2){display:block!important;grid-column:2;grid-row:1}
+.agreement-app .layout #toolbar:not(.hide){display:flex!important;visibility:visible!important;opacity:1!important;position:relative;z-index:2}
+.agreement-app .layout>.settings{grid-column:3;grid-row:1}
+@media(max-width:1200px) and (min-width:781px){.agreement-app .layout>.settings{grid-row:2;grid-column:2}}
+@media(max-width:780px){.agreement-app .layout>.blocks:not(.hide),.agreement-app .layout>div:nth-child(2),.agreement-app .layout>.settings{grid-row:auto;grid-column:auto}}
