@@ -4,7 +4,7 @@ const user=await DOTAuth.requireAuth();if(!user)return;DOTShell.render(user);
 const mount=document.getElementById('dotPageMount');if(!mount)return;
 const isEditor=location.pathname.endsWith('ic-agreement-builder.html');
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const api=async(action,rest={})=>{const {data,error}=await dotSupabase.functions.invoke('management-ic-agreements',{body:{action,...rest}});if(error||data?.error)throw Error(data?.error||error.message||'Request failed');return data};
+const api=async(action,rest={})=>{const {data,error}=await dotSupabase.functions.invoke('management-ic-agreements',{body:{action,...rest}});if(error){let detail='';try{const response=error.context;if(response&&typeof response.clone==='function'){const body=await response.clone().json();detail=body.error||body.message||''}}catch{}throw Error(detail||error.message||'Request failed')}if(data?.error)throw Error(data.error);return data};
 const q=s=>mount.querySelector(s);
 const notice=(message,type='success')=>{const host=q('#toastHost');if(!host)return;const item=document.createElement('div');item.className='s4u-toast '+type;item.setAttribute('role','status');item.textContent=message;host.append(item);setTimeout(()=>item.remove(),5000)};
 const modal=(title,body,confirmLabel='Continue',danger=false)=>new Promise(resolve=>{
