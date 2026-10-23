@@ -20,3 +20,22 @@
 .agreement-app .layout>.settings{grid-column:3;grid-row:1}
 @media(max-width:1200px) and (min-width:781px){.agreement-app .layout>.settings{grid-row:2;grid-column:2}}
 @media(max-width:780px){.agreement-app .layout>.blocks:not(.hide),.agreement-app .layout>div:nth-child(2),.agreement-app .layout>.settings{grid-row:auto;grid-column:auto}}
+
+/* Horizontal Email Agreement selector */
+.agreement-app .s4u-action-dialog.s4u-email-wide{width:min(1020px,calc(100vw - 48px));max-width:1020px;max-height:min(88vh,850px);overflow:auto}
+.agreement-app .s4u-email-grid{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:28px;align-items:stretch}
+.agreement-app .s4u-email-column{min-width:0;display:flex;flex-direction:column;gap:11px}
+.agreement-app .s4u-email-column h3{font-size:18px;color:#15375f;margin:0}
+.agreement-app .s4u-email-column p{color:#667b95;font-size:13px;margin:0;line-height:1.5}
+.agreement-app .s4u-email-column textarea,.agreement-app .s4u-email-column input[type=search]{width:100%;border:1px solid #cbdaeb;border-radius:10px;padding:13px;font:inherit;color:#17365f;background:white;margin:0}
+.agreement-app .s4u-email-column textarea{resize:vertical;min-height:250px;flex:1}
+.agreement-app .s4u-email-list{height:270px;overflow:auto;border:1px solid #d5e1ee;border-radius:10px;background:#f9fbfe}
+.agreement-app .s4u-email-recipient{display:flex;gap:12px;align-items:center;padding:13px 15px;border-bottom:1px solid #e4eaf3;cursor:pointer}
+.agreement-app .s4u-email-recipient:hover{background:#eaf3fc}
+.agreement-app .s4u-email-recipient input{flex:none;width:17px;height:17px;margin:0;accent-color:#275a93}
+.agreement-app .s4u-email-recipient span{display:flex;flex-direction:column;gap:3px;min-width:0}
+.agreement-app .s4u-email-recipient strong{font-size:13px;color:#15375f}
+.agreement-app .s4u-email-recipient small{font-size:12px;color:#69809a;overflow-wrap:anywhere}
+.agreement-app .s4u-email-help{font-size:12px!important;color:#69809a!important}
+.agreement-app .s4u-email-error{color:#a52b3b;margin:12px 0 0}
+@media(max-width:720px){.agreement-app .s4u-action-dialog.s4u-email-wide{width:calc(100vw - 22px);max-height:92vh}.agreement-app .s4u-email-grid{grid-template-columns:1fr;gap:20px}.agreement-app .s4u-email-column textarea{min-height:115px}.agreement-app .s4u-email-list{height:190px}}
