@@ -14,9 +14,12 @@ async function guestInit(){
  $('backInvoice').hidden=true;
  try{
  const resp=await fetch('https://elpbnytpciqnbexiaebp.supabase.co/functions/v1/dot-guest-invoice-checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token})});
- const data=await resp.json();if(!resp.ok||!data.client_secret||!data.publishable_key)throw Error(data.error||'Invoice payment unavailable');
+ const data=await resp.json();if(!resp.ok)throw Error(data.error||'Invoice payment unavailable');
+ if(data.invoice?.status==='paid'||Number(data.invoice?.amount_due||0)===0){const paid=data.invoice;$('checkoutTitle').textContent='Payment complete — '+paid.invoice_number;$('sumInvoice').textContent=paid.invoice_number;$('sumCustomer').textContent=paid.customer_name||'Customer';$('sumStatus').textContent='paid';$('sumTotal').textContent=money(0,paid.currency||'USD');$('invoiceDetails').innerHTML=detail('Payment status','Paid');$('lineItems').innerHTML='';$('paymentHost').innerHTML='<div class="complete">Your payment was received. Thank you.</div>';notice('Payment completed successfully.');return;}
+ if(!data.client_secret||!data.publishable_key)throw Error('Secure payment form unavailable');
  invoice=data.invoice;const c=invoice.currency||'USD';
  $('checkoutTitle').textContent='Pay Invoice — '+invoice.invoice_number;
+ document.querySelector('.checkout-intro p').textContent='Pay securely on this page using the card form below. No account or login is required.';
  $('sumInvoice').textContent=invoice.invoice_number;$('sumCustomer').textContent=invoice.customer_name;$('sumStatus').textContent=invoice.status;$('sumTotal').textContent=money(invoice.amount_due,c);
  $('invoiceDetails').innerHTML=[['Customer',invoice.customer_name],['Email',invoice.recipient_email],['Balance Due',money(invoice.amount_due,c)]].map(x=>detail(x[0],x[1])).join('');
  $('lineItems').innerHTML=(invoice.invoice_items||[]).map(x=>'<div class="line"><strong>'+esc(x.description)+'</strong><span>'+esc(x.quantity)+'</span><span>'+money(x.unit_amount,c)+'</span></div>').join('');
