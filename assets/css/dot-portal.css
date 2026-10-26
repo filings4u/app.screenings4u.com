@@ -1185,3 +1185,8 @@ body.dot-modal-open{overflow:hidden}
 .invoice-admin-page .invoice-record-paper,
 .invoice-admin-page .invoice-record-paper>.invoice-document{display:block;box-sizing:border-box;width:100%;min-width:0;max-width:100%;justify-self:stretch}
 .invoice-admin-page .invoice-record-paper{margin-left:0;margin-right:0}
+
+/* Full-width invoice document in DOT administration */
+.invoice-admin-page{width:100%;max-width:none}
+.invoice-admin-page .invoice-record-view,.invoice-admin-page .invoice-record-paper,.invoice-admin-page .invoice-record-paper .invoice-document,.invoice-admin-page .invoice-create-layout{width:100%;max-width:none;box-sizing:border-box;margin-left:0;margin-right:0}
+.invoice-admin-page .invoice-record-paper{display:block}
