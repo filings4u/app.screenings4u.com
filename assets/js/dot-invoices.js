@@ -4,7 +4,7 @@ const money=(v,c='USD')=>new Intl.NumberFormat('en-US',{style:'currency',currenc
 const fmt=(v,dateOnly=false)=>{if(!v)return'—';if(dateOnly){const day=String(v).slice(0,10);if(/^\d{4}-\d{2}-\d{2}$/.test(day)){const [year,month,date]=day.split('-').map(Number);return `${month}/${date}/${year}`;}}const d=new Date(v);return Number.isNaN(d.getTime())?String(v):d.toLocaleDateString('en-US')};
 const api=(action,extra={})=>DOTApi.invoke('dot-invoice-admin',{action,...extra});
 const adminPayUrl=id=>`global-checkout.html?mode=invoice&invoice_id=${encodeURIComponent(id)}`;
-const customerPayUrl=inv=>{const base=inv.customer_type==='ctpa'?'https://ctpa-dot.screenings4u.com':inv.customer_type==='owner_operator'?'https://owner-operator.screenings4u.com':'https://employer-fmcsa-dot.screenings4u.com';return `${base}/global-checkout.html?mode=invoice&invoice_id=${encodeURIComponent(inv.id)}`};
+const customerPayUrl=inv=>inv.payment_url||'';
 const badge=v=>`<span class="dot-status-pill ${/paid/i.test(v)?'ok':/void|uncollect|refund/i.test(v)?'bad':'warn'}">${esc(String(v||'draft').replaceAll('_',' ').toUpperCase())}</span>`;
 let state={invoices:[],ctpas:[],direct_employers:[],owner_operators:[]};
 function shell(title,copy,actions=''){DOTShell.render(window.DOT_AUTH_STATE);$('#dotPageMount').innerHTML=`<section class="dot-page invoice-admin-page"><header class="dot-page-head"><div><span class="dot-eyebrow">DOT BILLING</span><h1>${esc(title)}</h1><p>${esc(copy)}</p></div><div class="dot-actions">${actions}</div></header><div id="invoiceNotice"></div><div id="invoiceMount"></div></section>`}
