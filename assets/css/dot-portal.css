@@ -1190,3 +1190,9 @@ body.dot-modal-open{overflow:hidden}
 .invoice-admin-page{width:100%;max-width:none}
 .invoice-admin-page .invoice-record-view,.invoice-admin-page .invoice-record-paper,.invoice-admin-page .invoice-record-paper .invoice-document,.invoice-admin-page .invoice-create-layout{width:100%;max-width:none;box-sizing:border-box;margin-left:0;margin-right:0}
 .invoice-admin-page .invoice-record-paper{display:block}
+
+/* 2026-10-26 invoice sizing: make the paper match the full toolbar/content width */
+body .dot-page.invoice-admin-page,body .invoice-admin-page #invoiceMount,body .invoice-admin-page .invoice-record-view,body .invoice-admin-page .invoice-record-paper,body .invoice-admin-page .invoice-record-paper>.invoice-document{width:100%!important;max-width:none!important;min-width:0!important;box-sizing:border-box!important;margin-left:0!important;margin-right:0!important}
+body .invoice-admin-page .invoice-record-view{display:flex!important;flex-direction:column!important;align-items:stretch!important}
+body .invoice-admin-page .invoice-record-toolbar,body .invoice-admin-page .invoice-record-paper{flex:1 1 auto!important;align-self:stretch!important}
+body .invoice-admin-page .invoice-record-paper>.invoice-document{display:block!important}
