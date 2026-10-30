@@ -51,7 +51,21 @@ let publishedRecords=[];
     if(!items.length){const empty=document.createElement('p');empty.className='mro-empty';empty.textContent='No matching records.';body.append(empty);return}
     for(const r of items){const item=document.createElement('article');item.className='mro-record-item';const left=document.createElement('div');left.className='mro-record-main';const h=document.createElement('h3');h.textContent=donorName(r);const sub=document.createElement('p');sub.textContent='Tested '+(r.test_date||'—')+' • '+(r.cdl_number||r.state_id_number||r.identity_number||'No ID');left.append(h,sub);
       const badges=document.createElement('div');badges.className='mro-record-status';const result=document.createElement('span');result.textContent=r.result||'Pending MRO';const stage=document.createElement('small');stage.textContent=r.workflow_stage||'Ordered';badges.append(result,stage);
-      const actions=document.createElement('div');actions.className='mro-record-actions';actions.append(makeButton('View / Edit',()=>showRecord(r)));item.append(left,badges,actions);body.append(item)}
+      const documentInfo=recordMeta.get(r.id)||{};
+      const documentArea=document.createElement('div');documentArea.className='mro-record-document';
+      const documentLabel=document.createElement('strong');documentLabel.textContent='MRO document';
+      const documentName=document.createElement('span');documentName.textContent=documentInfo.document_name||r.document_name||'No PDF attached';
+      documentArea.append(documentLabel,documentName);
+      if(documentInfo.has_document){
+        const view=makeButton('View PDF',async()=>{
+          const viewer=window.open('about:blank','_blank');
+          try{const response=await documents({action:'view',id:r.id});if(!response.url)throw Error('Document unavailable');if(viewer)viewer.location.replace(response.url);else throw Error('Allow pop-ups to view PDF')}
+          catch(e){if(viewer)viewer.close();feedback(e.message,'error')}
+        });
+        documentArea.append(view);
+      }
+      const actions=document.createElement('div');actions.className='mro-record-actions';actions.append(makeButton('View / Edit',()=>showRecord(r)));
+      item.append(left,badges,documentArea,actions);body.append(item)}
   };
   async function loadPublished(){
     const employer_id=$('employer').value;if(!employer_id)return;
