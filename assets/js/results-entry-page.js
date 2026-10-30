@@ -45,7 +45,7 @@
     ...payload, source, employer_id: $('employer').value
   });
   mount.innerHTML = `<div class="dot-page results-editor re-redesign">
-  <header class="re-hero"><div><span class="dot-eyebrow">RESULTS MANAGEMENT / ${source==='dot'?'DOT':'NON-DOT'}</span><h1>MRO Results Workspace</h1><p>Verify each donor, attach their own official report, and review before sending.</p></div><a class="re-back" href="/results-management.html">← All Results</a></header>
+  <header class="re-hero"><div><span class="dot-eyebrow">RESULTS MANAGEMENT / ${source==='dot'?'DOT':'NON-DOT'}</span><h1>MRO Results Workspace</h1><p>Create donor-specific results, attach official reports, and review before publishing.</p></div><a class="re-back" href="/results-management.html">← All Results</a></header>
   <div class="re-workflow-strip" aria-label="Results processing stages"><div><b>1</b><span>Choose employer</span></div><div><b>2</b><span>Verify donor</span></div><div><b>3</b><span>Attach MRO PDF</span></div><div><b>4</b><span>Review & publish</span></div></div><div id="resultsFeedback" class="re-feedback" role="status" aria-live="polite">Loading employer records…</div>
   <section class="re-panel re-employer"><div class="re-section-title"><span class="re-step">01</span><div><h2>Select employer</h2><p>All results and documents are restricted to this employer.</p></div></div><div class="re-fields"><label class="re-wide">Employer<select id="employer"><option value="">Choose employer</option></select></label></div></section>
   <div class="re-workspace">
@@ -58,7 +58,8 @@
    <div class="re-bottom"><div class="re-submit"><button id="saveDraft" type="button" class="re-secondary">Save draft</button><button id="publish" type="button">Publish donor results</button></div></div>
    </section>
   </div>
-  <section class="re-panel re-published"><div class="re-section-title"><span class="re-step">05</span><div><h2>Saved drafts</h2><p>Resume existing drafts and attach any missing donor PDFs.</p></div></div><div id="draftList" role="region" aria-label="Saved donor drafts"></div><div class="re-section-title re-spaced"><span class="re-step">06</span><div><h2>Published donor results</h2><p id="publishedCount">Loading…</p><p>Correct an existing donor's PDF using Replace MRO PDF. Do not create a duplicate result.</p></div></div><div class="re-table"><table><thead><tr><th>Donor</th><th>Birthdate</th><th>CDL / State ID</th><th>Test Date</th><th>Result</th><th>Workflow</th><th>MRO Document</th><th>Actions</th></tr></thead><tbody id="publishedRows"></tbody></table></div></section>
+  <section class="re-panel re-published"><div class="re-section-title"><span class="re-step">05</span><div><h2>Saved drafts</h2><p>Resume unfinished submissions before publishing.</p></div></div><div id="draftList" role="region" aria-label="Saved donor drafts"></div><div class="re-records-link"><a href="/mro-records.html?source=${source}&amp;employer_id=${encodeURIComponent(parameters.get('employer_id')||'')}">View published MRO records →</a></div></section>
+  <div hidden><span id="publishedCount"></span><table><tbody id="publishedRows"></tbody></table></div>
  </div>`;
   const feedback = (message, kind = 'info') => {
     const el = $('resultsFeedback');
