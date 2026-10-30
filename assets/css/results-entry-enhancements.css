@@ -34,3 +34,23 @@
 .re-redesign button:focus-visible,.re-redesign input:focus-visible,.re-redesign select:focus-visible{outline:3px solid #f8a65d;outline-offset:2px}
 @media(max-width:1100px){.re-redesign .re-workspace{grid-template-columns:1fr}}
 @media(max-width:640px){.re-redesign .re-panel{padding:16px;border-radius:12px}.re-redesign .re-donor .re-fields{grid-template-columns:1fr}.re-redesign .re-donor .re-fields .re-wide{grid-column:1}.re-redesign .re-actions,.re-redesign .re-submit{flex-direction:column;align-items:stretch}.re-redesign .re-actions>*{width:100%}.re-redesign .re-step{flex-basis:32px;height:32px}.re-redesign .re-section-title h2{font-size:17px}}
+
+/* New workspace shell: distinct from legacy stacked entry form */
+.results-editor.re-redesign{background:#f4f7fc;padding:4px 6px 30px;border-radius:20px}
+.re-redesign .re-hero{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;background:linear-gradient(115deg,#122f59,#234d83);color:white;border-radius:18px;padding:34px 38px;margin-bottom:20px}
+.re-redesign .re-hero h1{font-size:clamp(25px,3vw,38px);color:#fff;margin:7px 0 8px;font-weight:850;letter-spacing:-.025em}
+.re-redesign .re-hero p{color:#e1eaf5;max-width:650px;font-size:15px;margin:0}
+.re-redesign .re-hero .dot-eyebrow{color:#ffb575}
+.re-redesign .re-hero .re-back{background:#fff;color:#17365f;border:0}
+.re-redesign .re-workflow-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 20px}
+.re-redesign .re-workflow-strip>div{min-width:0;display:flex;align-items:center;gap:10px;padding:16px 14px;border:1px solid #e0e8f1;border-radius:13px;background:#fff;color:#2a456a;font-weight:750;font-size:13px}
+.re-redesign .re-workflow-strip b{height:30px;width:30px;display:grid;place-items:center;border-radius:50%;background:#17365f;color:#fff;flex-shrink:0}
+.re-redesign .re-workflow-strip>div:nth-child(4){border-color:#f1bd96}
+.re-redesign .re-workflow-strip>div:nth-child(4) b{background:#e56a0a}
+.re-redesign .re-counter{padding:11px 13px;border:1px solid #d4e1ef;border-radius:9px;background:#f7faff;color:#17365f;font-size:13px;font-weight:800}
+.re-redesign .re-review-highlight{padding:19px;display:flex;flex-direction:column;gap:5px;background:#17365f;color:#fff;border-radius:12px;margin-bottom:24px}
+.re-redesign .re-review-highlight strong{font-size:18px}
+.re-redesign .re-review-highlight span{color:#dfebf9;font-size:13px}
+.re-redesign .re-donor,.re-redesign .re-review{border-top:5px solid #f36a00}
+@media(max-width:800px){.re-redesign .re-workflow-strip{grid-template-columns:repeat(2,minmax(0,1fr))}.re-redesign .re-hero{padding:24px}}
+@media(max-width:450px){.re-redesign .re-workflow-strip{grid-template-columns:1fr 1fr;gap:7px}.re-redesign .re-workflow-strip>div{padding:9px 8px;font-size:11px}.re-redesign .re-workflow-strip b{width:24px;height:24px}.re-redesign .re-hero{padding:20px 16px}}
