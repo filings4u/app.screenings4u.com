@@ -58,7 +58,7 @@
    <div class="re-bottom"><div class="re-submit"><button id="saveDraft" type="button" class="re-secondary">Save draft</button><button id="publish" type="button">Publish donor results</button></div></div>
    </section>
   </div>
-  <section class="re-panel re-published"><div class="re-section-title"><span class="re-step">05</span><div><h2>Saved drafts</h2><p>Resume unfinished submissions before publishing.</p></div></div><div id="draftList" role="region" aria-label="Saved donor drafts"></div><div class="re-records-link"><a href="/mro-records.html?source=${source}&amp;employer_id=${encodeURIComponent(parameters.get('employer_id')||'')}">View published MRO records →</a></div></section>
+  <section class="re-panel re-published"><div class="re-section-title"><span class="re-step">05</span><div><h2>Saved drafts</h2><p>Resume unfinished submissions before publishing.</p></div></div><div id="draftList" role="region" aria-label="Saved donor drafts"></div><div class="re-records-link"><a id="viewMroRecords" href="/mro-records.html?source=${source}&amp;employer_id=${encodeURIComponent(parameters.get('employer_id')||'')}">View published MRO records →</a></div></section>
   <div hidden><span id="publishedCount"></span><table><tbody id="publishedRows"></tbody></table></div>
  </div>`;
   const feedback = (message, kind = 'info') => {
@@ -292,7 +292,7 @@
       row.append(info,edit,send,remove);container.append(row)
     }
   }
-  $('employer').onchange=()=>{donorFiles.clear();$('pdf').value='';$('selectedDocument').textContent='No PDF selected.';rows=[];employees=[];activeDraftId=null;editingIndex=-1;render();$('employeeHistory').hidden=true;Promise.all([loadPublished(),loadDrafts(),loadEmployees()]).catch(e=>feedback(e.message,'error'))};
+  $('employer').onchange=()=>{ $('viewMroRecords').href='/mro-records.html?source='+encodeURIComponent(source)+'&employer_id='+encodeURIComponent($('employer').value);donorFiles.clear();$('pdf').value='';$('selectedDocument').textContent='No PDF selected.';rows=[];employees=[];activeDraftId=null;editingIndex=-1;render();$('employeeHistory').hidden=true;Promise.all([loadPublished(),loadDrafts(),loadEmployees()]).catch(e=>feedback(e.message,'error'))};
   $('saveDraft').onclick=async()=>{const button=$('saveDraft');button.disabled=true;
     try{if(!$('employer').value||!rows.length)throw Error('Choose employer and add donors');
       await uploadDonorDocuments();const result=await api({action:'save_draft',employer_id:$('employer').value,rows,draft_id:activeDraftId||undefined,workflow_stage:$('workflowStage').value});
