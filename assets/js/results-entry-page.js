@@ -57,7 +57,7 @@
       <label>Test date *<input type="date" id="testDate"></label>
       <label>Test result<select id="mroResult"><option value="">Pending MRO</option><option>Negative</option><option>Positive</option></select></label>
       <label>Workflow stage<select id="workflowStage"><option>Ordered</option><option>Processing</option><option>At Lab</option><option>MRO Confirmation</option></select></label>
-      <label class="re-wide">Official MRO document (PDF)<input id="pdf" type="file" accept=".pdf,application/pdf"><div id="selectedDocument" class="re-document-info">No PDF selected.</div></label>
+      <label class="re-wide">Official MRO document for this donor (PDF)<input id="pdf" type="file" accept=".pdf,application/pdf"><div id="selectedDocument" class="re-document-info">No PDF selected.</div></label>
     </div>
     <div id="employeeHistory" class="re-form" hidden></div><div class="re-actions"><button id="add" type="button">Add Donor</button>
       <button id="downloadTemplate" type="button" class="re-secondary">Download Spreadsheet Template</button>
@@ -83,12 +83,13 @@
     /^\d{4}-\d{2}-\d{2}$/.test(test) && dob >= '1900-01-01' &&
     dob < test && test <= new Date().toISOString().slice(0, 10);
   $('birthdate').max = $('testDate').max = new Date().toISOString().slice(0, 10);
-  let employees = [];let rows = [], previewURL = null, editingIndex = -1, publishedRecords = [], activeDraftId = null, activeDocument = null;
+  let employees = [];let rows = [], previewURL = null, editingIndex = -1, publishedRecords = [], activeDraftId = null, activeDocument = null; const donorFiles = new Map();
   const donorKey = r => [String(r.cdl_number||r.state_id_number||r.identity_number||'').trim().toUpperCase(),String(r.test_date||'')].join('|');
   const sameDonor = (a,b) => donorKey(a) === donorKey(b);
   const setEditor = (r,index) => {
     editingIndex=index;$('employeeSelect').value=r.employee_id||'';
     for(const [field,key] of [['firstName','first_name'],['middleInitial','middle_initial'],['lastName','last_name'],['birthdate','birthdate'],['cdlNumber','cdl_number'],['stateIdNumber','state_id_number'],['testDate','test_date'],['mroResult','result']]) $(field).value=r[key]||'';
+    $('pdf').value=''; $('selectedDocument').textContent=r.document_name ? 'Attached: '+r.document_name : 'Select this donor’s official MRO PDF';
     $('add').textContent='Update Donor';
     feedback('Editing donor details. Click Update Donor to save changes in the list.');
     $('firstName').focus();
@@ -96,7 +97,7 @@
   const clearEditor = () => {
     editingIndex=-1;$('add').textContent='Add Donor';
     for(const id of ['firstName','middleInitial','lastName','birthdate','cdlNumber','stateIdNumber']) $(id).value='';
-    $('mroResult').value='';
+    $('mroResult').value=''; $('pdf').value=''; $('selectedDocument').textContent='No PDF selected.';
   };
   const cell = (tr, value = '') => {
     const td = document.createElement('td');
@@ -119,8 +120,9 @@
       result.onchange = () => {r.result = result.value || null};cell(tr, '').replaceChildren(result);
       const edit = document.createElement('button');edit.type='button';edit.textContent='Edit';edit.onclick=()=>setEditor(r,i);
       const remove = document.createElement('button');remove.type = 'button';remove.textContent = 'Remove';
-      remove.onclick = () => {rows.splice(i, 1);render();feedback('Donor removed from unsaved list.')};
-      const actions=cell(tr,'');actions.append(edit,document.createTextNode(' '),remove);body.append(tr);
+      remove.onclick = () => {donorFiles.delete(r);rows.splice(i, 1);render();feedback('Donor removed from unsaved list.')};
+      const doc=document.createElement('span');doc.textContent=r.document_name ? ' • PDF: '+r.document_name : ' • PDF missing';
+      const actions=cell(tr,'');actions.append(edit,document.createTextNode(' '),remove,doc);body.append(tr);
     });
   };
   $('add').onclick = () => {
@@ -137,6 +139,11 @@
     if(publishedRecords.some(x=>sameDonor(x,r))){feedback('This donor and test date already have a published record. Edit the published record instead.','error');return}
     if (rows.length >= 200 && editingIndex === -1) {feedback('Maximum 200 donors per submission.', 'error');return}
     const editing=editingIndex>=0;
+    const file=$('pdf').files[0];
+    const previous=editing?rows[editingIndex]:null;
+    if(!file&&!previous?.document_path&&!donorFiles.has(previous)){feedback('Select the official MRO PDF for this donor before adding.', 'error');return}
+    if(previous){r.document_path=previous.document_path||'';r.document_name=previous.document_name||'';const oldFile=donorFiles.get(previous);if(oldFile)donorFiles.set(r,oldFile);donorFiles.delete(previous)}
+    if(file){r.document_path='';r.document_name=file.name;donorFiles.set(r,file)}
     if(editing)rows[editingIndex]=r;else rows.push(r);
     render();clearEditor();feedback(editing?'Donor updated in the unsaved list.':'Donor added to the unsaved list.', 'success');
   };
@@ -181,15 +188,23 @@
       rows.push(...imported);render();feedback(`${imported.length} donors imported into unsaved list.`, 'success');
     } catch(e) {feedback(e.message,'error')}
   };
-  const upload = async () => {
-    const file = $('pdf').files[0];if (!file) return { document_path:'',filename:'' };
+  const upload = async (file) => {
+    if (!file) throw Error('Donor PDF missing');
     if (!file.name.toLowerCase().endsWith('.pdf') || file.size > 10485760) throw Error('PDF required, max 10MB');
     feedback('Uploading official MRO PDF…');
     const data = await api({action:'prepare',employer_id:$('employer').value,filename:file.name});
     if (!data.path || !data.upload_url) throw Error('Upload URL not provided');
     const response = await fetch(data.upload_url,{method:'PUT',headers:{'Content-Type':'application/pdf'},body:file});
     if (!response.ok) throw Error('MRO PDF upload failed');
-    return {document_path:data.path,filename:file.name};
+    return {document_path:data.path,document_name:file.name};
+  };
+  const uploadDonorDocuments = async () => {
+    for(const row of rows){
+      const file=donorFiles.get(row);
+      if(file){const saved=await upload(file);row.document_path=saved.document_path;row.document_name=saved.document_name;donorFiles.delete(row)}
+      if(!row.document_path)throw Error('Each donor must have an individual MRO PDF: '+row.first_name+' '+row.last_name);
+    }
+    if(new Set(rows.map(r=>r.document_path)).size!==rows.length)throw Error('MRO PDF is assigned to more than one donor.');
   };
   async function loadPublished() {
     const employer_id = $('employer').value;if (!employer_id) return;
@@ -251,9 +266,9 @@
       const row=document.createElement('div');row.className='re-draft-row';
       const info=document.createElement('span');info.textContent=(draft.records?.length||0)+' donor(s) • '+(draft.document_name||'No PDF')+' • Saved draft';
       const edit=document.createElement('button');edit.type='button';edit.textContent='Load & Edit';
-      edit.onclick=()=>{activeDraftId=draft.id;activeDocument={document_path:draft.document_path||'',filename:draft.document_name||''};rows=(draft.records||[]).map(x=>({...x}));render();$('workflowStage').value=draft.workflow_stage||'Ordered';feedback('Draft loaded. Edit donor information, then Save Draft or Publish.','success');window.scrollTo({top:0,behavior:'smooth'})};
+      edit.onclick=()=>{activeDraftId=draft.id;activeDocument=null;rows=(draft.records||[]).map(x=>({...x}));render();$('workflowStage').value=draft.workflow_stage||'Ordered';feedback('Draft loaded. Edit donor information, then Save Draft or Publish.','success');window.scrollTo({top:0,behavior:'smooth'})};
       const send=document.createElement('button');send.type='button';send.textContent='Publish & Email';
-      send.onclick=async()=>{if(!await window.DOTDialog.confirm('Publish this saved draft and request an email notification?',{title:'Publish saved donor results',confirmText:'Publish & Notify'}))return;send.disabled=true;try{
+      send.onclick=async()=>{feedback('Draft publishing is unavailable until backend document ownership validation is deployed.','error');return;if((draft.records||[]).some(r=>!r.document_path)||new Set((draft.records||[]).map(r=>r.document_path)).size!==(draft.records||[]).length){feedback('Legacy draft uses shared or missing MRO PDFs. Load and attach a separate PDF to each donor before publishing.','error');return}if(!await window.DOTDialog.confirm('Publish this saved draft and request an email notification?',{title:'Publish saved donor results',confirmText:'Publish & Notify'}))return;send.disabled=true;try{
         await loadPublished();if((draft.records||[]).some(r=>publishedRecords.some(p=>sameDonor(r,p))))throw Error('One or more donor test results are already published. No duplicate results or emails were created.');
         const result=await api({action:'push_draft',employer_id,draft_id:draft.id});
         if(!result.ok)throw Error('Publish was not confirmed');
@@ -270,22 +285,22 @@
   $('employer').onchange=()=>{rows=[];employees=[];activeDraftId=null;editingIndex=-1;render();$('employeeHistory').hidden=true;Promise.all([loadPublished(),loadDrafts(),loadEmployees()]).catch(e=>feedback(e.message,'error'))};
   $('saveDraft').onclick=async()=>{const button=$('saveDraft');button.disabled=true;
     try{if(!$('employer').value||!rows.length)throw Error('Choose employer and add donors');
-      const file=$('pdf').files[0]?await upload():(activeDocument||{document_path:'',filename:''});const result=await api({action:'save_draft',employer_id:$('employer').value,rows,draft_id:activeDraftId||undefined,workflow_stage:$('workflowStage').value,...file});
+      await uploadDonorDocuments();const result=await api({action:'save_draft',employer_id:$('employer').value,rows,draft_id:activeDraftId||undefined,workflow_stage:$('workflowStage').value});
       if(!result.ok)throw Error('Draft save not confirmed');activeDraftId=null;activeDocument=null;rows=[];render();await loadDrafts();feedback('Draft saved successfully. No customer notification was sent.','success');
     }catch(e){feedback(e.message,'error')}finally{button.disabled=false}
   };
   $('publish').onclick=async()=>{
+    feedback('Publishing is unavailable until backend document ownership validation is deployed.', 'error');return;
     if(!await window.DOTDialog.confirm('Publish these donor results to the customer portal and request an email notification?',{title:'Publish donor results',confirmText:'Publish & Notify'}))return;
     const button=$('publish');button.disabled=true;
     try{if(!$('employer').value||!rows.length)throw Error('Choose employer and add donors');
       await loadPublished();
       if(rows.some(r=>publishedRecords.some(p=>sameDonor(r,p))))throw Error('Donor/test date already published. Edit the existing record; no new email was sent.');
-      if(!$('pdf').files[0]&&!activeDocument?.document_path)throw Error('Select the official MRO PDF before publishing');
-      const file=$('pdf').files[0]?await upload():activeDocument;feedback('Publishing results to customer records…');
-      const result=await api({action:'publish',employer_id:$('employer').value,rows,workflow_stage:$('workflowStage').value,...file});
+      await uploadDonorDocuments();feedback('Publishing individually assigned donor results…');
+      const result=await api({action:'publish',employer_id:$('employer').value,rows,workflow_stage:$('workflowStage').value});
       if(!result.ok)throw Error('Publishing was not confirmed');
       rows=[];activeDraftId=null;activeDocument=null;render();$('pdf').value='';$('selectedDocument').textContent='No PDF selected.';
-      await loadPublished();await loadDrafts();feedback(`${result.count||0} donor results published to the portal. MRO PDF saved: ${file.filename}.`, 'success');await offerNotification(result.ids,$('employer').value);
+      await loadPublished();await loadDrafts();feedback(`${result.count||0} donor results published to the portal. Each MRO PDF is assigned to its donor.`, 'success');await offerNotification(result.ids,$('employer').value);
     }catch(e){feedback(e.message,'error')}finally{button.disabled=false}
   };
 async function loadEmployees(){employees=[];const pick=$('employeeSelect');pick.replaceChildren(new Option('Choose existing employee',''));if(!$('employer').value)return;const data=await api({action:'employees',employer_id:$('employer').value});employees=data.employees||[];for(const e of employees)pick.add(new Option([e.first_name,e.middle_name,e.last_name].filter(Boolean).join(' '),e.id));const target=parameters.get('employee_id');if(target&&employees.some(e=>e.id===target)){pick.value=target;pick.dispatchEvent(new Event('change'));}}
