@@ -44,30 +44,22 @@
   const documents = payload => call('management-mro-documents', {
     ...payload, source, employer_id: $('employer').value
   });
-  mount.innerHTML = `<div class="dot-page results-editor">
-    <div class="dot-page-head"><div><span class="dot-eyebrow">DOT &amp; NON-DOT RESULTS</span>
-    <h1>Enter Donor Results</h1><p>Add donors, attach the official MRO report, save or publish.</p></div>
-    <a class="re-back" href="/results-management.html">← Results Management</a></div>
-    <section class="re-form"><div id="resultsFeedback" class="re-feedback" role="status" aria-live="polite">Loading records…</div>
-    <div class="re-fields">
-      <label class="re-wide">Employer<select id="employer"><option value="">Choose employer</option></select></label>
-      <label class="re-wide">Existing employee<select id="employeeSelect"><option value="">Choose existing employee</option></select></label><label>First name *<input id="firstName"></label><label>Middle initial<input id="middleInitial" maxlength="1"></label>
-      <label>Last name *<input id="lastName"></label><label>Birthdate *<input type="date" id="birthdate"></label>
-      <label>CDL number<input id="cdlNumber"></label><label>State ID number<input id="stateIdNumber"></label>
-      <label>Test date *<input type="date" id="testDate"></label>
-      <label>Test result<select id="mroResult"><option value="">Pending MRO</option><option>Negative</option><option>Positive</option></select></label>
-      <label>Workflow stage<select id="workflowStage"><option>Ordered</option><option>Processing</option><option>At Lab</option><option>MRO Confirmation</option></select></label>
-      <label class="re-wide">Official MRO document for this donor (PDF)<input id="pdf" type="file" accept=".pdf,application/pdf"><div id="selectedDocument" class="re-document-info">No PDF selected.</div></label>
-    </div>
-    <div id="employeeHistory" class="re-form" hidden></div><div class="re-actions"><button id="add" type="button">Add Donor</button>
-      <button id="downloadTemplate" type="button" class="re-secondary">Download Spreadsheet Template</button>
-      <label class="re-upload">Import Spreadsheet<input id="sheet" type="file" accept=".xlsx,.xls,.csv"></label></div>
-    <div class="re-table"><table><thead><tr><th>Donor</th><th>Birthdate</th><th>CDL / State ID</th><th>Test Date</th><th>Result</th><th>Actions</th></tr></thead><tbody id="rows"></tbody></table></div>
-    <div class="re-published"><h2>Saved Drafts — Review Before Sending</h2><p>Drafts are not published or emailed until you explicitly send them.</p><div id="draftList" role="region" aria-label="Saved donor drafts"></div><h2>Published Donor Results</h2><p id="publishedCount">Loading…</p>
-      <div class="re-table"><table><thead><tr><th>Donor</th><th>Birthdate</th><th>CDL / State ID</th><th>Test Date</th><th>Result</th><th>Workflow</th><th>MRO Document</th><th>Actions</th></tr></thead>
-      <tbody id="publishedRows"></tbody></table></div></div>
-    <div class="re-bottom"><div class="re-submit"><button id="saveDraft" type="button" class="re-secondary">Save &amp; Exit</button>
-      <button id="publish" type="button">Save &amp; Send Results</button></div></div></section></div>`;
+  mount.innerHTML = `<div class="dot-page results-editor re-redesign">
+  <header class="dot-page-head"><div><span class="dot-eyebrow">RESULTS MANAGEMENT / ${source==='dot'?'DOT':'NON-DOT'}</span><h1>MRO Results Workspace</h1><p>Verify each donor, attach their own official report, and review before sending.</p></div><a class="re-back" href="/results-management.html">← All Results</a></header>
+  <div id="resultsFeedback" class="re-feedback" role="status" aria-live="polite">Loading employer records…</div>
+  <section class="re-panel re-employer"><div class="re-section-title"><span class="re-step">01</span><div><h2>Select employer</h2><p>All results and documents are restricted to this employer.</p></div></div><div class="re-fields"><label class="re-wide">Employer<select id="employer"><option value="">Choose employer</option></select></label></div></section>
+  <div class="re-workspace">
+   <section class="re-panel re-donor"><div class="re-section-title"><span class="re-step">02</span><div><h2>Donor information</h2><p>One donor and one official MRO PDF per record.</p></div></div>
+    <div class="re-fields"><label class="re-wide">Existing employee (optional)<select id="employeeSelect"><option value="">Choose employee</option></select></label><label>First name *<input id="firstName" autocomplete="off"></label><label>Middle initial<input id="middleInitial" maxlength="1"></label><label>Last name *<input id="lastName" autocomplete="off"></label><label>Date of birth *<input type="date" id="birthdate"></label><label>CDL number<input id="cdlNumber"></label><label>State ID number<input id="stateIdNumber"></label><label>Test date *<input type="date" id="testDate"></label><label>Test result<select id="mroResult"><option value="">Pending MRO</option><option>Negative</option><option>Positive</option></select></label><label>Workflow stage<select id="workflowStage"><option>Ordered</option><option>Processing</option><option>At Lab</option><option>MRO Confirmation</option></select></label></div>
+    <div class="re-upload-panel"><div class="re-section-title"><span class="re-step">03</span><div><h2>Donor's official MRO PDF</h2><p>Verify the donor name on the PDF before attaching it. Maximum 10 MB.</p></div></div><label class="re-wide">Choose PDF for this donor<input id="pdf" type="file" accept=".pdf,application/pdf"></label><div id="selectedDocument" class="re-document-info">No PDF selected.</div></div>
+    <div id="employeeHistory" hidden></div><div class="re-actions"><button id="add" type="button">Add donor to review</button><button id="downloadTemplate" type="button" class="re-secondary">Download CSV template</button><label class="re-upload">Import donors CSV/XLSX<input id="sheet" type="file" accept=".xlsx,.xls,.csv"></label></div>
+   </section>
+   <section class="re-panel re-review"><div class="re-section-title"><span class="re-step">04</span><div><h2>Review before sending</h2><p>Every donor must have an individual PDF. No results are delivered until you confirm publishing.</p></div></div><div class="re-table"><table><thead><tr><th>Donor</th><th>Birthdate</th><th>CDL / State ID</th><th>Test date</th><th>Result</th><th>Actions / attached PDF</th></tr></thead><tbody id="rows"></tbody></table></div>
+   <div class="re-bottom"><div class="re-submit"><button id="saveDraft" type="button" class="re-secondary">Save draft</button><button id="publish" type="button">Publish donor results</button></div></div>
+   </section>
+  </div>
+  <section class="re-panel re-published"><div class="re-section-title"><span class="re-step">05</span><div><h2>Saved drafts</h2><p>Resume existing drafts and attach any missing donor PDFs.</p></div></div><div id="draftList" role="region" aria-label="Saved donor drafts"></div><div class="re-section-title re-spaced"><span class="re-step">06</span><div><h2>Published donor results</h2><p id="publishedCount">Loading…</p><p>Correct an existing donor's PDF using Replace MRO PDF. Do not create a duplicate result.</p></div></div><div class="re-table"><table><thead><tr><th>Donor</th><th>Birthdate</th><th>CDL / State ID</th><th>Test Date</th><th>Result</th><th>Workflow</th><th>MRO Document</th><th>Actions</th></tr></thead><tbody id="publishedRows"></tbody></table></div></section>
+ </div>`;
   const feedback = (message, kind = 'info') => {
     const el = $('resultsFeedback');
     el.textContent = message;
@@ -242,6 +234,23 @@
       const actions=cell(tr,'');const buttons=document.createElement('div');buttons.style.cssText='display:flex;gap:8px;flex-wrap:wrap;align-items:center';
       const remove=document.createElement('button');remove.type='button';remove.textContent='Delete';remove.className='re-delete-result';remove.style.cssText='background:#b42318;border:1px solid #b42318;border-radius:7px;color:#fff;font-weight:700;padding:8px 12px;cursor:pointer';
       remove.onclick=async()=>{const confirmed=await window.DOTDialog.confirm('Permanently delete the published result for '+name+'? This cannot be undone.',{title:'Delete Published Result',confirmText:'Delete Result',cancelText:'Cancel',danger:true});if(!confirmed)return;remove.disabled=true;save.disabled=true;try{const deleted=await api({action:'delete_published',employer_id,id:r.id,confirm_delete:true});if(!deleted.ok)throw Error('Deletion was not confirmed');await loadPublished();feedback('Deleted published result for '+name+'.','success')}catch(e){feedback(e.message||String(e),'error');remove.disabled=false;save.disabled=false}};
+      const replace=document.createElement('button');replace.type='button';replace.textContent='Replace MRO PDF';replace.className='re-secondary';
+      replace.onclick=async()=>{
+        if(!await window.DOTDialog.confirm('Replace the official MRO PDF for '+name+' (test date '+r.test_date+')? Verify the corrected document matches this donor.',{title:'Confirm donor PDF replacement',confirmText:'Select corrected PDF'}))return;
+        const picker=document.createElement('input');picker.type='file';picker.accept='.pdf,application/pdf';picker.style.display='none';document.body.append(picker);
+        picker.onchange=async()=>{const file=picker.files[0];picker.remove();if(!file)return;replace.disabled=true;try{
+          if(!file.name.toLowerCase().endsWith('.pdf')||file.size>10485760)throw Error('Select a PDF under 10 MB');
+          const prepared=await api({action:'prepare',employer_id:$('employer').value,filename:file.name});
+          if(!prepared.path||!prepared.upload_url)throw Error('PDF upload unavailable');
+          const uploaded=await fetch(prepared.upload_url,{method:'PUT',headers:{'Content-Type':'application/pdf'},body:file});
+          if(!uploaded.ok)throw Error('PDF upload failed');
+          const changed=await documents({action:'replace',id:r.id,confirm_donor_id:r.id,confirm_donor_name:name,confirm_test_date:r.test_date,document_path:prepared.path,document_name:file.name});
+          if(!changed.ok)throw Error('Replacement not confirmed');
+          await loadPublished();feedback('Corrected MRO PDF saved for '+name+'. Verify the employer portal before sending a notification.','success');
+        }catch(e){feedback(e.message,'error')}finally{replace.disabled=false}};
+        picker.click();
+      };
+      buttons.append(replace);
       buttons.append(save,remove);actions.append(buttons);body.append(tr);
     }
     if(metadata.metadata_error) feedback('Results loaded. Document/status service unavailable: '+metadata.metadata_error,'error');
