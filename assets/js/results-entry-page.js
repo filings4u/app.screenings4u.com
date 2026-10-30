@@ -152,7 +152,7 @@
     const file = $('pdf').files[0],target = $('selectedDocument');target.replaceChildren();
     if (!file) {target.textContent = 'No PDF selected.';return}
     if (!file.name.toLowerCase().endsWith('.pdf') || file.size > 10485760) {
-      feedback('Official MRO document must be a PDF, maximum 10 MB.', 'error');return;
+      $('pdf').value='';target.textContent='No valid PDF selected.';feedback('Official MRO document must be a PDF, maximum 10 MB.', 'error');return;
     }
     previewURL = URL.createObjectURL(file);
     const link = document.createElement('a');link.href = previewURL;link.target = '_blank';link.rel = 'noopener';
@@ -264,11 +264,11 @@
     if(!drafts.length){container.textContent='No saved drafts.';return}
     for(const draft of drafts){
       const row=document.createElement('div');row.className='re-draft-row';
-      const info=document.createElement('span');info.textContent=(draft.records?.length||0)+' donor(s) • '+(draft.document_name||'No PDF')+' • Saved draft';
+      const info=document.createElement('span');info.textContent=(draft.records?.length||0)+' donor(s) • '+(draft.records||[]).filter(x=>!!x.document_path).length+' attached PDF(s) • Saved draft';
       const edit=document.createElement('button');edit.type='button';edit.textContent='Load & Edit';
-      edit.onclick=()=>{activeDraftId=draft.id;activeDocument=null;rows=(draft.records||[]).map(x=>({...x}));render();$('workflowStage').value=draft.workflow_stage||'Ordered';feedback('Draft loaded. Edit donor information, then Save Draft or Publish.','success');window.scrollTo({top:0,behavior:'smooth'})};
+      edit.onclick=()=>{activeDraftId=draft.id;activeDocument=null;donorFiles.clear();$('pdf').value='';$('selectedDocument').textContent='No PDF selected.';rows=(draft.records||[]).map(x=>({...x}));render();$('workflowStage').value=draft.workflow_stage||'Ordered';feedback('Draft loaded. Edit donor information, then Save Draft or Publish.','success');window.scrollTo({top:0,behavior:'smooth'})};
       const send=document.createElement('button');send.type='button';send.textContent='Publish & Email';
-      send.onclick=async()=>{feedback('Draft publishing is unavailable until backend document ownership validation is deployed.','error');return;if((draft.records||[]).some(r=>!r.document_path)||new Set((draft.records||[]).map(r=>r.document_path)).size!==(draft.records||[]).length){feedback('Legacy draft uses shared or missing MRO PDFs. Load and attach a separate PDF to each donor before publishing.','error');return}if(!await window.DOTDialog.confirm('Publish this saved draft and request an email notification?',{title:'Publish saved donor results',confirmText:'Publish & Notify'}))return;send.disabled=true;try{
+      send.onclick=async()=>{if((draft.records||[]).some(r=>!r.document_path)||new Set((draft.records||[]).map(r=>r.document_path)).size!==(draft.records||[]).length){feedback('Legacy draft uses shared or missing MRO PDFs. Load and attach a separate PDF to each donor before publishing.','error');return}if(!await window.DOTDialog.confirm('Publish this saved draft and request an email notification?',{title:'Publish saved donor results',confirmText:'Publish & Notify'}))return;send.disabled=true;try{
         await loadPublished();if((draft.records||[]).some(r=>publishedRecords.some(p=>sameDonor(r,p))))throw Error('One or more donor test results are already published. No duplicate results or emails were created.');
         const result=await api({action:'push_draft',employer_id,draft_id:draft.id});
         if(!result.ok)throw Error('Publish was not confirmed');
@@ -282,7 +282,7 @@
       row.append(info,edit,send,remove);container.append(row)
     }
   }
-  $('employer').onchange=()=>{rows=[];employees=[];activeDraftId=null;editingIndex=-1;render();$('employeeHistory').hidden=true;Promise.all([loadPublished(),loadDrafts(),loadEmployees()]).catch(e=>feedback(e.message,'error'))};
+  $('employer').onchange=()=>{donorFiles.clear();$('pdf').value='';$('selectedDocument').textContent='No PDF selected.';rows=[];employees=[];activeDraftId=null;editingIndex=-1;render();$('employeeHistory').hidden=true;Promise.all([loadPublished(),loadDrafts(),loadEmployees()]).catch(e=>feedback(e.message,'error'))};
   $('saveDraft').onclick=async()=>{const button=$('saveDraft');button.disabled=true;
     try{if(!$('employer').value||!rows.length)throw Error('Choose employer and add donors');
       await uploadDonorDocuments();const result=await api({action:'save_draft',employer_id:$('employer').value,rows,draft_id:activeDraftId||undefined,workflow_stage:$('workflowStage').value});
@@ -290,7 +290,6 @@
     }catch(e){feedback(e.message,'error')}finally{button.disabled=false}
   };
   $('publish').onclick=async()=>{
-    feedback('Publishing is unavailable until backend document ownership validation is deployed.', 'error');return;
     if(!await window.DOTDialog.confirm('Publish these donor results to the customer portal and request an email notification?',{title:'Publish donor results',confirmText:'Publish & Notify'}))return;
     const button=$('publish');button.disabled=true;
     try{if(!$('employer').value||!rows.length)throw Error('Choose employer and add donors');
@@ -299,7 +298,7 @@
       await uploadDonorDocuments();feedback('Publishing individually assigned donor results…');
       const result=await api({action:'publish',employer_id:$('employer').value,rows,workflow_stage:$('workflowStage').value});
       if(!result.ok)throw Error('Publishing was not confirmed');
-      rows=[];activeDraftId=null;activeDocument=null;render();$('pdf').value='';$('selectedDocument').textContent='No PDF selected.';
+      rows=[];donorFiles.clear();activeDraftId=null;activeDocument=null;render();$('pdf').value='';$('selectedDocument').textContent='No PDF selected.';
       await loadPublished();await loadDrafts();feedback(`${result.count||0} donor results published to the portal. Each MRO PDF is assigned to its donor.`, 'success');await offerNotification(result.ids,$('employer').value);
     }catch(e){feedback(e.message,'error')}finally{button.disabled=false}
   };
