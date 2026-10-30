@@ -85,3 +85,28 @@
 .re-records-page .mro-empty{padding:25px;color:#61738b;text-align:center}
 @media(max-width:730px){.re-records-page .mro-record-item{grid-template-columns:1fr;gap:10px}.re-records-page .mro-record-actions button{width:100%}.re-records-page .mro-data-grid{grid-template-columns:1fr 1fr}.re-records-page .mro-detail-edit{grid-template-columns:1fr}.re-records-page .mro-detail{padding:16px}}
 @media(max-width:480px){.re-records-page .mro-data-grid{grid-template-columns:1fr}.re-records-page .mro-detail-actions button{width:100%}}
+
+/* Results entry: full-width sequential workflow, no cramped side-by-side table */
+.re-redesign .re-workspace{display:flex;flex-direction:column;gap:20px}
+.re-redesign .re-workspace>.re-panel{width:100%;max-width:none}
+.re-redesign .re-donor .re-fields{grid-template-columns:repeat(3,minmax(0,1fr))}
+.re-redesign .re-donor .re-fields .re-wide{grid-column:1/-1}
+.re-redesign .re-donor .re-upload-panel{max-width:100%;margin-top:22px}
+.re-redesign .re-donor .re-actions{margin-bottom:0}
+.re-redesign .re-review-highlight{margin-bottom:20px}
+.re-redesign .re-donor-review-list{display:grid;gap:12px}
+.re-redesign .re-review-empty{background:#f7faff;border:1px dashed #c7d8eb;border-radius:12px;padding:25px;color:#566d89;text-align:center;line-height:1.6}
+.re-redesign .re-review-donor{border:1px solid #d9e4f0;background:#fff;border-radius:12px;padding:18px;min-width:0}
+.re-redesign .re-review-donor-top,.re-redesign .re-review-donor-bottom{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center}
+.re-redesign .re-review-donor-top h3{margin:0 0 6px;font-size:17px;color:#17365f}
+.re-redesign .re-review-donor-top p{margin:0;color:#657891;font-size:12px;line-height:1.5}
+.re-redesign .re-review-donor-actions{display:flex;gap:9px;flex-wrap:wrap}
+.re-redesign .re-review-donor-bottom{border-top:1px solid #e3eaf2;padding-top:15px;margin-top:15px;align-items:end}
+.re-redesign .re-review-pdf{display:flex;flex-direction:column;gap:5px;flex:1;min-width:0}
+.re-redesign .re-review-pdf strong{font-size:12px;color:#17365f}
+.re-redesign .re-review-pdf span{font-size:12px;color:#5c718b;overflow-wrap:anywhere}
+.re-redesign .re-review-donor-bottom label{min-width:180px;max-width:240px;flex:1}
+.re-redesign .re-review .re-submit{justify-content:flex-end}
+.re-redesign .re-review .re-submit button{flex:0 1 auto;min-width:190px}
+@media(max-width:900px){.re-redesign .re-donor .re-fields{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.re-redesign .re-donor .re-fields{grid-template-columns:1fr}.re-redesign .re-review-donor-bottom label{max-width:none;width:100%}.re-redesign .re-review-donor-actions{width:100%}.re-redesign .re-review-donor-actions button{flex:1}.re-redesign .re-review .re-submit button{width:100%}}
