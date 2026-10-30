@@ -45,8 +45,8 @@
     ...payload, source, employer_id: $('employer').value
   });
   mount.innerHTML = `<div class="dot-page results-editor re-redesign">
-  <header class="dot-page-head"><div><span class="dot-eyebrow">RESULTS MANAGEMENT / ${source==='dot'?'DOT':'NON-DOT'}</span><h1>MRO Results Workspace</h1><p>Verify each donor, attach their own official report, and review before sending.</p></div><a class="re-back" href="/results-management.html">← All Results</a></header>
-  <div id="resultsFeedback" class="re-feedback" role="status" aria-live="polite">Loading employer records…</div>
+  <header class="re-hero"><div><span class="dot-eyebrow">RESULTS MANAGEMENT / ${source==='dot'?'DOT':'NON-DOT'}</span><h1>MRO Results Workspace</h1><p>Verify each donor, attach their own official report, and review before sending.</p></div><a class="re-back" href="/results-management.html">← All Results</a></header>
+  <div class="re-workflow-strip" aria-label="Results processing stages"><div><b>1</b><span>Choose employer</span></div><div><b>2</b><span>Verify donor</span></div><div><b>3</b><span>Attach MRO PDF</span></div><div><b>4</b><span>Review & publish</span></div></div><div id="resultsFeedback" class="re-feedback" role="status" aria-live="polite">Loading employer records…</div>
   <section class="re-panel re-employer"><div class="re-section-title"><span class="re-step">01</span><div><h2>Select employer</h2><p>All results and documents are restricted to this employer.</p></div></div><div class="re-fields"><label class="re-wide">Employer<select id="employer"><option value="">Choose employer</option></select></label></div></section>
   <div class="re-workspace">
    <section class="re-panel re-donor"><div class="re-section-title"><span class="re-step">02</span><div><h2>Donor information</h2><p>One donor and one official MRO PDF per record.</p></div></div>
@@ -54,7 +54,7 @@
     <div class="re-upload-panel"><div class="re-section-title"><span class="re-step">03</span><div><h2>Donor's official MRO PDF</h2><p>Verify the donor name on the PDF before attaching it. Maximum 10 MB.</p></div></div><label class="re-wide">Choose PDF for this donor<input id="pdf" type="file" accept=".pdf,application/pdf"></label><div id="selectedDocument" class="re-document-info">No PDF selected.</div></div>
     <div id="employeeHistory" hidden></div><div class="re-actions"><button id="add" type="button">Add donor to review</button><button id="downloadTemplate" type="button" class="re-secondary">Download CSV template</button><label class="re-upload">Import donors CSV/XLSX<input id="sheet" type="file" accept=".xlsx,.xls,.csv"></label></div>
    </section>
-   <section class="re-panel re-review"><div class="re-section-title"><span class="re-step">04</span><div><h2>Review before sending</h2><p>Every donor must have an individual PDF. No results are delivered until you confirm publishing.</p></div></div><div class="re-table"><table><thead><tr><th>Donor</th><th>Birthdate</th><th>CDL / State ID</th><th>Test date</th><th>Result</th><th>Actions / attached PDF</th></tr></thead><tbody id="rows"></tbody></table></div>
+   <section class="re-panel re-review"><div class="re-review-highlight"><strong>Submission review</strong><span>Results are not sent until you choose Publish.</span></div><div class="re-section-title"><span class="re-step">04</span><div><h2>Review before sending</h2><p>Every donor must have an individual PDF. No results are delivered until you confirm publishing.</p></div></div><p id="donorCount" class="re-counter">0 donors ready for review</p><div class="re-table"><table><thead><tr><th>Donor</th><th>Birthdate</th><th>CDL / State ID</th><th>Test date</th><th>Result</th><th>Actions / attached PDF</th></tr></thead><tbody id="rows"></tbody></table></div>
    <div class="re-bottom"><div class="re-submit"><button id="saveDraft" type="button" class="re-secondary">Save draft</button><button id="publish" type="button">Publish donor results</button></div></div>
    </section>
   </div>
@@ -102,7 +102,7 @@
     el.value = current || ''; return el;
   };
   const render = () => {
-    const body = $('rows');body.replaceChildren();
+    const body = $('rows');body.replaceChildren(); const counter=$('donorCount');if(counter)counter.textContent=rows.length+' donor(s) ready for review';
     if (!rows.length) { const tr = document.createElement('tr'); const td = cell(tr, 'No donors added.');td.colSpan = 6;body.append(tr);return; }
     rows.forEach((r, i) => {
       const tr = document.createElement('tr');
