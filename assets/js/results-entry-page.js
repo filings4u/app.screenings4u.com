@@ -54,7 +54,7 @@
     <div class="re-upload-panel"><div class="re-section-title"><span class="re-step">03</span><div><h2>Donor's official MRO PDF</h2><p>Verify the donor name on the PDF before attaching it. Maximum 10 MB.</p></div></div><label class="re-wide">Choose PDF for this donor<input id="pdf" type="file" accept=".pdf,application/pdf"></label><div id="selectedDocument" class="re-document-info">No PDF selected.</div></div>
     <div id="employeeHistory" hidden></div><div class="re-actions"><button id="add" type="button">Add donor to review</button><button id="downloadTemplate" type="button" class="re-secondary">Download CSV template</button><label class="re-upload">Import donors CSV/XLSX<input id="sheet" type="file" accept=".xlsx,.xls,.csv"></label></div>
    </section>
-   <section class="re-panel re-review"><div class="re-review-highlight"><strong>Submission review</strong><span>Results are not sent until you choose Publish.</span></div><div class="re-section-title"><span class="re-step">04</span><div><h2>Review before sending</h2><p>Every donor must have an individual PDF. No results are delivered until you confirm publishing.</p></div></div><p id="donorCount" class="re-counter">0 donors ready for review</p><div class="re-table"><table><thead><tr><th>Donor</th><th>Birthdate</th><th>CDL / State ID</th><th>Test date</th><th>Result</th><th>Actions / attached PDF</th></tr></thead><tbody id="rows"></tbody></table></div>
+   <section class="re-panel re-review"><div class="re-review-highlight"><strong>Submission review</strong><span>Results are not sent until you choose Publish.</span></div><div class="re-section-title"><span class="re-step">04</span><div><h2>Review before sending</h2><p>Every donor must have an individual PDF. No results are delivered until you confirm publishing.</p></div></div><p id="donorCount" class="re-counter">0 donors ready for review</p><div id="rows" class="re-donor-review-list" aria-label="Donors awaiting publication"></div>
    <div class="re-bottom"><div class="re-submit"><button id="saveDraft" type="button" class="re-secondary">Save draft</button><button id="publish" type="button">Publish donor results</button></div></div>
    </section>
   </div>
@@ -103,19 +103,21 @@
     el.value = current || ''; return el;
   };
   const render = () => {
-    const body = $('rows');body.replaceChildren(); const counter=$('donorCount');if(counter)counter.textContent=rows.length+' donor(s) ready for review';
-    if (!rows.length) { const tr = document.createElement('tr'); const td = cell(tr, 'No donors added.');td.colSpan = 6;body.append(tr);return; }
-    rows.forEach((r, i) => {
-      const tr = document.createElement('tr');
-      cell(tr, [r.first_name, r.middle_initial, r.last_name].filter(Boolean).join(' '));
-      cell(tr, r.birthdate);cell(tr, r.cdl_number || r.state_id_number);cell(tr, r.test_date);
-      const result = select(['', 'Negative', 'Positive'], r.result, 'Pending MRO');
-      result.onchange = () => {r.result = result.value || null};cell(tr, '').replaceChildren(result);
-      const edit = document.createElement('button');edit.type='button';edit.textContent='Edit';edit.onclick=()=>setEditor(r,i);
-      const remove = document.createElement('button');remove.type = 'button';remove.textContent = 'Remove';
-      remove.onclick = () => {donorFiles.delete(r);rows.splice(i, 1);render();feedback('Donor removed from unsaved list.')};
-      const doc=document.createElement('span');doc.textContent=r.document_name ? ' • PDF: '+r.document_name : ' • PDF missing';
-      const actions=cell(tr,'');actions.append(edit,document.createTextNode(' '),remove,doc);body.append(tr);
+    const body=$('rows');body.replaceChildren();
+    $('donorCount').textContent=rows.length+' donor(s) ready for review';
+    if(!rows.length){const empty=document.createElement('div');empty.className='re-review-empty';empty.textContent='No donors added yet. Complete the donor information and attach an MRO PDF to begin.';body.append(empty);return}
+    rows.forEach((r,i)=>{
+      const card=document.createElement('article');card.className='re-review-donor';
+      const top=document.createElement('div');top.className='re-review-donor-top';
+      const identity=document.createElement('div');const heading=document.createElement('h3');heading.textContent=[r.first_name,r.middle_initial,r.last_name].filter(Boolean).join(' ');
+      const details=document.createElement('p');details.textContent='Test date: '+(r.test_date||'—')+' • ID: '+(r.cdl_number||r.state_id_number||'—')+' • DOB: '+(r.birthdate||'—');
+      identity.append(heading,details);const actions=document.createElement('div');actions.className='re-review-donor-actions';
+      const edit=document.createElement('button');edit.type='button';edit.className='re-secondary';edit.textContent='Edit donor';edit.onclick=()=>{setEditor(r,i);$('firstName').scrollIntoView({behavior:'smooth',block:'center'})};
+      const remove=document.createElement('button');remove.type='button';remove.className='re-secondary';remove.textContent='Remove';remove.onclick=()=>{donorFiles.delete(r);rows.splice(i,1);render();feedback('Donor removed from review list.')};
+      actions.append(edit,remove);top.append(identity,actions);
+      const lower=document.createElement('div');lower.className='re-review-donor-bottom';
+      const pdf=document.createElement('div');pdf.className='re-review-pdf';const status=document.createElement('strong');status.textContent=r.document_name?'MRO PDF attached':'MRO PDF missing';const filename=document.createElement('span');filename.textContent=r.document_name||'Select a PDF by editing this donor';pdf.append(status,filename);
+      const resultBox=document.createElement('label');resultBox.textContent='Test result';const result=select(['','Negative','Positive'],r.result,'Pending MRO');result.onchange=()=>{r.result=result.value||null};resultBox.append(result);lower.append(pdf,resultBox);card.append(top,lower);body.append(card);
     });
   };
   $('add').onclick = () => {
@@ -321,6 +323,6 @@ $('employeeSelect').onchange=()=>{const e=employees.find(x=>x.id===$('employeeSe
     const selected=parameters.get('employer_id');
     if(selected&&[...$('employer').options].some(x=>x.value===selected)){$('employer').value=selected;$('employer').disabled=true}
     if($('employer').value)await Promise.all([loadPublished(),loadDrafts(),loadEmployees()]);
-    feedback('Ready. View published documents and notification status below.');
+    feedback('Ready to enter donor results. Published records are available on the separate MRO Records page.');
   }catch(e){feedback(e.message,'error')}
 })().catch(error=>{const mount=document.getElementById('dotPageMount');if(mount)mount.textContent=error.message||String(error)});
