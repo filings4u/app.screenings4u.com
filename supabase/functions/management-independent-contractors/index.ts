@@ -13,12 +13,29 @@ const [staff,roles,access]=await Promise.all([db.from("staff_profiles").select("
 if(staff.error||roles.error||access.error)throw staff.error||roles.error||access.error;
 if(staff.data?.employment_status!=="active"||(!roles.data?.length&&!(access.data||[]).some((r:any)=>["admin","owner","manager","full"].includes(String(r.access_level||"").toLowerCase()))))return J({error:"Management permission required"},403);
 const b=await req.json().catch(()=>({})),action=String(b.action||"list");
-const fields="id,full_name,email,phone,company_name,website,city,state,zip_code,service_areas,collector_type,certifications,years_experience,message,status,availability_status,capabilities,rate_card,internal_notes,last_contacted_at,approved_at,created_at,updated_at";
+const fields="id,full_name,email,phone,company_name,website,city,state,zip_code,service_areas,collector_type,certifications,years_experience,message,status,availability_status,capabilities,rate_card,internal_notes,last_contacted_at,approved_at,created_at,updated_at,application_details";
 if(action==="list"){const q=await db.from("collector_network_submissions").select(fields).order("created_at",{ascending:false}).limit(1000);if(q.error)throw q.error;return J({contractors:q.data||[]});}
 if(action==="denied_list"){
  const denied=await db.from("collector_network_submissions").select(fields).eq("status","rejected").order("updated_at",{ascending:false}).limit(1000);if(denied.error)throw denied.error;
  const entries=await db.from("ic_application_denials").select("applicant_id,email,denial_reason,denied_at,restored_at").order("denied_at",{ascending:false}).limit(5000);if(entries.error)throw entries.error;
  return J({contractors:(denied.data||[]).map((r:any)=>{const matches=(entries.data||[]).filter((d:any)=>d.applicant_id===r.id||String(d.email).toLowerCase()===String(r.email).toLowerCase());return {...r,denial:matches.find((d:any)=>!d.restored_at)||matches[0]||null,denial_count:matches.length}})});
+}
+if(action==="application_document_upload"){
+ const id=String(b.id||""),kind=String(b.kind||""),mime=String(b.mime||""),base64=String(b.base64||"");
+ if(!/^[a-f0-9-]{36}$/i.test(id)||!["collector_cert_file","licenses_file","insurance_file"].includes(kind)||!["application/pdf","image/png","image/jpeg"].includes(mime)||base64.length>4200000||base64.length<10)return J({error:"Invalid application attachment"},400);
+ const found=await db.from("collector_network_submissions").select("id,status,application_details").eq("id",id).single();if(found.error)throw found.error;if(found.data.status==="rejected"||found.data.status==="superseded")return J({error:"Application is locked"},423);
+ const bytes=Uint8Array.from(atob(base64),(ch:string)=>ch.charCodeAt(0));if(bytes.length>3145728)return J({error:"Maximum 3 MB per document"},400);
+ const ext=mime==="application/pdf"?"pdf":mime==="image/png"?"png":"jpg",path="collector-applications/"+id+"/"+kind+"/"+crypto.randomUUID()+"."+ext;
+ const upload=await db.storage.from("testing-private-documents").upload(path,bytes,{contentType:mime,upsert:false});if(upload.error)throw upload.error;
+ const details=found.data.application_details||{},docs=Array.isArray(details.supporting_documents)?details.supporting_documents:[];
+ const entry={kind,path,mime,original_filename:String(b.filename||"Document").slice(0,130),uploaded_at:new Date().toISOString()};
+ const update=await db.from("collector_network_submissions").update({application_details:{...details,supporting_documents:[...docs,entry]}}).eq("id",id);if(update.error)throw update.error;return J({ok:true,document:entry});
+}
+if(action==="application_document_view"){
+ const id=String(b.id||""),path=String(b.path||"");
+ const found=await db.from("collector_network_submissions").select("application_details").eq("id",id).maybeSingle();if(found.error)throw found.error;
+ if(!found.data?.application_details?.supporting_documents?.some((x:any)=>x.path===path))return J({error:"Document not found"},404);
+ const url=await db.storage.from("testing-private-documents").createSignedUrl(path,120);if(url.error)throw url.error;return J({url:url.data.signedUrl});
 }
 if(action==="detail"){const q=await db.from("collector_network_submissions").select(fields).eq("id",String(b.id||"")).maybeSingle();if(q.error)throw q.error;
 if(patch.status==="approved"){
@@ -108,16 +125,17 @@ if(action==="change_approved_email"){
 }
 if(action==="update"){
 const id=String(b.id||"");if(!/^[a-f0-9-]{36}$/i.test(id))return J({error:"Invalid contractor"},400);
-const v=b.changes||{},keys=["full_name","email","phone","company_name","website","city","state","zip_code","service_areas","collector_type","certifications","years_experience","message","status","availability_status","internal_notes","capabilities","rate_card"],patch:any={};
+const v=b.changes||{},keys=["full_name","email","phone","company_name","website","city","state","zip_code","service_areas","collector_type","certifications","years_experience","message","status","availability_status","internal_notes","capabilities","rate_card","application_details"],patch:any={};
 for(const k of keys)if(Object.prototype.hasOwnProperty.call(v,k))patch[k]=v[k];
 if(patch.email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(patch.email)))return J({error:"Invalid email"},400);
 if(patch.email&&String(patch.email).trim().toLowerCase().endsWith("@screenings4u.com"))return J({error:"screenings4u.com staff email addresses cannot be Independent Contractors"},403);
 if(patch.status&&!["new","reviewing","approved","inactive","rejected"].includes(patch.status))return J({error:"Invalid status"},400);
+if(patch.application_details&&(typeof patch.application_details!=="object"||Array.isArray(patch.application_details)||JSON.stringify(patch.application_details).length>30000))return J({error:"Invalid application details"},400);
 if(!Object.keys(patch).length)return J({error:"No changes"},400);
 const original=await db.from("collector_network_submissions").select("status,email").eq("id",id).maybeSingle();if(original.error)throw original.error;if(!original.data)return J({error:"Applicant not found"},404);if(String(patch.email||original.data.email).trim().toLowerCase().endsWith("@screenings4u.com"))return J({error:"screenings4u.com addresses cannot hold IC contractor status. Revoke this profile from the IC Directory."},403);if(original.data.status==="rejected")return J({error:"Denied application locked; use Restore"},423);if(patch.status==="rejected")return J({error:"Use Deny with a reason to preserve the denial record"},400);
 if(patch.status==="approved"){const denied=await db.from("ic_application_denials").select("id").eq("email",String(original.data.email).toLowerCase()).is("restored_at",null).limit(1);if(denied.error)throw denied.error;if(denied.data?.length)return J({error:"Application denied; restore before approval"},423);patch.approved_at=new Date().toISOString();patch.approved_by=uid}
 patch.updated_at=new Date().toISOString();
-const q=await db.from("collector_network_submissions").update(patch).eq("id",id).select(fields).single();if(q.error)throw q.error;return J({contractor:q.data});}
+if(patch.application_details){const existing=await db.from("collector_network_submissions").select("application_details").eq("id",id).single();if(existing.error)throw existing.error;patch.application_details={...(existing.data.application_details||{}),...patch.application_details,supporting_documents:existing.data.application_details?.supporting_documents||[]}}const q=await db.from("collector_network_submissions").update(patch).eq("id",id).select(fields).single();if(q.error)throw q.error;return J({contractor:q.data});}
 if(action==="create"){
 const v=b.contractor||{},name=String(v.full_name||"").trim(),email=String(v.email||"").trim().toLowerCase();if(!name||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return J({error:"Name and email required"},400);
 const block=await db.from("ic_application_denials").select("id").eq("email",email).is("restored_at",null).limit(1);if(block.error)throw block.error;if(block.data?.length)return J({error:"Application denied. Contact management for restoration."},403);
@@ -125,6 +143,7 @@ if(email.endsWith("@screenings4u.com"))return J({error:"Internal screenings4u.co
 const found=await db.from("collector_network_submissions").select("id").ilike("email",email).limit(1);if(found.error)throw found.error;if(found.data?.length)return J({error:"Contractor email already exists"},409);
 const row:any={full_name:name,email,status:"new",availability_status:"available",capabilities:{},rate_card:{}};
 for(const k of ["company_name","phone","website","city","state","zip_code","collector_type","service_areas","certifications","years_experience","internal_notes"])if(v[k]!=null)row[k]=String(v[k]);
+if(v.application_details&&typeof v.application_details==="object")row.application_details=v.application_details;
 const q=await db.from("collector_network_submissions").insert(row).select(fields).single();if(q.error)throw q.error;return J({contractor:q.data});}
 return J({error:"Invalid action"},400);
 }catch(e){console.error("Independent contractor management",e);return J({error:e instanceof Error?e.message:"Server error"},500)}
