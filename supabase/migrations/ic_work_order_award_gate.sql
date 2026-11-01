@@ -20,7 +20,7 @@ begin
     where work_order_id=p_work_order_id and id<>p_assignment_id and status in ('pending','pending_admin_review');
   update public.testing_work_orders set assigned_collector_id=v_collector,status='scheduled',accepted_at=now(),updated_by=p_admin_user_id,updated_at=now() where id=p_work_order_id;
   insert into public.testing_work_order_events(work_order_id,event_type,actor_type,actor_user_id,collector_id,notes)
-    values(p_work_order_id,'collector_awarded','admin',p_admin_user_id,v_collector,'Exclusive IC award after management review');
+    values(p_work_order_id,'collector_awarded','staff',p_admin_user_id,v_collector,'Exclusive IC award after management review');
   return jsonb_build_object('work_order_id',p_work_order_id,'assignment_id',p_assignment_id,'collector_id',v_collector);
 end $$;
 revoke all on function public.ic_award_work_order(uuid,uuid,uuid) from public,anon,authenticated;
