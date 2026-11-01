@@ -86,15 +86,17 @@ const id=String(b.id||"");if(!/^[a-f0-9-]{36}$/i.test(id))return J({error:"Inval
 const v=b.changes||{},keys=["full_name","email","phone","company_name","website","city","state","zip_code","service_areas","collector_type","certifications","years_experience","message","status","availability_status","internal_notes","capabilities","rate_card"],patch:any={};
 for(const k of keys)if(Object.prototype.hasOwnProperty.call(v,k))patch[k]=v[k];
 if(patch.email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(patch.email)))return J({error:"Invalid email"},400);
+if(patch.email&&String(patch.email).trim().toLowerCase().endsWith("@screenings4u.com"))return J({error:"screenings4u.com staff email addresses cannot be Independent Contractors"},403);
 if(patch.status&&!["new","reviewing","approved","inactive","rejected"].includes(patch.status))return J({error:"Invalid status"},400);
 if(!Object.keys(patch).length)return J({error:"No changes"},400);
-const original=await db.from("collector_network_submissions").select("status,email").eq("id",id).maybeSingle();if(original.error)throw original.error;if(!original.data)return J({error:"Applicant not found"},404);if(original.data.status==="rejected")return J({error:"Denied application locked; use Restore"},423);if(patch.status==="rejected")return J({error:"Use Deny with a reason to preserve the denial record"},400);
+const original=await db.from("collector_network_submissions").select("status,email").eq("id",id).maybeSingle();if(original.error)throw original.error;if(!original.data)return J({error:"Applicant not found"},404);if(String(patch.email||original.data.email).trim().toLowerCase().endsWith("@screenings4u.com"))return J({error:"screenings4u.com addresses cannot hold IC contractor status. Revoke this profile from the IC Directory."},403);if(original.data.status==="rejected")return J({error:"Denied application locked; use Restore"},423);if(patch.status==="rejected")return J({error:"Use Deny with a reason to preserve the denial record"},400);
 if(patch.status==="approved"){const denied=await db.from("ic_application_denials").select("id").eq("email",String(original.data.email).toLowerCase()).is("restored_at",null).limit(1);if(denied.error)throw denied.error;if(denied.data?.length)return J({error:"Application denied; restore before approval"},423);patch.approved_at=new Date().toISOString();patch.approved_by=uid}
 patch.updated_at=new Date().toISOString();
 const q=await db.from("collector_network_submissions").update(patch).eq("id",id).select(fields).single();if(q.error)throw q.error;return J({contractor:q.data});}
 if(action==="create"){
 const v=b.contractor||{},name=String(v.full_name||"").trim(),email=String(v.email||"").trim().toLowerCase();if(!name||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return J({error:"Name and email required"},400);
 const block=await db.from("ic_application_denials").select("id").eq("email",email).is("restored_at",null).limit(1);if(block.error)throw block.error;if(block.data?.length)return J({error:"Application denied. Contact management for restoration."},403);
+if(email.endsWith("@screenings4u.com"))return J({error:"Internal screenings4u.com addresses are not eligible for contractor applications"},403);
 const found=await db.from("collector_network_submissions").select("id").ilike("email",email).limit(1);if(found.error)throw found.error;if(found.data?.length)return J({error:"Contractor email already exists"},409);
 const row:any={full_name:name,email,status:"new",availability_status:"available",capabilities:{},rate_card:{}};
 for(const k of ["company_name","phone","website","city","state","zip_code","collector_type","service_areas","certifications","years_experience","internal_notes"])if(v[k]!=null)row[k]=String(v[k]);
