@@ -119,6 +119,7 @@ if(action==="ic_award"||action==="ic_deny"){
  }
  if(!insured)return J({error:"Valid verified Professional Liability insurance must be on file before award"},409);
  const won=await db.rpc("ic_award_work_order",{p_work_order_id:a.data.work_order_id,p_assignment_id:aid,p_admin_user_id:user.id});if(won.error)return J({error:won.error.message||"Could not award work order"},409);
+ const key=Deno.env.get("RESEND_API_KEY")||"";if(key){const link="https://independent-contractor.screenings4u.com/work-orders.html?assignment="+encodeURIComponent(aid);const html='<div style="font:15px Arial;background:#f3f6fa;padding:25px"><div style="max-width:570px;margin:auto;background:#fff;padding:25px;border-top:5px solid #ef7627"><img alt="screenings4u" width="180" src="https://independent-contractor.screenings4u.com/images/logo.png"><h2>Your Work Order Has Been Awarded</h2><p>You have been officially selected for this work order. Review the work order and start only when ready.</p><a href="'+link+'" style="display:inline-block;background:#23558a;color:white;padding:12px 18px;border-radius:8px;text-decoration:none">View Approved Work Order</a></div></div>';try{await fetch("https://api.resend.com/emails",{method:"POST",headers:{Authorization:"Bearer "+key,"Content-Type":"application/json"},body:JSON.stringify({from:Deno.env.get("RESEND_FROM_EMAIL")||"screenings4u <notifications@screenings4u.com>",to:[collector.data.email],subject:"screenings4u Work Order Awarded",html})})}catch(e){console.error("Award email failed",e)}}
  return J({ok:true,award:won.data});
 }
 if(action==="assign"){
@@ -126,7 +127,8 @@ if(action==="assign"){
  if(!/^[0-9a-f-]{36}$/i.test(id)||!/^[0-9a-f-]{36}$/i.test(assignee)||!["ic","staff"].includes(kind))return J({error:"Invalid assignment"},400);
  const order=await db.from("testing_work_orders").select("id,status,metadata").eq("id",id).maybeSingle();if(order.error)throw order.error;if(!order.data||order.data.metadata?.management_deleted_at)return J({error:"Work order not found"},404);
  if(["completed","cancelled"].includes(order.data.status))return J({error:"Cannot assign finalized work order"},409);
- if(kind==="ic"){
+ if(kind==="ic")return J({error:"ICs must be invited for management review through Collector Search. Direct award is disabled."},409);
+if(false){
   const person=await db.from("collector_network_submissions").select("id,email").eq("id",assignee).eq("status","approved").maybeSingle();if(person.error)throw person.error;if(!person.data)return J({error:"Approved IC not found"},404);
   const previous=await db.from("testing_work_order_assignments").select("id,status").eq("work_order_id",id).eq("collector_id",assignee).in("status",["pending","accepted"]).maybeSingle();if(previous.error)throw previous.error;
   if(!previous.data){const add=await db.from("testing_work_order_assignments").insert({work_order_id:id,collector_id:assignee,status:"pending",response_token_hash:Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(crypto.randomUUID()+crypto.randomUUID())))).map(x=>x.toString(16).padStart(2,"0")).join(""),sent_to_email:person.data.email,sent_at:new Date().toISOString()});if(add.error)throw add.error;}
