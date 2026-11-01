@@ -15,7 +15,23 @@ if(staff.data?.employment_status!=="active"||(!roles.data?.length&&!(access.data
 const b=await req.json().catch(()=>({})),action=String(b.action||"list");
 const fields="id,full_name,email,phone,company_name,website,city,state,zip_code,service_areas,collector_type,certifications,years_experience,message,status,availability_status,capabilities,rate_card,internal_notes,last_contacted_at,approved_at,created_at,updated_at";
 if(action==="list"){const q=await db.from("collector_network_submissions").select(fields).order("created_at",{ascending:false}).limit(1000);if(q.error)throw q.error;return J({contractors:q.data||[]});}
-if(action==="detail"){const q=await db.from("collector_network_submissions").select(fields).eq("id",String(b.id||"")).maybeSingle();if(q.error)throw q.error;return J({contractor:q.data});}
+if(action==="detail"){const q=await db.from("collector_network_submissions").select(fields).eq("id",String(b.id||"")).maybeSingle();if(q.error)throw q.error;
+if(patch.status==="approved"){
+ const applicantEmail=String(q.data.email||"").toLowerCase();
+ const submitted=await db.from("ic_agreement_submissions").select("id,user_id").eq("email",applicantEmail).order("created_at",{ascending:false}).limit(1);
+ if(submitted.error)throw submitted.error;
+ const account=submitted.data?.[0]?.user_id;
+ if(account){
+  const grant=await db.from("ic_portal_access").upsert({user_id:account,enabled:true,source:"approved_application"},{onConflict:"user_id"});if(grant.error)throw grant.error;
+  const invitation=await db.auth.admin.generateLink({type:"magiclink",email:applicantEmail,options:{redirectTo:"https://independent-contractor.screenings4u.com/dashboard.html"}});
+  if(invitation.error)throw invitation.error;
+  const link=invitation.data?.properties?.action_link||"";
+  const key=Deno.env.get("RESEND_API_KEY")||"";
+  if(key&&link){const safe=(v:any)=>String(v??"").replace(/[&<>"]/g,(ch:string)=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[ch]!));
+   const mail=await fetch("https://api.resend.com/emails",{method:"POST",headers:{Authorization:"Bearer "+key,"Content-Type":"application/json"},body:JSON.stringify({from:Deno.env.get("RESEND_FROM_EMAIL")||"screenings4u <notifications@screenings4u.com>",to:[applicantEmail],subject:"screenings4u IC Network — Application Approved",html:'<div style="font:15px Arial;background:#f3f6fa;padding:24px"><div style="max-width:580px;background:white;margin:auto;padding:25px;border-top:5px solid #ff7100"><img alt="screenings4u" width="180" src="https://independent-contractor.screenings4u.com/images/logo.png"><h2>Your Independent Contractor application is approved</h2><p>Your portal is now ready. Use the secure invitation below to activate your access.</p><a style="display:inline-block;padding:13px 18px;background:#24548c;color:white;text-decoration:none;border-radius:8px" href="'+safe(link)+'">Activate IC Portal</a></div></div>'})});if(!mail.ok)console.error("Approval invitation delivery",mail.status)}
+ }
+}
+return J({contractor:q.data});}
 if(action==="deny"){
  const id=String(b.id||""),reason=String(b.reason||"").trim();
  if(!/^[a-f0-9-]{36}$/i.test(id)||!reason)return J({error:"A denial reason is required"},400);
