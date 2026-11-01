@@ -20,7 +20,9 @@ if(patch.status==="approved"){
  const applicantEmail=String(q.data.email||"").toLowerCase();
  const submitted=await db.from("ic_agreement_submissions").select("id,user_id").eq("email",applicantEmail).order("created_at",{ascending:false}).limit(1);
  if(submitted.error)throw submitted.error;
- const account=submitted.data?.[0]?.user_id;
+ let account=submitted.data?.[0]?.user_id;
+ if(!account){const page=await db.auth.admin.listUsers({page:1,perPage:1000});if(page.error)throw page.error;const known=page.data.users.find((x:any)=>x.email?.toLowerCase()===applicantEmail);if(known)account=known.id;
+ else {const created=await db.auth.admin.createUser({email:applicantEmail,email_confirm:false,user_metadata:{full_name:q.data.full_name,account_type:"independent_contractor"}});if(created.error)throw created.error;account=created.data.user?.id;}}
  if(account){
   const grant=await db.from("ic_portal_access").upsert({user_id:account,enabled:true,source:"approved_application"},{onConflict:"user_id"});if(grant.error)throw grant.error;
   const invitation=await db.auth.admin.generateLink({type:"magiclink",email:applicantEmail,options:{redirectTo:"https://independent-contractor.screenings4u.com/dashboard.html"}});
