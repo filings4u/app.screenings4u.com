@@ -13,7 +13,7 @@ const [staff,roles,access]=await Promise.all([db.from("staff_profiles").select("
 if(staff.error||roles.error||access.error)throw staff.error||roles.error||access.error;
 if(staff.data?.employment_status!=="active"||(!roles.data?.length&&!(access.data||[]).some((r:any)=>["admin","owner","manager","full"].includes(String(r.access_level||"").toLowerCase()))))return J({error:"Management permission required"},403);
 const b=await req.json().catch(()=>({})),action=String(b.action||"list");
-const fields="id,full_name,email,phone,company_name,website,city,state,zip_code,service_areas,collector_type,certifications,years_experience,message,status,availability_status,capabilities,rate_card,internal_notes,last_contacted_at,approved_at,created_at,updated_at";
+const fields="id,full_name,email,phone,company_name,website,city,state,zip_code,service_areas,collector_type,certifications,years_experience,message,status,availability_status,capabilities,rate_card,internal_notes,last_contacted_at,approved_at,created_at,updated_at,application_details";
 if(action==="list"){const q=await db.from("collector_network_submissions").select(fields).order("created_at",{ascending:false}).limit(1000);if(q.error)throw q.error;return J({contractors:q.data||[]});}
 if(action==="denied_list"){
  const denied=await db.from("collector_network_submissions").select(fields).eq("status","rejected").order("updated_at",{ascending:false}).limit(1000);if(denied.error)throw denied.error;
@@ -108,11 +108,12 @@ if(action==="change_approved_email"){
 }
 if(action==="update"){
 const id=String(b.id||"");if(!/^[a-f0-9-]{36}$/i.test(id))return J({error:"Invalid contractor"},400);
-const v=b.changes||{},keys=["full_name","email","phone","company_name","website","city","state","zip_code","service_areas","collector_type","certifications","years_experience","message","status","availability_status","internal_notes","capabilities","rate_card"],patch:any={};
+const v=b.changes||{},keys=["full_name","email","phone","company_name","website","city","state","zip_code","service_areas","collector_type","certifications","years_experience","message","status","availability_status","internal_notes","capabilities","rate_card","application_details"],patch:any={};
 for(const k of keys)if(Object.prototype.hasOwnProperty.call(v,k))patch[k]=v[k];
 if(patch.email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(patch.email)))return J({error:"Invalid email"},400);
 if(patch.email&&String(patch.email).trim().toLowerCase().endsWith("@screenings4u.com"))return J({error:"screenings4u.com staff email addresses cannot be Independent Contractors"},403);
 if(patch.status&&!["new","reviewing","approved","inactive","rejected"].includes(patch.status))return J({error:"Invalid status"},400);
+if(patch.application_details&&(typeof patch.application_details!=="object"||Array.isArray(patch.application_details)||JSON.stringify(patch.application_details).length>30000))return J({error:"Invalid application details"},400);
 if(!Object.keys(patch).length)return J({error:"No changes"},400);
 const original=await db.from("collector_network_submissions").select("status,email").eq("id",id).maybeSingle();if(original.error)throw original.error;if(!original.data)return J({error:"Applicant not found"},404);if(String(patch.email||original.data.email).trim().toLowerCase().endsWith("@screenings4u.com"))return J({error:"screenings4u.com addresses cannot hold IC contractor status. Revoke this profile from the IC Directory."},403);if(original.data.status==="rejected")return J({error:"Denied application locked; use Restore"},423);if(patch.status==="rejected")return J({error:"Use Deny with a reason to preserve the denial record"},400);
 if(patch.status==="approved"){const denied=await db.from("ic_application_denials").select("id").eq("email",String(original.data.email).toLowerCase()).is("restored_at",null).limit(1);if(denied.error)throw denied.error;if(denied.data?.length)return J({error:"Application denied; restore before approval"},423);patch.approved_at=new Date().toISOString();patch.approved_by=uid}
@@ -125,6 +126,7 @@ if(email.endsWith("@screenings4u.com"))return J({error:"Internal screenings4u.co
 const found=await db.from("collector_network_submissions").select("id").ilike("email",email).limit(1);if(found.error)throw found.error;if(found.data?.length)return J({error:"Contractor email already exists"},409);
 const row:any={full_name:name,email,status:"new",availability_status:"available",capabilities:{},rate_card:{}};
 for(const k of ["company_name","phone","website","city","state","zip_code","collector_type","service_areas","certifications","years_experience","internal_notes"])if(v[k]!=null)row[k]=String(v[k]);
+if(v.application_details&&typeof v.application_details==="object")row.application_details=v.application_details;
 const q=await db.from("collector_network_submissions").insert(row).select(fields).single();if(q.error)throw q.error;return J({contractor:q.data});}
 return J({error:"Invalid action"},400);
 }catch(e){console.error("Independent contractor management",e);return J({error:e instanceof Error?e.message:"Server error"},500)}
