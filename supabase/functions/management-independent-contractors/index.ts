@@ -81,6 +81,31 @@ if(action==="restore"){
  const update=await db.from("collector_network_submissions").update({status:"reviewing",updated_at:now}).eq("id",id);if(update.error)throw update.error;
  return J({ok:true,status:"reviewing"});
 }
+if(action==="change_approved_email"){
+ const id=String(b.id||""),email=String(b.email||"").trim().toLowerCase();
+ if(!/^[a-f0-9-]{36}$/i.test(id)||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return J({error:"Valid contractor and email required"},400);
+ if(email.endsWith("@screenings4u.com"))return J({error:"Internal staff emails cannot be IC accounts"},403);
+ const existing=await db.from("collector_network_submissions").select("id,email,full_name,status").eq("id",id).single();if(existing.error)throw existing.error;
+ if(existing.data.status!=="approved")return J({error:"Only approved IC email changes can use this action"},409);
+ const oldEmail=String(existing.data.email||"").toLowerCase();
+ if(oldEmail===email)return J({error:"Email is unchanged"},400);
+ const duplicates=await db.from("collector_network_submissions").select("id").ilike("email",email).neq("id",id).neq("status","superseded").limit(1);if(duplicates.error)throw duplicates.error;if(duplicates.data?.length)return J({error:"This email belongs to another contractor"},409);
+ const denied=await db.from("ic_application_denials").select("id").eq("email",email).is("restored_at",null).limit(1);if(denied.error)throw denied.error;if(denied.data?.length)return J({error:"New email is blocked by a prior denial"},403);
+ const users=await db.auth.admin.listUsers({page:1,perPage:1000});if(users.error)throw users.error;
+ const oldAccount=users.data.users.find((u:any)=>u.email?.trim().toLowerCase()===oldEmail);
+ const other=users.data.users.find((u:any)=>u.email?.trim().toLowerCase()===email);
+ if(other&&other.id!==oldAccount?.id)return J({error:"That address already has an account. Contact management to verify ownership."},409);
+ if(!oldAccount)return J({error:"No linked portal account found. Use the approval invitation process instead."},409);
+ const staff=await db.from("staff_profiles").select("user_id").eq("user_id",oldAccount.id).maybeSingle();if(staff.error)throw staff.error;if(staff.data)return J({error:"This is a staff account and cannot be converted to an IC. Revoke the IC profile."},403);
+ const updated=await db.auth.admin.updateUserById(oldAccount.id,{email,email_confirm:false});if(updated.error)throw updated.error;
+ const profile=await db.from("collector_network_submissions").update({email,updated_at:new Date().toISOString()}).eq("id",id).eq("email",existing.data.email).select(fields).maybeSingle();
+ if(profile.error||!profile.data){await db.auth.admin.updateUserById(oldAccount.id,{email:oldEmail});return J({error:"Unable to synchronize contractor record; account email rollback attempted"},409)}
+ const invitation=await db.auth.admin.generateLink({type:"magiclink",email,options:{redirectTo:"https://independent-contractor.screenings4u.com/dashboard.html"}});
+ if(invitation.error)return J({contractor:profile.data,invitation_status:"failed",error:"Email updated but invitation could not be generated. Contact support."},502);
+ const link=invitation.data?.properties?.action_link||"",key=Deno.env.get("RESEND_API_KEY");let delivery="not_configured";
+ if(key&&link){try{const x=await fetch("https://api.resend.com/emails",{method:"POST",headers:{Authorization:"Bearer "+key,"Content-Type":"application/json"},body:JSON.stringify({from:Deno.env.get("RESEND_FROM_EMAIL")||"screenings4u <notifications@screenings4u.com>",to:[email],subject:"screenings4u — Updated IC Portal Email",html:'<div style="font-family:Arial;background:#f3f6fa;padding:25px"><div style="background:white;padding:26px;max-width:580px;margin:auto;border-top:5px solid #ff7100"><h2>Update your IC portal sign-in</h2><p>Your screenings4u contractor account email has been updated.</p><a style="background:#24548c;color:white;padding:13px 18px;display:inline-block;border-radius:8px" href="'+link+'">Activate Updated Email</a></div></div>'})});delivery=x.ok?"sent":"failed"}catch{delivery="failed"}}
+ return J({contractor:profile.data,invitation_status:delivery});
+}
 if(action==="update"){
 const id=String(b.id||"");if(!/^[a-f0-9-]{36}$/i.test(id))return J({error:"Invalid contractor"},400);
 const v=b.changes||{},keys=["full_name","email","phone","company_name","website","city","state","zip_code","service_areas","collector_type","certifications","years_experience","message","status","availability_status","internal_notes","capabilities","rate_card"],patch:any={};
