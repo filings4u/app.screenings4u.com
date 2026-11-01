@@ -39,6 +39,8 @@ if(action==="deny"){
  if(existing.data.status==="approved")return J({error:"Approved collectors must be deactivated separately"},409);
  if(existing.data.status==="rejected")return J({error:"Application is already denied. Use Restore."},409);
  const now=new Date().toISOString();
+ const linked=await db.from("ic_agreement_submissions").select("user_id").eq("email",String(existing.data.email).toLowerCase()).limit(10);if(linked.error)throw linked.error;
+ for(const record of linked.data||[]){if(record.user_id){const revoked=await db.from("ic_portal_access").update({enabled:false}).eq("user_id",record.user_id);if(revoked.error)throw revoked.error;}}
  const denied=await db.from("ic_application_denials").insert({email:String(existing.data.email).toLowerCase(),applicant_id:id,denial_reason:reason,denied_by:uid,denied_at:now});if(denied.error)throw denied.error;
  const update=await db.from("collector_network_submissions").update({status:"rejected",internal_notes:reason,updated_at:now}).eq("id",id);if(update.error)throw update.error;
  return J({ok:true,status:"rejected"});
