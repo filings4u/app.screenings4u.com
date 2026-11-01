@@ -20,6 +20,23 @@ if(action==="denied_list"){
  const entries=await db.from("ic_application_denials").select("applicant_id,email,denial_reason,denied_at,restored_at").order("denied_at",{ascending:false}).limit(5000);if(entries.error)throw entries.error;
  return J({contractors:(denied.data||[]).map((r:any)=>{const matches=(entries.data||[]).filter((d:any)=>d.applicant_id===r.id||String(d.email).toLowerCase()===String(r.email).toLowerCase());return {...r,denial:matches.find((d:any)=>!d.restored_at)||matches[0]||null,denial_count:matches.length}})});
 }
+if(action==="application_document_upload"){
+ const id=String(b.id||""),kind=String(b.kind||""),mime=String(b.mime||""),base64=String(b.base64||"");
+ if(!/^[a-f0-9-]{36}$/i.test(id)||!["collector_cert_file","licenses_file","insurance_file"].includes(kind)||!["application/pdf","image/png","image/jpeg"].includes(mime)||base64.length>4200000||base64.length<10)return J({error:"Invalid application attachment"},400);
+ const found=await db.from("collector_network_submissions").select("id,status,application_details").eq("id",id).single();if(found.error)throw found.error;if(found.data.status==="rejected"||found.data.status==="superseded")return J({error:"Application is locked"},423);
+ const bytes=Uint8Array.from(atob(base64),(ch:string)=>ch.charCodeAt(0));if(bytes.length>3145728)return J({error:"Maximum 3 MB per document"},400);
+ const ext=mime==="application/pdf"?"pdf":mime==="image/png"?"png":"jpg",path="collector-applications/"+id+"/"+kind+"/"+crypto.randomUUID()+"."+ext;
+ const upload=await db.storage.from("testing-private-documents").upload(path,bytes,{contentType:mime,upsert:false});if(upload.error)throw upload.error;
+ const details=found.data.application_details||{},docs=Array.isArray(details.supporting_documents)?details.supporting_documents:[];
+ const entry={kind,path,mime,original_filename:String(b.filename||"Document").slice(0,130),uploaded_at:new Date().toISOString()};
+ const update=await db.from("collector_network_submissions").update({application_details:{...details,supporting_documents:[...docs,entry]}}).eq("id",id);if(update.error)throw update.error;return J({ok:true,document:entry});
+}
+if(action==="application_document_view"){
+ const id=String(b.id||""),path=String(b.path||"");
+ const found=await db.from("collector_network_submissions").select("application_details").eq("id",id).maybeSingle();if(found.error)throw found.error;
+ if(!found.data?.application_details?.supporting_documents?.some((x:any)=>x.path===path))return J({error:"Document not found"},404);
+ const url=await db.storage.from("testing-private-documents").createSignedUrl(path,120);if(url.error)throw url.error;return J({url:url.data.signedUrl});
+}
 if(action==="detail"){const q=await db.from("collector_network_submissions").select(fields).eq("id",String(b.id||"")).maybeSingle();if(q.error)throw q.error;
 if(patch.status==="approved"){
  const applicantEmail=String(q.data.email||"").toLowerCase();
@@ -118,7 +135,7 @@ if(!Object.keys(patch).length)return J({error:"No changes"},400);
 const original=await db.from("collector_network_submissions").select("status,email").eq("id",id).maybeSingle();if(original.error)throw original.error;if(!original.data)return J({error:"Applicant not found"},404);if(String(patch.email||original.data.email).trim().toLowerCase().endsWith("@screenings4u.com"))return J({error:"screenings4u.com addresses cannot hold IC contractor status. Revoke this profile from the IC Directory."},403);if(original.data.status==="rejected")return J({error:"Denied application locked; use Restore"},423);if(patch.status==="rejected")return J({error:"Use Deny with a reason to preserve the denial record"},400);
 if(patch.status==="approved"){const denied=await db.from("ic_application_denials").select("id").eq("email",String(original.data.email).toLowerCase()).is("restored_at",null).limit(1);if(denied.error)throw denied.error;if(denied.data?.length)return J({error:"Application denied; restore before approval"},423);patch.approved_at=new Date().toISOString();patch.approved_by=uid}
 patch.updated_at=new Date().toISOString();
-const q=await db.from("collector_network_submissions").update(patch).eq("id",id).select(fields).single();if(q.error)throw q.error;return J({contractor:q.data});}
+if(patch.application_details){const existing=await db.from("collector_network_submissions").select("application_details").eq("id",id).single();if(existing.error)throw existing.error;patch.application_details={...(existing.data.application_details||{}),...patch.application_details,supporting_documents:existing.data.application_details?.supporting_documents||[]}}const q=await db.from("collector_network_submissions").update(patch).eq("id",id).select(fields).single();if(q.error)throw q.error;return J({contractor:q.data});}
 if(action==="create"){
 const v=b.contractor||{},name=String(v.full_name||"").trim(),email=String(v.email||"").trim().toLowerCase();if(!name||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return J({error:"Name and email required"},400);
 const block=await db.from("ic_application_denials").select("id").eq("email",email).is("restored_at",null).limit(1);if(block.error)throw block.error;if(block.data?.length)return J({error:"Application denied. Contact management for restoration."},403);
