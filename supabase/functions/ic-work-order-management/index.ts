@@ -128,12 +128,7 @@ if(action==="assign"){
  const order=await db.from("testing_work_orders").select("id,status,metadata").eq("id",id).maybeSingle();if(order.error)throw order.error;if(!order.data||order.data.metadata?.management_deleted_at)return J({error:"Work order not found"},404);
  if(["completed","cancelled"].includes(order.data.status))return J({error:"Cannot assign finalized work order"},409);
  if(kind==="ic")return J({error:"ICs must be invited for management review through Collector Search. Direct award is disabled."},409);
-if(false){
-  const person=await db.from("collector_network_submissions").select("id,email").eq("id",assignee).eq("status","approved").maybeSingle();if(person.error)throw person.error;if(!person.data)return J({error:"Approved IC not found"},404);
-  const previous=await db.from("testing_work_order_assignments").select("id,status").eq("work_order_id",id).eq("collector_id",assignee).in("status",["pending","accepted"]).maybeSingle();if(previous.error)throw previous.error;
-  if(!previous.data){const add=await db.from("testing_work_order_assignments").insert({work_order_id:id,collector_id:assignee,status:"pending",response_token_hash:Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(crypto.randomUUID()+crypto.randomUUID())))).map(x=>x.toString(16).padStart(2,"0")).join(""),sent_to_email:person.data.email,sent_at:new Date().toISOString()});if(add.error)throw add.error;}
-  const upd=await db.from("testing_work_orders").update({assigned_collector_id:assignee,updated_by:user.id}).eq("id",id);if(upd.error)throw upd.error;
- }else{
+{
   const person=await db.from("staff_profiles").select("user_id").eq("user_id",assignee).eq("employment_status","active").maybeSingle();if(person.error)throw person.error;if(!person.data)return J({error:"Active staff member not found"},404);
   const priorStaff=str(order.data.metadata?.assigned_staff_user_id);const md={...(order.data.metadata||{}),assigned_staff_user_id:assignee,assigned_staff_at:new Date().toISOString(),staff_progress:priorStaff===assignee?(order.data.metadata?.staff_progress||{}):{}};
   const upd=await db.from("testing_work_orders").update({metadata:md,updated_by:user.id}).eq("id",id);if(upd.error)throw upd.error;
