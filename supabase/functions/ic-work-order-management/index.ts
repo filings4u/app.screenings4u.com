@@ -68,7 +68,7 @@ if(staff.error||roles.error||staff.data?.employment_status!=="active"||!roles.da
 const b=requestBody,action=str(b.action||"list");
 if(action==="list"){let all:any[]=[];for(let from=0;from<100000;from+=1000){const page=await db.from("testing_work_orders").select("*").order("created_at",{ascending:false}).range(from,from+999);if(page.error)throw page.error;all.push(...(page.data||[]));if((page.data||[]).length<1000)break;}const d=await db.from("management_work_order_deliveries").select("*").order("created_at",{ascending:false}).limit(500);if(d.error)throw d.error;return J({work_orders:all.filter((w:any)=>!w.metadata?.management_deleted_at),deliveries:d.data||[]});}
 if(action==="assignees"){
- const [ic,staffList]=await Promise.all([db.from("collector_network_submissions").select("id,full_name,email").eq("status","approved").order("full_name").limit(500),db.from("staff_profiles").select("user_id,employee_number,job_title").eq("employment_status","active").limit(500)]);
+ const [ic,staffList]=await Promise.all([db.from("collector_network_submissions").select("id,full_name,email,city,state,zip_code,service_areas,certifications,availability_status,collector_type").eq("status","approved").order("full_name").limit(500),db.from("staff_profiles").select("user_id,employee_number,job_title").eq("employment_status","active").limit(500)]);
  if(ic.error||staffList.error)throw ic.error||staffList.error;
  const staffNames=await Promise.all((staffList.data||[]).map(async(x:any)=>{const u=await db.auth.admin.getUserById(x.user_id);return {id:x.user_id,name:String(u.data?.user?.user_metadata?.full_name||u.data?.user?.email||x.employee_number||x.user_id),email:u.data?.user?.email||"",job_title:x.job_title}}));
  return J({contractors:ic.data||[],staff:staffNames});
