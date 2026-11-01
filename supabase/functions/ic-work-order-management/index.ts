@@ -88,7 +88,7 @@ if(action==="ic_invite_many"){
    const html='<div style="font-family:Arial,sans-serif;background:#f3f6fa;padding:28px"><div style="max-width:600px;margin:auto;background:white;border-radius:12px;padding:26px;border-top:5px solid #f07822"><img alt="screenings4u" src="https://independent-contractor.screenings4u.com/images/logo.png" width="190"><h2>New Work Order Available for Review</h2><p>'+esc(job.data.work_order_number)+' — '+esc(job.data.work_order_title)+'</p><p>This is an invitation to review; acceptance does not guarantee award.</p><a style="background:#24548d;color:white;padding:14px 18px;text-decoration:none;border-radius:8px;display:inline-block" href="'+link+'">Review Work Order</a></div></div>';
    try{const response=await fetch("https://api.resend.com/emails",{method:"POST",headers:{Authorization:"Bearer "+key,"Content-Type":"application/json"},body:JSON.stringify({from:Deno.env.get("RESEND_FROM_EMAIL")||"screenings4u <notifications@screenings4u.com>",to:[person.email],subject:"screenings4u Work Order "+job.data.work_order_number,html})});delivery=response.ok?"sent":"failed"}catch{delivery="failed"}
   }
-  await db.from("testing_work_order_events").insert({work_order_id:id,event_type:"ic_invited",actor_type:"admin",actor_user_id:user.id,collector_id:person.id,notes:"Invitation created: "+delivery});
+  await db.from("testing_work_order_events").insert({work_order_id:id,event_type:"ic_invited",actor_type:"staff",actor_user_id:user.id,collector_id:person.id,notes:"Invitation created: "+delivery});
   results.push({collector_id:person.id,assignment_id:added.data.id,delivery});
  }
  await db.from("testing_work_orders").update({status:"sent",sent_at:new Date().toISOString(),updated_by:user.id}).eq("id",id).in("status",["draft","ready_to_assign","sent"]);
@@ -107,7 +107,7 @@ if(action==="ic_award"||action==="ic_deny"){
  if(a.error)throw a.error;if(!a.data||a.data.status!=="pending_admin_review")return J({error:"Contractor not ready for admin review"},409);
  if(action==="ic_deny"){
   const result=await db.from("testing_work_order_assignments").update({status:"denied",updated_at:new Date().toISOString()}).eq("id",aid).eq("status","pending_admin_review").select("id").maybeSingle();if(result.error)throw result.error;if(!result.data)return J({error:"Review changed"},409);
-  await db.from("testing_work_order_events").insert({work_order_id:a.data.work_order_id,event_type:"collector_denied",actor_type:"admin",actor_user_id:user.id,collector_id:a.data.collector_id,notes:str(b.reason).slice(0,1000)});
+  await db.from("testing_work_order_events").insert({work_order_id:a.data.work_order_id,event_type:"collector_denied",actor_type:"staff",actor_user_id:user.id,collector_id:a.data.collector_id,notes:str(b.reason).slice(0,1000)});
   return J({ok:true});
  }
  const collector=await db.from("collector_network_submissions").select("email,status").eq("id",a.data.collector_id).maybeSingle();if(collector.error)throw collector.error;if(!collector.data||collector.data.status!=="approved")return J({error:"Collector profile is not approved"},409);
