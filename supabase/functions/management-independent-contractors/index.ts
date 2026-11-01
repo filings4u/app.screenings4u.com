@@ -48,7 +48,8 @@ patch.updated_at=new Date().toISOString();
 const q=await db.from("collector_network_submissions").update(patch).eq("id",id).select(fields).single();if(q.error)throw q.error;return J({contractor:q.data});}
 if(action==="create"){
 const v=b.contractor||{},name=String(v.full_name||"").trim(),email=String(v.email||"").trim().toLowerCase();if(!name||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return J({error:"Name and email required"},400);
-const block=await db.from("ic_application_denials").select("id").eq("email",email).is("restored_at",null).limit(1);if(block.error)throw block.error;if(block.data?.length)return J({error:"Application denied. Contact management for restoration."},403);\nconst found=await db.from("collector_network_submissions").select("id").ilike("email",email).limit(1);if(found.error)throw found.error;if(found.data?.length)return J({error:"Contractor email already exists"},409);
+const block=await db.from("ic_application_denials").select("id").eq("email",email).is("restored_at",null).limit(1);if(block.error)throw block.error;if(block.data?.length)return J({error:"Application denied. Contact management for restoration."},403);
+const found=await db.from("collector_network_submissions").select("id").ilike("email",email).limit(1);if(found.error)throw found.error;if(found.data?.length)return J({error:"Contractor email already exists"},409);
 const row:any={full_name:name,email,status:"new",availability_status:"available",capabilities:{},rate_card:{}};
 for(const k of ["company_name","phone","website","city","state","zip_code","collector_type","service_areas","certifications","years_experience","internal_notes"])if(v[k]!=null)row[k]=String(v[k]);
 const q=await db.from("collector_network_submissions").insert(row).select(fields).single();if(q.error)throw q.error;return J({contractor:q.data});}
