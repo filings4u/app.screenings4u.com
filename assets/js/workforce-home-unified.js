@@ -24,11 +24,11 @@ const modules=[
 ['Website','dot-website.html','workforce-website.html'],
 ['User Access','dot-users-access.html','workforce-user-access.html'],
 ['Reports','dot-audit.html','workforce-reports.html'],
-['Work Orders','global-work-orders.html','global-work-orders.html'],
+['IC Work Orders','ic-work-orders.html','ic-work-orders.html'],
 ['Task Manager','task-manager.html','task-manager.html']
 ];
 const dotOnly=[['Owner-Operators','dot-owner-operators.html'],['Clearinghouse','dot-clearinghouse.html'],['Return-to-Duty / SAP','dot-return-to-duty.html'],['Follow-Up Testing','dot-follow-up-testing.html'],['DOT Agencies','dot-agencies.html']];
-const shared=new Set(['global-customer-360.html','results-management.html','dot-invoices.html','subscription-management.html','global-work-orders.html','task-manager.html']);
+const shared=new Set(['global-customer-360.html','results-management.html','dot-invoices.html','subscription-management.html','ic-work-orders.html','task-manager.html']);
 function card(label,href,program){const a=document.createElement('a');a.className='wf-tile';a.href=href+(shared.has(href)?'?workspace='+(program==='nondot'?'workforce':'dot'):'');const name=document.createElement('strong');name.textContent=label;const meta=document.createElement('small');meta.textContent='Open '+label; a.append(name,meta);return a}
 async function start(){const user=await window.DOTAuth.requireAuth();if(!user)return;window.DOTShell.render(user);const mount=document.getElementById('dotPageMount');if(!mount)return;const main=document.createElement('section');main.className='wf-home';main.innerHTML='<div class="wf-hero"><div><span class="dot-eyebrow">WORKFORCE | SCREENINGS4U</span><h1>Workforce Management</h1><p>Manage your selected workspace using the DOT / NON-DOT selector in the sidebar.</p></div></div><h2 class="wf-category">Management & Operations</h2><div id="wfTasks" class="wf-grid"></div><div id="wfSpecific"></div>';mount.replaceChildren(main);const select=document.querySelector('#dotBusinessSelect');
 function paint(){const program=selected;const host=main.querySelector('#wfTasks');host.replaceChildren(...modules.map(([label,dot,non])=>card(label,program==='dot'?dot:non,program)));const extra=main.querySelector('#wfSpecific');extra.replaceChildren();if(program==='dot'){const title=document.createElement('h2');title.className='wf-category';title.textContent='DOT-specific compliance';const grid=document.createElement('div');grid.className='wf-grid';grid.append(...dotOnly.map(([label,href])=>card(label,href,program)));extra.append(title,grid)}}
