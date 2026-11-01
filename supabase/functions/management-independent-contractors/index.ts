@@ -83,7 +83,7 @@ if(action==="restore"){
 }
 if(action==="change_approved_email"){
  const id=String(b.id||""),email=String(b.email||"").trim().toLowerCase();
- if(!/^[a-f0-9-]{36}$/i.test(id)||!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email))return J({error:"Valid contractor and email required"},400);
+ if(!/^[a-f0-9-]{36}$/i.test(id)||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return J({error:"Valid contractor and email required"},400);
  if(email.endsWith("@screenings4u.com"))return J({error:"Internal staff emails cannot be IC accounts"},403);
  const existing=await db.from("collector_network_submissions").select("id,email,full_name,status").eq("id",id).single();if(existing.error)throw existing.error;
  if(existing.data.status!=="approved")return J({error:"Only approved IC email changes can use this action"},409);
