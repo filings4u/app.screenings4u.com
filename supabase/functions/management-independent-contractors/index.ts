@@ -34,6 +34,27 @@ if(patch.status==="approved"){
  }
 }
 return J({contractor:q.data});}
+if(action==="revoke_approved"){
+ const id=String(b.id||""),reason=String(b.reason||"").trim();
+ if(!/^[a-f0-9-]{36}$/i.test(id)||reason.length<3)return J({error:"A reason of at least 3 characters is required"},400);
+ const applicant=await db.from("collector_network_submissions").select("id,email,status").eq("id",id).maybeSingle();
+ if(applicant.error)throw applicant.error;
+ if(!applicant.data||applicant.data.status!=="approved")return J({error:"Only an approved contractor can be revoked here"},409);
+ const email=String(applicant.data.email||"").trim().toLowerCase();
+ if(!email)return J({error:"Missing contractor email"},400);
+ const active=await db.from("ic_application_denials").select("id").eq("email",email).is("restored_at",null).limit(1);
+ if(active.error)throw active.error;if(active.data?.length)return J({error:"Active denial already exists"},409);
+ const users=await db.from("ic_agreement_submissions").select("user_id").ilike("email",email).limit(100);if(users.error)throw users.error;
+ const authUsers=await db.auth.admin.listUsers({page:1,perPage:1000});if(authUsers.error)throw authUsers.error;
+ const known=authUsers.data.users.find((u:any)=>u.email?.trim().toLowerCase()===email);
+ const ids=[...new Set([...(users.data||[]).map((x:any)=>x.user_id),known?.id].filter(Boolean))];
+ const now=new Date().toISOString();
+ const log=await db.from("ic_application_denials").insert({email,applicant_id:id,denial_reason:reason,denied_by:uid,denied_at:now});if(log.error)throw log.error;
+ const revoked=await db.from("collector_network_submissions").update({status:"rejected",internal_notes:reason,availability_status:"inactive",updated_at:now}).eq("id",id).eq("status","approved").select("id").maybeSingle();if(revoked.error)throw revoked.error;
+ if(!revoked.data)return J({error:"Applicant state changed; contact admin to review recorded denial"},409);
+ for(const userId of ids){const disabled=await db.from("ic_portal_access").update({enabled:false}).eq("user_id",userId);if(disabled.error)throw disabled.error;}
+ return J({ok:true,status:"rejected",revoked_user_count:ids.length});
+}
 if(action==="deny"){
  const id=String(b.id||""),reason=String(b.reason||"").trim();
  if(!/^[a-f0-9-]{36}$/i.test(id)||!reason)return J({error:"A denial reason is required"},400);
