@@ -5,6 +5,7 @@ const safe=(s:any)=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",
 Deno.serve(async req=>{if(req.method==="OPTIONS")return new Response("ok",{headers:H});if(req.method!=="POST")return out({error:"Method not allowed"},405);
 try{const b=await req.json(),email=String(b.email||"").toLowerCase().trim(),name=String(b.full_name||"").trim(),sign=String(b.signature||"").trim();
 if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)||!name||sign!==String(b.representative||"").trim()||!b.accepted||!b.phone||!b.address||!b.city_state_zip||!b.representative)return out({error:"Required fields or signature missing"},400);
+if(email.endsWith("@screenings4u.com"))return out({error:"Internal staff addresses cannot apply as Independent Contractors."},403);
 const secret=Deno.env.get("TURNSTILE_SECRET_KEY");if(!secret)return out({error:"Security verification not configured"},503);
 const check=await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify",{method:"POST",body:new URLSearchParams({secret,response:String(b.turnstile_token||"")})});const ver=await check.json();if(!ver.success||!["screenings4u.com","www.screenings4u.com","independent-contractor.screenings4u.com"].includes(ver.hostname))return out({error:"Security verification failed"},403);
 const db=createClient(Deno.env.get("SUPABASE_URL")!,Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,{auth:{persistSession:false}});
