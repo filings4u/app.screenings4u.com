@@ -98,7 +98,7 @@ if(action==="change_approved_email"){
  if(!oldAccount)return J({error:"No linked portal account found. Use the approval invitation process instead."},409);
  const staff=await db.from("staff_profiles").select("user_id").eq("user_id",oldAccount.id).maybeSingle();if(staff.error)throw staff.error;if(staff.data)return J({error:"This is a staff account and cannot be converted to an IC. Revoke the IC profile."},403);
  const updated=await db.auth.admin.updateUserById(oldAccount.id,{email,email_confirm:false});if(updated.error)throw updated.error;
- const profile=await db.from("collector_network_submissions").update({email,updated_at:new Date().toISOString(),updated_by:uid}).eq("id",id).eq("email",existing.data.email).select(fields).maybeSingle();
+ const profile=await db.from("collector_network_submissions").update({email,updated_at:new Date().toISOString()}).eq("id",id).eq("email",existing.data.email).select(fields).maybeSingle();
  if(profile.error||!profile.data){await db.auth.admin.updateUserById(oldAccount.id,{email:oldEmail});return J({error:"Unable to synchronize contractor record; account email rollback attempted"},409)}
  const invitation=await db.auth.admin.generateLink({type:"magiclink",email,options:{redirectTo:"https://independent-contractor.screenings4u.com/dashboard.html"}});
  if(invitation.error)return J({contractor:profile.data,invitation_status:"failed",error:"Email updated but invitation could not be generated. Contact support."},502);
