@@ -41,7 +41,8 @@ const v=b.changes||{},keys=["full_name","email","phone","company_name","website"
 for(const k of keys)if(Object.prototype.hasOwnProperty.call(v,k))patch[k]=v[k];
 if(patch.email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(patch.email)))return J({error:"Invalid email"},400);
 if(patch.status&&!["new","reviewing","approved","inactive","rejected"].includes(patch.status))return J({error:"Invalid status"},400);
-if(!Object.keys(patch).length)return J({error:"No changes"},400);\nconst original=await db.from("collector_network_submissions").select("status,email").eq("id",id).maybeSingle();if(original.error)throw original.error;if(!original.data)return J({error:"Applicant not found"},404);if(original.data.status==="rejected")return J({error:"Denied application locked; use Restore"},423);if(patch.status==="rejected")return J({error:"Use Deny with a reason to preserve the denial record"},400);
+if(!Object.keys(patch).length)return J({error:"No changes"},400);
+const original=await db.from("collector_network_submissions").select("status,email").eq("id",id).maybeSingle();if(original.error)throw original.error;if(!original.data)return J({error:"Applicant not found"},404);if(original.data.status==="rejected")return J({error:"Denied application locked; use Restore"},423);if(patch.status==="rejected")return J({error:"Use Deny with a reason to preserve the denial record"},400);
 if(patch.status==="approved"){const denied=await db.from("ic_application_denials").select("id").eq("email",String(original.data.email).toLowerCase()).is("restored_at",null).limit(1);if(denied.error)throw denied.error;if(denied.data?.length)return J({error:"Application denied; restore before approval"},423);patch.approved_at=new Date().toISOString();patch.approved_by=uid}
 patch.updated_at=new Date().toISOString();
 const q=await db.from("collector_network_submissions").update(patch).eq("id",id).select(fields).single();if(q.error)throw q.error;return J({contractor:q.data});}
