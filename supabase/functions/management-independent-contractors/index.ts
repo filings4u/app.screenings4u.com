@@ -15,6 +15,11 @@ if(staff.data?.employment_status!=="active"||(!roles.data?.length&&!(access.data
 const b=await req.json().catch(()=>({})),action=String(b.action||"list");
 const fields="id,full_name,email,phone,company_name,website,city,state,zip_code,service_areas,collector_type,certifications,years_experience,message,status,availability_status,capabilities,rate_card,internal_notes,last_contacted_at,approved_at,created_at,updated_at";
 if(action==="list"){const q=await db.from("collector_network_submissions").select(fields).order("created_at",{ascending:false}).limit(1000);if(q.error)throw q.error;return J({contractors:q.data||[]});}
+if(action==="denied_list"){
+ const denied=await db.from("collector_network_submissions").select(fields).eq("status","rejected").order("updated_at",{ascending:false}).limit(1000);if(denied.error)throw denied.error;
+ const entries=await db.from("ic_application_denials").select("applicant_id,email,denial_reason,denied_at,restored_at").order("denied_at",{ascending:false}).limit(5000);if(entries.error)throw entries.error;
+ return J({contractors:(denied.data||[]).map((r:any)=>{const matches=(entries.data||[]).filter((d:any)=>d.applicant_id===r.id||String(d.email).toLowerCase()===String(r.email).toLowerCase());return {...r,denial:matches.find((d:any)=>!d.restored_at)||matches[0]||null,denial_count:matches.length}})});
+}
 if(action==="detail"){const q=await db.from("collector_network_submissions").select(fields).eq("id",String(b.id||"")).maybeSingle();if(q.error)throw q.error;
 if(patch.status==="approved"){
  const applicantEmail=String(q.data.email||"").toLowerCase();
