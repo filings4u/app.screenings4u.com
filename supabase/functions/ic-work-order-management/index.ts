@@ -73,6 +73,27 @@ if(action==="assignees"){
  const staffNames=await Promise.all((staffList.data||[]).map(async(x:any)=>{const u=await db.auth.admin.getUserById(x.user_id);return {id:x.user_id,name:String(u.data?.user?.user_metadata?.full_name||u.data?.user?.email||x.employee_number||x.user_id),email:u.data?.user?.email||"",job_title:x.job_title}}));
  return J({contractors:ic.data||[],staff:staffNames});
 }
+if(action==="ic_invite_many"){
+ const id=str(b.id),collectorIds=[...new Set((Array.isArray(b.collector_ids)?b.collector_ids:[]).map(str))];
+ if(!/^[0-9a-f-]{36}$/i.test(id)||!collectorIds.length||collectorIds.length>30||collectorIds.some(x=>!/^[0-9a-f-]{36}$/i.test(x)))return J({error:"Select 1–30 valid collectors"},400);
+ const job=await db.from("testing_work_orders").select("id,work_order_number,work_order_title,status").eq("id",id).maybeSingle();if(job.error)throw job.error;if(!job.data||!["draft","ready_to_assign","sent"].includes(job.data.status))return J({error:"Save a dispatch-ready work order first"},409);
+ const people=await db.from("collector_network_submissions").select("id,full_name,email,status").in("id",collectorIds);if(people.error)throw people.error;if((people.data||[]).length!==collectorIds.length||(people.data||[]).some((x:any)=>x.status!=="approved"||!x.email))return J({error:"Every invited collector must have an approved profile and email"},409);
+ const results:any[]=[];
+ for(const person of people.data||[]){
+  const existing=await db.from("testing_work_order_assignments").select("id,status").eq("work_order_id",id).eq("collector_id",person.id).in("status",["pending","pending_admin_review","awarded"]).limit(1);if(existing.error)throw existing.error;if(existing.data?.length){results.push({collector_id:person.id,status:"already_invited"});continue}
+  const token=Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(crypto.randomUUID()+crypto.randomUUID())))).map(x=>x.toString(16).padStart(2,"0")).join("");
+  const added=await db.from("testing_work_order_assignments").insert({work_order_id:id,collector_id:person.id,status:"pending",response_token_hash:token,sent_to_email:person.email,sent_at:new Date().toISOString()}).select("id").single();if(added.error)throw added.error;
+  const key=Deno.env.get("RESEND_API_KEY")||"";let delivery="unavailable";
+  if(key){const link="https://independent-contractor.screenings4u.com/work-orders.html?assignment="+encodeURIComponent(added.data.id);
+   const html='<div style="font-family:Arial,sans-serif;background:#f3f6fa;padding:28px"><div style="max-width:600px;margin:auto;background:white;border-radius:12px;padding:26px;border-top:5px solid #f07822"><img alt="screenings4u" src="https://independent-contractor.screenings4u.com/images/logo.png" width="190"><h2>New Work Order Available for Review</h2><p>'+esc(job.data.work_order_number)+' — '+esc(job.data.work_order_title)+'</p><p>This is an invitation to review; acceptance does not guarantee award.</p><a style="background:#24548d;color:white;padding:14px 18px;text-decoration:none;border-radius:8px;display:inline-block" href="'+link+'">Review Work Order</a></div></div>';
+   try{const response=await fetch("https://api.resend.com/emails",{method:"POST",headers:{Authorization:"Bearer "+key,"Content-Type":"application/json"},body:JSON.stringify({from:Deno.env.get("RESEND_FROM_EMAIL")||"screenings4u <notifications@screenings4u.com>",to:[person.email],subject:"screenings4u Work Order "+job.data.work_order_number,html})});delivery=response.ok?"sent":"failed"}catch{delivery="failed"}
+  }
+  await db.from("testing_work_order_events").insert({work_order_id:id,event_type:"ic_invited",actor_type:"admin",actor_user_id:user.id,collector_id:person.id,notes:"Invitation created: "+delivery});
+  results.push({collector_id:person.id,assignment_id:added.data.id,delivery});
+ }
+ await db.from("testing_work_orders").update({status:"sent",sent_at:new Date().toISOString(),updated_by:user.id}).eq("id",id).in("status",["draft","ready_to_assign","sent"]);
+ return J({ok:true,results});
+}
 if(action==="ic_review_queue"){
  const q=await db.from("testing_work_order_assignments").select("id,work_order_id,collector_id,status,responded_at,metadata,offered_amount").in("status",["pending_admin_review","awarded","denied"]).order("responded_at",{ascending:false}).limit(250);if(q.error)throw q.error;
  const ids=[...new Set((q.data||[]).map((x:any)=>x.work_order_id))],collectorIds=[...new Set((q.data||[]).map((x:any)=>x.collector_id))];
@@ -143,7 +164,7 @@ const result=id?await db.from("testing_work_orders").update(row).eq("id",id).sel
 const order=result.data;
 const del=await db.from("testing_work_order_services").delete().eq("work_order_id",order.id);if(del.error)throw del.error;
 if(services.length){const sr=await db.from("testing_work_order_services").insert(services.map((x:any)=>({...x,work_order_id:order.id,line_total:x.quantity*x.unit_price})));if(sr.error)throw sr.error;}
-await db.from("testing_work_order_events").insert({work_order_id:order.id,event_type:id?"updated":"created",actor_user_id:user.id,notes:"Managed from global work orders"});
+await db.from("testing_work_order_events").insert({work_order_id:order.id,event_type:id?"updated":"created",actor_user_id:user.id,notes:"Managed from IC work orders"});
 return J({work_order:order});}
 if(action==="photo_upload"){const id=str(b.id),filename=str(b.filename),mime=str(b.mime);if(!/^[0-9a-f-]{36}$/i.test(id)||!/^image\/(jpeg|png|webp)$/.test(mime))return J({error:"Valid work order and JPEG, PNG or WebP required"},400);const found=await db.from("testing_work_orders").select("id,status").eq("id",id).maybeSingle();if(found.error)throw found.error;if(!found.data)return J({error:"Work order not found"},404);if(!["draft","ready_to_assign","sent"].includes(found.data.status))return J({error:"Work order no longer editable"},409);const ext=mime==="image/png"?"png":mime==="image/webp"?"webp":"jpg";const path="work-orders/"+id+"/references/"+crypto.randomUUID()+"."+ext;const sign=await db.storage.from("testing-private-documents").createSignedUploadUrl(path);if(sign.error)throw sign.error;return J({path,token:sign.data.token,bucket:"testing-private-documents"})}
 if(action==="photo_attach"){const id=str(b.id),path=str(b.path);if(!/^[0-9a-f-]{36}$/i.test(id)||!path.startsWith("work-orders/"+id+"/references/"))return J({error:"Invalid photo"},400);const row=await db.from("testing_work_orders").select("metadata,status").eq("id",id).maybeSingle();if(row.error)throw row.error;if(!row.data||!["draft","ready_to_assign","sent"].includes(row.data.status))return J({error:"Work order cannot be edited"},409);const photos=Array.isArray(row.data.metadata?.reference_photos)?row.data.metadata.reference_photos:[];if(photos.length>=20)return J({error:"Maximum 20 reference photos"},400);const next={...(row.data.metadata||{}),reference_photos:[...photos,{path,added_at:new Date().toISOString()}]};const up=await db.from("testing_work_orders").update({metadata:next}).eq("id",id);if(up.error)throw up.error;return J({ok:true})}
