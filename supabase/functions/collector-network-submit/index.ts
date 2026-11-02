@@ -11,7 +11,7 @@ Deno.serve(async(req)=>{if(req.method==="OPTIONS")return new Response("ok",{head
  const denial=await db.from("ic_application_denials").select("id").eq("email",email).is("restored_at",null).limit(1);if(denial.error)throw denial.error;if(denial.data?.length)return J({error:"Application is not eligible for resubmission. Contact management to request restoration."},403);
  const details=b.application_details||{};
  if(typeof details!=="object"||Array.isArray(details)||JSON.stringify(details).length>30000)return J({error:"Invalid application details"},400);
- for(const k of ["first_name","last_name","phone","city","state","zip_code","mobile_services","dot_experience","service_areas","signature","signature_date"])if(!String(details[k]||"").trim())return J({error:"Missing required application field: "+k},400);
+ for(const k of ["first_name","last_name","phone","city","state","zip_code","mobile_services","service_areas","signature","signature_date"])if(!String(details[k]||"").trim())return J({error:"Missing required application field: "+k},400);
  if(!Array.isArray(details.services)||!details.services.length||!Array.isArray(details.availability)||!details.availability.length||!details.ack_accurate||!details.ack_no_guarantee||!details.ack_independent||!details.ack_verify)return J({error:"Required acknowledgments, services or availability missing"},400);
  if(details.preferred_contact==="Text message"&&!details.sms_consent)return J({error:"Text message consent required for SMS contact preference"},400);
  if(!/^[0-9]{5}$/.test(String(details.zip_code||""))||(details.site_zip&&!/^[0-9]{5}$/.test(String(details.site_zip))))return J({error:"ZIP codes must contain exactly 5 digits"},400);
