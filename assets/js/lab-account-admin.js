@@ -4,30 +4,79 @@ const root=document.getElementById('dotPageMount');if(!root)return;
 const E=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const call=async(fn,body)=>{const {data,error}=await dotSupabase.functions.invoke(fn,{body});if(error||data?.error)throw Error(data?.error||error?.message||'Request failed');return data};
 const isNumbers=location.pathname.endsWith('lab-account-numbers.html');
-const heading=isNumbers?'Lab Account Numbers':'Lab Account Intakes';
+const isDetail=location.pathname.endsWith('lab-account-intake-detail.html');
+const heading=isNumbers?'Lab Account Numbers':isDetail?'Lab Account Record':'Lab Account Intakes';
 root.innerHTML='<div class="lab-wrap"><h1>'+heading+'</h1><p id="labMessage" role="status">Loading…</p><div id="labContent"></div></div>';
 const msg=root.querySelector('#labMessage'),container=root.querySelector('#labContent');
 const when=x=>x?new Date(x).toLocaleDateString():'—';
 const button=(label,attrs='')=>'<button type="button" '+attrs+'>'+E(label)+'</button>';
 let submissions=[],accounts=[],ctpas=[],organizations=[];
 function modal(html){const el=document.createElement('div');el.className='modal';el.innerHTML='<div class="modal-card"><div class="top"><h2>Record details</h2>'+button('Close','data-close')+'</div>'+html+'</div>';root.querySelector('.lab-wrap').append(el);const close=()=>el.remove();el.querySelector('[data-close]').onclick=close;el.addEventListener('click',e=>{if(e.target===el)close()});return el}
-async function loadIntakes(){
+
+const norm=v=>String(v||'').trim().toLowerCase();
+const safeId=v=>/^[0-9a-f-]{36}$/i.test(v||'');
+const detailUrl=(email,kind,id,mode)=>'lab-account-intake-detail.html?'+new URLSearchParams(Object.fromEntries(Object.entries({email,kind,id,mode}).filter(([,v])=>v))).toString();
+const groupsFor=rows=>{
+ const groups=new Map();
+ for(const x of rows){
+  const email=norm(x.submitter_email||x.details?.primary_contact_email||x.details?.billing_contact_email);
+  const key=email||('unknown:'+x.kind+':'+x.id);
+  if(!groups.has(key))groups.set(key,{key,email,rows:[],customer_user_id:null});
+  const g=groups.get(key);g.rows.push(x);if(x.customer_user_id)g.customer_user_id=x.customer_user_id;
+ }
+ return [...groups.values()].sort((a,b)=>Math.max(...b.rows.map(x=>+new Date(x.created_at||0)))-Math.max(...a.rows.map(x=>+new Date(x.created_at||0))));
+};
+async function fetchIntakes(){
  const [forms,purchases]=await Promise.all([call('enterprise-forms-management',{action:'submissions'}),call('enterprise-forms-management',{action:'lab_account_purchases'})]);
  const fromForms=(forms.submissions||[]).filter(x=>['lab_account_intake_standalone','lab_account_intake'].includes(x.form_key)).map(x=>({...x,kind:'submission',details:x.payload||{}}));
  const known=new Set(fromForms.map(x=>x.related_order_id).filter(Boolean));
- const fromPurchases=(purchases.purchases||[]).filter(x=>!known.has(x.order_id)).map(x=>({...x,kind:'purchase',submission_number:x.order_number,submitter_name:x.customer_email,submitter_email:x.customer_email,details:x.intake_data||{}}));
- submissions=[...fromForms,...fromPurchases].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
- msg.textContent=submissions.length+' lab account intake records';
- container.innerHTML='<div class="lab-panel"><div class="lab-tools"><input id="labSearch" type="search" placeholder="Search submission, customer or business"><select id="labStatus"><option value="">All statuses</option>'+[...new Set(submissions.map(x=>x.status).filter(Boolean))].map(x=>'<option>'+E(x)+'</option>').join('')+'</select><a href="https://lab-account.screenings4u.com/dashboard.html" target="_blank" rel="noopener">Lab Account Portal</a></div><table><thead><tr><th>Submission</th><th>Customer</th><th>Business</th><th>Status</th><th>Received</th><th>Actions</th></tr></thead><tbody id="labRows"></tbody></table></div>';
- const draw=()=>{const query=(container.querySelector('#labSearch').value||'').toLowerCase(),status=container.querySelector('#labStatus').value;const shown=submissions.filter(x=>(!status||x.status===status)&&[x.submission_number,x.submitter_name,x.submitter_email,x.details?.legal_business_name].some(v=>String(v||'').toLowerCase().includes(query)));container.querySelector('#labRows').innerHTML=shown.map(x=>'<tr><td>'+E(x.submission_number||'—')+'</td><td>'+E(x.submitter_name||x.submitter_email||'—')+'</td><td>'+E(x.details?.legal_business_name||'—')+'</td><td>'+E(x.status||'—')+'</td><td>'+when(x.created_at)+'</td><td><div class="actions">'+button('View','data-view="'+E(x.id)+'"')+button('Edit','data-edit="'+E(x.id)+'"')+button('Archive','data-archive="'+E(x.id)+'"')+'</div></td></tr>').join('')||'<tr><td colspan="6">No matching intakes.</td></tr>';
- container.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>showRecord(submissions.find(x=>x.id===b.dataset.view),false));
- container.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>showRecord(submissions.find(x=>x.id===b.dataset.edit),true));
- container.querySelectorAll('[data-archive]').forEach(b=>b.onclick=()=>archive(submissions.find(x=>x.id===b.dataset.archive)));
- };
- container.querySelector('#labSearch').oninput=draw;container.querySelector('#labStatus').onchange=draw;draw();
+ const fromPurchases=(purchases.purchases||[]).filter(x=>!known.has(x.order_id)).map(x=>({...x,kind:'purchase',submission_number:x.order_number,submitter_email:x.customer_email,submitter_name:x.customer_email,details:x.intake_data||{}}));
+ return [...fromForms,...fromPurchases].filter(x=>x.status!=='archived').sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
 }
-function showRecord(record,editing){if(!record)return;const fields=Object.entries(record.details||{});const form='<form id="recordForm">'+fields.map(([k,v])=>'<label><span>'+E(k.replaceAll('_',' '))+'</span><input name="'+E(k)+'" value="'+E(typeof v==='object'?JSON.stringify(v):v)+'" '+(!editing?'readonly':'')+'></label>').join('')+(editing?'<button class="primary" type="submit">Save changes</button>':'')+'</form><p role="status" id="saveStatus"></p>';const popup=modal('<p>'+E(record.submission_number||'')+' · '+E(record.submitter_email||'')+'</p>'+form);if(editing)popup.querySelector('#recordForm').onsubmit=async e=>{e.preventDefault();try{const payload=Object.fromEntries(new FormData(e.target).entries());const action=record.kind==='purchase'?'edit_lab_purchase':'edit_submission_payload';await call('enterprise-forms-management',{action,id:record.id,payload});popup.remove();await loadIntakes()}catch(err){popup.querySelector('#saveStatus').textContent=err.message}}}
-async function archive(x){if(!x||!confirm('Archive this intake? It will remain in records.'))return;try{await call('enterprise-forms-management',x.kind==='purchase'?{action:'archive_lab_purchase',id:x.id}:{action:'update_submission',id:x.id,status:'archived'});await loadIntakes()}catch(err){msg.textContent=err.message}}
+const actionLink=(href,label,extra='')=>'<a class="lab-action '+extra+'" href="'+E(href)+'">'+E(label)+'</a>';
+const names=x=>x.rows.map(r=>r.submitter_name).find(v=>v&&v.includes(' '))||x.rows.find(r=>r.submitter_name)?.submitter_name||x.email||'Customer';
+const business=x=>x.rows.map(r=>r.details?.legal_business_name||r.details?.business_name).find(Boolean)||'—';
+const latest=x=>x.rows[0]||{};
+async function loadIntakes(){
+ submissions=await fetchIntakes();const grouped=groupsFor(submissions);
+ msg.textContent=grouped.length+' unique customers • '+submissions.length+' active intake and purchase records';
+ container.innerHTML='<div class="lab-panel"><div class="lab-toolbar"><label class="lab-search-label">Search customers, emails, businesses, or submissions<input id="labSearch" type="search" placeholder="Search customer, email, business, or submission"></label><label class="lab-status-label">Filter by status<select id="labStatus"><option value="">All statuses</option>'+[...new Set(submissions.map(x=>x.status).filter(Boolean))].map(x=>'<option>'+E(x)+'</option>').join('')+'</select></label><a class="lab-action lab-primary" href="lab-account-numbers.html">Manage Lab Account Numbers</a><a class="lab-action" href="https://lab-account.screenings4u.com/dashboard.html" target="_blank" rel="noopener">Lab Account Portal</a></div><div class="lab-table-scroll"><table class="lab-table"><thead><tr><th>Customer</th><th>Email</th><th>Business</th><th>Records</th><th>Latest status</th><th>Last activity</th><th>Manage</th></tr></thead><tbody id="labRows"></tbody></table></div></div>';
+ const draw=()=>{
+  const q=norm(container.querySelector('#labSearch').value),status=container.querySelector('#labStatus').value;
+  const shown=grouped.filter(group=>(!status||group.rows.some(x=>x.status===status))&&(!q||[group.email,names(group),business(group),...group.rows.flatMap(x=>[x.submission_number,x.status])].some(v=>norm(v).includes(q))));
+  container.querySelector('#labRows').innerHTML=shown.map(group=>{
+   const record=latest(group),link=detailUrl(group.email,'','',''),count=group.rows.length;
+   return '<tr><td>'+actionLink(link,names(group),'lab-customer-link')+'</td><td>'+E(group.email||'Unverified')+'</td><td>'+E(business(group))+'</td><td><span class="lab-count">'+count+'</span> '+(count===1?'record':'records')+'</td><td><span class="lab-pill">'+E(record.status||'unknown')+'</span></td><td>'+when(record.created_at)+'</td><td><div class="lab-row-actions">'+actionLink(link,'Manage customer','lab-primary')+actionLink(detailUrl(group.email,record.kind,record.id,''),'Latest record')+'</div></td></tr>';
+  }).join('')||'<tr><td colspan="7" class="lab-empty">No customers match your search.</td></tr>';
+ };
+ container.querySelector('#labSearch').addEventListener('input',draw);container.querySelector('#labStatus').addEventListener('change',draw);draw();
+}
+const editableFields=x=>Object.entries(x.details||{}).filter(([k,v])=>typeof v==='string'&& !/token|captcha|turnstile|password|secret|signature|website_trap|form_started_at/i.test(k));
+const detailsView=x=>editableFields(x).map(([k,v])=>'<div class="lab-detail-field"><span>'+E(k.replaceAll('_',' '))+'</span><strong>'+E(v||'—')+'</strong></div>').join('')||'<p>No additional intake details have been submitted yet.</p>';
+async function loadDetail(){
+ submissions=await fetchIntakes();const params=new URLSearchParams(location.search),email=norm(params.get('email')),id=params.get('id')||'',kind=params.get('kind')||'',mode=params.get('mode')||'';
+ const grouped=groupsFor(submissions);
+ const group=grouped.find(g=>g.email===email)|| (safeId(id)?grouped.find(g=>g.rows.some(x=>x.id===id)):null);
+ if(!group){msg.textContent='Customer not found or archived.';container.innerHTML=actionLink('lab-account-intakes.html','← Back to customer intakes');return}
+ const record=safeId(id)?group.rows.find(x=>x.id===id&&x.kind===kind):null;
+ const pageUrl=detailUrl(group.email,'','','');
+ if(!record){
+  root.querySelector('h1').textContent=names(group);
+  msg.textContent=group.rows.length+' records associated with '+group.email+' • One customer account';
+  container.innerHTML='<div class="lab-detail-nav">'+actionLink('lab-account-intakes.html','← All customers')+actionLink('lab-account-numbers.html','Manage Lab Account Numbers')+'</div><div class="lab-panel"><h2>Customer profile</h2><div class="lab-detail"><div class="lab-detail-field"><span>Customer</span><strong>'+E(names(group))+'</strong></div><div class="lab-detail-field"><span>Account email</span><strong>'+E(group.email)+'</strong></div><div class="lab-detail-field"><span>Business</span><strong>'+E(business(group))+'</strong></div><div class="lab-detail-field"><span>Linked records</span><strong>'+group.rows.length+'</strong></div></div></div><div class="lab-panel"><h2>Intake &amp; purchase history</h2><p class="lab-muted">These are records belonging to one customer account, not separate customer accounts. Purchase and submission history is retained.</p><div class="lab-table-scroll"><table class="lab-table"><thead><tr><th>Reference</th><th>Type</th><th>Status</th><th>Date</th><th>Manage</th></tr></thead><tbody>'+group.rows.map(x=>'<tr><td>'+actionLink(detailUrl(group.email,x.kind,x.id,''),x.submission_number||x.id,'lab-customer-link')+'</td><td>'+E(x.kind==='purchase'?'Purchase intake':'Submitted form')+'</td><td><span class="lab-pill">'+E(x.status||'unknown')+'</span></td><td>'+when(x.created_at)+'</td><td><div class="lab-row-actions">'+actionLink(detailUrl(group.email,x.kind,x.id,''),'View')+actionLink(detailUrl(group.email,x.kind,x.id,'edit'),'Edit')+'</div></td></tr>').join('')+'</tbody></table></div></div>';
+  return;
+ }
+ root.querySelector('h1').textContent=record.submission_number||'Lab account record';
+ msg.textContent=(record.kind==='purchase'?'Purchase intake':'Submitted form')+' • '+group.email+' • '+record.status;
+ const recordHref=detailUrl(group.email,record.kind,record.id,''),editing=mode==='edit';
+ const fields=editableFields(record);
+ const formHtml='<form id="labManageForm" class="lab-edit-grid">'+fields.map(([k,v])=>'<label><span>'+E(k.replaceAll('_',' '))+'</span><input name="'+E(k)+'" value="'+E(v)+'" maxlength="3000" '+(editing?'':'readonly')+'></label>').join('')+(editing?'<div class="lab-form-actions"><button type="submit" class="lab-primary">Save changes</button>'+actionLink(recordHref,'Cancel')+'</div>':'')+'</form>';
+ container.innerHTML='<div class="lab-detail-nav">'+actionLink(pageUrl,'← Customer account')+actionLink('lab-account-intakes.html','All customers')+'</div><div class="lab-panel"><div class="lab-detail-header"><div><h2>'+E(record.submission_number||'Record')+'</h2><p>Associated with <strong>'+E(group.email)+'</strong></p></div><span class="lab-pill">'+E(record.status||'unknown')+'</span></div><div class="lab-row-actions">'+actionLink(recordHref,'View')+actionLink(detailUrl(group.email,record.kind,record.id,'edit'),'Edit','lab-primary')+'</div><div class="lab-detail"><div class="lab-detail-field"><span>Record type</span><strong>'+E(record.kind==='purchase'?'Purchase intake':'Submitted form')+'</strong></div><div class="lab-detail-field"><span>Created</span><strong>'+when(record.created_at)+'</strong></div><div class="lab-detail-field"><span>Business</span><strong>'+E(record.details?.legal_business_name||business(group))+'</strong></div><div class="lab-detail-field"><span>Customer email</span><strong>'+E(group.email)+'</strong></div></div></div><div class="lab-panel"><h2>'+ (editing?'Edit intake details':'Submitted details')+'</h2>'+(editing?formHtml:'<div class="lab-detail">'+detailsView(record)+'</div>')+'<p id="saveStatus" role="status" class="lab-notice"></p></div><div class="lab-panel lab-manage-actions"><h2>Manage record</h2><p class="lab-muted">Change the review status or archive this individual record. Other records and customer account history are preserved.</p><div class="lab-row-actions">'+(record.kind==='submission'?'<button type="button" data-status="reviewing">Mark reviewing</button><button type="button" data-status="completed">Mark completed</button>':'')+'<button type="button" data-archive-record class="lab-danger">Archive record</button></div></div>';
+ const saveMsg=container.querySelector('#saveStatus');
+ if(editing){container.querySelector('#labManageForm').addEventListener('submit',async e=>{e.preventDefault();const btn=e.target.querySelector('button[type="submit"]');btn.disabled=true;try{const payload=Object.fromEntries(new FormData(e.target).entries());await call('enterprise-forms-management',{action:record.kind==='purchase'?'edit_lab_purchase':'edit_submission_payload',id:record.id,payload});location.href=recordHref}catch(error){saveMsg.textContent=error.message;btn.disabled=false}})}
+ container.querySelectorAll('[data-status]').forEach(b=>b.addEventListener('click',async()=>{b.disabled=true;try{await call('enterprise-forms-management',{action:'update_submission',id:record.id,status:b.dataset.status});location.href=recordHref}catch(e){saveMsg.textContent=e.message;b.disabled=false}}));
+ container.querySelector('[data-archive-record]').addEventListener('click',async()=>{if(!confirm('Archive this record? The account and other records will remain.'))return;try{await call('enterprise-forms-management',record.kind==='purchase'?{action:'archive_lab_purchase',id:record.id}:{action:'update_submission',id:record.id,status:'archived'});location.href=pageUrl}catch(e){saveMsg.textContent=e.message}});
+}
 async function loadNumbers(){
  const data=await call('lab-account-management',{action:'list'});accounts=data.accounts||[];ctpas=data.ctpas||[];organizations=data.organizations||[];
  const orgName=id=>{const o=organizations.find(x=>x.id===id);return o?.display_name||o?.legal_name||o?.name||id||'—'};
@@ -39,5 +88,5 @@ async function loadNumbers(){
 function showAccount(record){const opts=ctpas.map(c=>'<option value="'+E(c.id)+'" '+(record?.ctpa_id===c.id?'selected':'')+'>'+E(organizations.find(o=>o.id===c.organization_id)?.display_name||organizations.find(o=>o.id===c.organization_id)?.legal_name||c.organization_id)+' ('+E(c.status||'')+')</option>').join('');
  const popup=modal('<form id="accountForm"><label>C/TPA<select name="ctpa_id" required><option value="">Select C/TPA</option>'+opts+'</select></label><label>Laboratory<input name="lab_name" required maxlength="180" value="'+E(record?.lab_name||record?.laboratory_name||'')+'"></label><label>Lab account number<input name="account_code" required maxlength="120" value="'+E(record?.account_code||'')+'"></label><label>Status<select name="status"><option value="active">Active</option><option value="inactive" '+(record?.status==='inactive'?'selected':'')+'>Inactive</option></select></label><label>Primary lab account<select name="is_primary"><option value="false">No</option><option value="true" '+(record?.is_primary?'selected':'')+'>Yes</option></select></label><label>Notes<textarea name="notes" rows="3" maxlength="2000">'+E(record?.notes||'')+'</textarea></label><button class="primary" type="submit">Save assignment</button></form><p id="saveStatus" role="status"></p>');
  popup.querySelector('#accountForm').onsubmit=async e=>{e.preventDefault();const b=Object.fromEntries(new FormData(e.target).entries());try{await call('lab-account-management',{action:'save',id:record?.id||null,...b,is_primary:b.is_primary==='true'});popup.remove();await loadNumbers()}catch(err){popup.querySelector('#saveStatus').textContent=err.message}}}
-try{if(isNumbers)await loadNumbers();else await loadIntakes()}catch(err){msg.textContent=err.message}
+try{if(isNumbers)await loadNumbers();else if(isDetail)await loadDetail();else await loadIntakes()}catch(err){msg.textContent=err.message}
 })();
