@@ -55,7 +55,17 @@ if(action==="confirm_house_delivery"){
 
 if(grant.plan==="lab-account-workflow-test-1"&&["create","cancel"].includes(action))return reply({error:"The $1 workflow test does not include physical supply requests."},403);
 if(action==="create"){
-const lines=Array.isArray(b.lines)?b.lines:[];if(!lines.length||lines.length>40)return reply({error:"Select supply quantities"},400);
+ const email=String(user.email||"").trim().toLowerCase();
+ const verified=await db.from("lab_account_intakes").select("id,order_id,account_status,status").ilike("customer_email",email).eq("account_status","active").eq("status","completed").limit(10);
+ if(verified.error)throw verified.error;
+ if(!verified.data?.length)return reply({error:"Your laboratory account must finish onboarding and be activated before requesting physical testing supplies."},403);
+ const org=await db.from("organizations").select("id").ilike("primary_email",email).neq("status","archived").limit(2);
+ if(org.error)throw org.error;
+ if(org.data?.length!==1)return reply({error:"Your C/TPA organization must be verified before ordering physical supplies."},403);
+ const ctpa=await db.from("ctpas").select("id,status").eq("organization_id",org.data[0].id).maybeSingle();
+ if(ctpa.error)throw ctpa.error;
+ if(ctpa.data?.status!=="active")return reply({error:"Your C/TPA is still onboarding. Supply requests become available after activation."},403);
+ const lines=Array.isArray(b.lines)?b.lines:[];if(!lines.length||lines.length>40)return reply({error:"Select supply quantities"},400);
 const uniq=new Set<string>();for(const l of lines){if(!/^[0-9a-f-]{36}$/i.test(String(l.item_id))||!Number.isInteger(l.quantity)||l.quantity<1||l.quantity>1000||uniq.has(l.item_id))return reply({error:"Invalid supply quantities"},400);uniq.add(l.item_id)}
 const active=await db.from("ic_portal_supply_items").select("id").in("id",[...uniq]).eq("active",true);if(active.error)throw active.error;if(active.data?.length!==uniq.size)return reply({error:"Supply item unavailable"},409);
 const addr=b.shipping_address||{};for(const field of ["recipient","line1","city","state","postal_code"]){if(typeof addr[field]!=="string"||!addr[field].trim()||addr[field].length>180)return reply({error:"Complete the shipping address"},400)}
