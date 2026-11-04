@@ -54,7 +54,7 @@ async function companies(){
  await loadCore({ctpa:true,logistics:true,intakes:true});
  note(purchases.length+' purchased House Lab Account plan(s)');
  content.innerHTML=stats([['Purchased companies',new Set(purchases.map(p=>norm(p.customer_email))).size],['Accounts pending',purchases.filter(p=>norm(p.account_status)!=='active').length],['Active accounts',purchases.filter(p=>norm(p.account_status)==='active').length]]);
- const id=params.get('intake_id')||'',p=purchases.find(x=>x.id===id);
+ const id=params.get('intake_id')||'',targetCtpa=params.get('ctpa_id')||'',p=purchases.find(x=>x.id===id)||purchases.find(x=>norm(x.customer_email)===norm(params.get('email')))||purchases.find(x=>ctpaFor(x)?.id===targetCtpa);
  if(!p){
   filterable(purchases,p=>[nameFor(p),p.customer_email,p.order_number,p.status,p.account_status].join(' '),list=>table(['Company','Purchase','Intake','Account','Manage'],list.map(p=>'<tr><td><strong>'+esc(nameFor(p))+'</strong><small>'+esc(p.customer_email)+'</small></td><td>'+esc(p.order_number||'—')+'<small>'+date(p.created_at)+'</small></td><td>'+stat(p.status)+'</td><td>'+stat(p.account_status)+'</td><td>'+link(companyLink(p),'Manage company','lab-primary')+'</td></tr>'),'No House Lab Account purchases found.'),'');
   return;
@@ -102,7 +102,7 @@ async function numbersPage(){
  const eligible=purchases.map(p=>({...p,ctpa:ctpaFor(p)}));
  note(purchases.length+' purchased company accounts · '+numbers.length+' laboratory account numbers');
  content.innerHTML=stats([['Purchased companies',new Set(purchases.map(p=>norm(p.customer_email))).size],['Linked C/TPAs',new Set(eligible.map(x=>x.ctpa?.id).filter(Boolean)).size],['Assigned lab numbers',numbers.filter(x=>eligible.some(e=>e.ctpa?.id===x.ctpa_id)).length]]);
- const p=purchases.find(x=>x.id===params.get('intake_id'));
+ const p=purchases.find(x=>x.id===params.get('intake_id'))||purchases.find(x=>ctpaFor(x)?.id===params.get('ctpa_id'));
  if(!p){filterable(eligible,x=>[nameFor(x),x.customer_email,x.order_number,x.ctpa?.company_code,...numbers.filter(n=>n.ctpa_id===x.ctpa?.id).map(n=>n.account_code)].join(' '),list=>table(['Purchased company','C/TPA','Assigned numbers','Manage'],list.map(x=>'<tr><td><strong>'+esc(nameFor(x))+'</strong><small>'+esc(x.customer_email)+'</small></td><td>'+esc(x.ctpa?.company_code||'Not linked')+'</td><td>'+numbers.filter(n=>n.ctpa_id===x.ctpa?.id).length+'</td><td>'+link(url('numbers',x.id),'Manage lab numbers','lab-primary')+'</td></tr>'),'No purchased accounts.'));return}
  const ctpa=ctpaFor(p),assigned=numbers.filter(n=>n.ctpa_id===ctpa?.id),edit=assigned.find(x=>x.id===params.get('number_id'));
  content.innerHTML+=section('Laboratory account numbers',selectCompany(p.id)+'<p class="lab-muted">Unlimited laboratory account numbers may be assigned to each linked C/TPA. Edit the existing row rather than creating duplicate assignments.</p>');wireSelect('numbers');
@@ -117,7 +117,7 @@ async function onboardingPage(){
  const completed=intakes.filter(x=>norm(x.status)==='completed'),total=intakes.length;
  note(total+' submitted intake form(s) · '+completed.length+' reviewed');
  content.innerHTML=stats([['Intakes received',total],['Review completed',completed.length],['Awaiting review',total-completed.length]]);
- const id=params.get('intake_id'),p=purchases.find(x=>x.id===id);
+ const id=params.get('intake_id'),p=purchases.find(x=>x.id===id)||purchases.find(x=>norm(x.customer_email)===norm(params.get('email')));
  const matched=p?intakes.filter(x=>norm(x.submitter_email)===norm(p.customer_email)):[];
  if(!p){
   filterable(intakes,x=>[x.submitter_email,x.submitter_name,x.submission_number,x.status,x.payload?.legal_business_name].join(' '),rows=>table(['Company / submitter','Submitted','Review status','Purchase','Manage'],rows.map(x=>{const p=purchases.find(p=>norm(p.customer_email)===norm(x.submitter_email));return '<tr><td><strong>'+esc(x.payload?.legal_business_name||x.submitter_name||x.submitter_email||'Customer')+'</strong><small>'+esc(x.submitter_email||'—')+'</small></td><td>'+date(x.submitted_at||x.created_at)+'</td><td>'+stat(x.status)+'</td><td>'+esc(p?.order_number||'Not linked')+'</td><td>'+ (p?link(url('onboarding',p.id),'Manage intake','lab-primary'):'<span class="lab-muted">No purchased account match</span>')+'</td></tr>'}),'No completed House Lab Account intake submissions found.'));
