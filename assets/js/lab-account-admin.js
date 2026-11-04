@@ -8,7 +8,9 @@ const isDetail=location.pathname.endsWith('lab-account-intake-detail.html');
 const isAssignment=location.pathname.endsWith('lab-account-assignment.html');
 const isStatus=location.pathname.endsWith('lab-account-status.html');
 const heading=isNumbers?'Lab Account Numbers':isAssignment?'Lab Account Assignment':isStatus?'House Lab Account Status':isDetail?'Lab Account Record':'Lab Account Intakes';
-root.innerHTML='<div class="lab-wrap"><h1>'+heading+'</h1><p id="labMessage" role="status">Loading…</p><div id="labContent"></div></div>';
+const labSections=[['lab-account-numbers.html','Account directory'],['lab-account-intakes.html','Intakes'],['lab-account-assignment.html','Assign numbers'],['house-lab-fulfillment.html','Supplies & invoices']];
+const labNav=labSections.map(([url,label])=>'<a href="'+url+'" class="lab-section-tab'+(location.pathname.endsWith(url)?' current':'')+'">'+label+'</a>').join('');
+root.innerHTML='<div class="lab-wrap"><header class="lab-page-header"><div><span class="lab-eyebrow">SCREENINGS4U / LAB OPERATIONS</span><h1>'+heading+'</h1><p class="lab-page-subtitle">Manage customer profiles, laboratory assignments and fulfillment from one connected workspace.</p></div><a href="lab-account-numbers.html" class="lab-header-home">C/TPA directory</a></header><nav class="lab-section-nav" aria-label="Lab account management">'+labNav+'</nav><p id="labMessage" role="status">Loading…</p><div id="labContent"></div></div>';
 const msg=root.querySelector('#labMessage'),container=root.querySelector('#labContent');
 const when=x=>x?new Date(x).toLocaleDateString():'—';
 const button=(label,attrs='')=>'<button type="button" '+attrs+'>'+E(label)+'</button>';
@@ -137,17 +139,22 @@ async function loadAssignment(){
  const existing=id?accounts.find(x=>x.id===id):null;
  if(id&&!existing){msg.textContent='Lab account number not found';container.innerHTML=actionLink('lab-account-numbers.html','Return to Lab Account Numbers');return}
  const selected=existing?.ctpa_id||params.get('ctpa_id')||'';
+ const selectionExists=ctpas.some(c=>c.id===selected);
+ if(selected&&!selectionExists){msg.textContent='The selected C/TPA no longer exists. Choose an existing customer.';}
  const orgById=new Map(organizations.map(o=>[o.id,o]));
  const nameOf=c=>orgById.get(c.organization_id)?.legal_name||c.company_code||c.id;
  const options=[...ctpas].sort((a,b)=>nameOf(a).localeCompare(nameOf(b))).map(c=>'<option value="'+E(c.id)+'" '+(c.id===selected?'selected':'')+'>'+E(nameOf(c))+' ('+E(c.status)+')</option>').join('');
  root.querySelector('h1').textContent=existing?'Edit Laboratory Account Number':'Assign Laboratory Account Number';
  msg.textContent='One record per laboratory number. Select the C/TPA and save changes to the existing record.';
- container.innerHTML='<div class="lab-detail-nav">'+actionLink('lab-account-numbers.html','← Lab Account Numbers')+'<span id="profileNav"></span></div><div class="lab-panel"><h2>C/TPA customer</h2><label class="lab-search-label">Choose C/TPA<select id="assignmentCtpa" '+(existing?'disabled':'')+'><option value="">Select a C/TPA</option>'+options+'</select></label><p class="lab-muted" id="selectedAccountStatus"></p></div><div class="lab-panel"><div class="lab-detail-header"><div><h2>'+ (existing?'Edit assigned number':'Laboratory account numbers') +'</h2><p class="lab-muted">Edit this laboratory number, or add a new number for the selected C/TPA. Existing records are never duplicated when editing.</p></div>'+(existing?'':'<button type="button" class="lab-action lab-primary" id="addNumber">+ Add another number</button>')+'</div><div id="accountEditors"></div><div class="lab-row-actions" style="margin-top:16px"><button id="saveNumbers" type="button" class="lab-primary">'+(existing?'Save changes':'Save laboratory numbers')+'</button>'+actionLink('lab-account-numbers.html','Cancel')+'<button type="button" id="setupReady" class="lab-action">Send setup-ready email</button></div><p class="lab-notice" id="saveStatus" role="status"></p></div>';
+ container.innerHTML='<div class="lab-detail-nav">'+actionLink('lab-account-numbers.html','← Lab Account Numbers')+'<span id="profileNav"></span></div><div class="lab-panel"><h2>C/TPA customer</h2><label class="lab-search-label">Choose C/TPA<select id="assignmentCtpa" '+(existing?'disabled':'')+'><option value="">Select a C/TPA</option>'+options+'</select></label><p class="lab-muted" id="selectedAccountStatus"></p><div id="existingAssignments" class="lab-assignment-existing"></div></div><div class="lab-panel"><div class="lab-detail-header"><div><h2>'+ (existing?'Edit assigned number':'Laboratory account numbers') +'</h2><p class="lab-muted">Edit this laboratory number, or add a new number for the selected C/TPA. Existing records are never duplicated when editing.</p></div>'+(existing?'':'<button type="button" class="lab-action lab-primary" id="addNumber">+ Add another number</button>')+'</div><div id="accountEditors"></div><div class="lab-row-actions" style="margin-top:16px"><button id="saveNumbers" type="button" class="lab-primary">'+(existing?'Save changes':'Save laboratory numbers')+'</button>'+actionLink('lab-account-numbers.html','Cancel')+'<button type="button" id="setupReady" class="lab-action">Send setup-ready email</button></div><p class="lab-notice" id="saveStatus" role="status"></p></div>';
  const ctpa=container.querySelector('#assignmentCtpa'),editors=container.querySelector('#accountEditors'),output=container.querySelector('#saveStatus');
  function profileLink(){
   const c=ctpas.find(x=>x.id===ctpa.value);
   container.querySelector('#profileNav').innerHTML=c?actionLink('lab-ctpa-profile.html?ctpa_id='+encodeURIComponent(c.id),'Open / edit C/TPA profile'):'';
-  container.querySelector('#selectedAccountStatus').textContent=c?'Customer: '+nameOf(c)+' · '+c.status+' · '+accounts.filter(x=>x.ctpa_id===c.id).length+' existing laboratory number(s)':'Select a C/TPA to continue';
+  const assigned=c?accounts.filter(x=>x.ctpa_id===c.id):[];
+  container.querySelector('#selectedAccountStatus').textContent=c?'Customer: '+nameOf(c)+' · '+c.status+' · '+assigned.length+' existing laboratory number(s)':'Select a C/TPA to continue';
+  const slot=container.querySelector('#existingAssignments');
+  if(slot)slot.innerHTML=assigned.length?'<h3>Existing assignments — edit instead of duplicating</h3><div class="lab-existing-list">'+assigned.map(x=>'<a class="lab-existing-item" href="'+assignUrl(x.id)+'"><strong>'+E(x.lab_name||'Laboratory')+' · '+E((x.config?.account_type||'dot').toUpperCase())+'</strong><span>'+E(x.account_code||'')+'</span><span>Edit assignment →</span></a>').join('')+'</div>':'<p class="lab-muted">No existing laboratory accounts for this C/TPA.</p>';
  }
  const types=['dot','non_dot','hair','oral','other'];
  function addRow(record={}){
@@ -171,6 +178,12 @@ async function loadAssignment(){
   const rows=[...editors.children].map(box=>Object.fromEntries([...box.querySelectorAll('[name]')].map(field=>[field.name,field.value]))).map(x=>({...x,is_primary:x.is_primary==='true'}));
   if(rows.some(x=>!x.lab_name.trim()||!x.account_code.trim())){output.textContent='Every row requires a laboratory and account number.';return}
   if(rows.filter(x=>x.is_primary).length>1){output.textContent='Only one number can be marked primary.';return}
+  const key=x=>norm(x.lab_name)+'|'+norm(x.account_type);
+  if(new Set(rows.map(key)).size!==rows.length){output.textContent='A laboratory and account type can only appear once. Remove the duplicate row.';return}
+  if(!existing){
+   const duplicate=rows.find(row=>accounts.some(a=>a.ctpa_id===ctpa.value&&key(row)===norm(a.lab_name)+'|'+norm(a.config?.account_type||'dot')));
+   if(duplicate){output.textContent='This laboratory and account type is already assigned. Use the Edit assignment link above.';return}
+  }
   const button=container.querySelector('#saveNumbers');button.disabled=true;output.textContent='Saving…';
   try{
    if(existing)await call('lab-account-management',{action:'save',ctpa_id:ctpa.value,id:existing.id,...rows[0]});
