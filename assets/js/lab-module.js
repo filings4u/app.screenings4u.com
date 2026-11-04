@@ -26,7 +26,8 @@ const orgFor=email=>orgs.find(x=>norm(x.primary_email)===norm(email));
 const ctpaFor=p=>{const o=orgFor(p.customer_email);return o&&ctpas.find(x=>x.organization_id===o.id)};
 const nameFor=p=>{const d=p.intake_data||{};return orgFor(p.customer_email)?.legal_name||d.legal_business_name||d.business_name||d.company_name||p.customer_email||'Unnamed company'};
 const companyLink=p=>url('companies',p.id);
-const companyOptions=(selected='')=>purchases.map(p=>'<option value="'+esc(p.id)+'" '+(p.id===selected?'selected':'')+'>'+esc(nameFor(p))+' — '+esc(p.order_number||p.customer_email)+'</option>').join('');
+const purchasedCompanies=()=>purchases.filter((p,i)=>purchases.findIndex(x=>norm(x.customer_email)===norm(p.customer_email))===i);
+const companyOptions=(selected='')=>purchasedCompanies().map(p=>'<option value="'+esc(p.id)+'" '+(p.id===selected?'selected':'')+'>'+esc(nameFor(p))+' — '+esc(p.order_number||p.customer_email)+'</option>').join('');
 const stat=s=>'<span class="lab-state '+(norm(s)==='active'||norm(s)==='completed'||norm(s)==='delivered'?'good':norm(s)==='pending'||norm(s)==='submitted'?'pending':'')+'">'+esc(s||'pending')+'</span>';
 const table=(headers,rows,empty)=>'<div class="lab-table-scroll"><table class="lab-table"><thead><tr>'+headers.map(h=>'<th>'+esc(h)+'</th>').join('')+'</tr></thead><tbody>'+ (rows.join('')||'<tr><td colspan="'+headers.length+'" class="lab-empty">'+esc(empty)+'</td></tr>')+'</tbody></table></div>';
 const section=(heading,body,subtitle='')=>'<section class="lab-panel"><div class="lab-detail-header"><div><h2>'+heading+'</h2>'+(subtitle?'<p class="lab-muted">'+esc(subtitle)+'</p>':'')+'</div></div>'+body+'</section>';
@@ -54,9 +55,9 @@ async function companies(){
  await loadCore({ctpa:true,logistics:true,intakes:true});
  note(purchases.length+' purchased House Lab Account plan(s)');
  content.innerHTML=stats([['Purchased companies',new Set(purchases.map(p=>norm(p.customer_email))).size],['Accounts pending',purchases.filter(p=>norm(p.account_status)!=='active').length],['Active accounts',purchases.filter(p=>norm(p.account_status)==='active').length]]);
- const id=params.get('intake_id')||'',targetCtpa=params.get('ctpa_id')||'',p=purchases.find(x=>x.id===id)||purchases.find(x=>norm(x.customer_email)===norm(params.get('email')))||purchases.find(x=>ctpaFor(x)?.id===targetCtpa);
+ const id=params.get('intake_id')||'',targetCtpa=params.get('ctpa_id')||params.get('id')||'',p=purchases.find(x=>x.id===id)||purchases.find(x=>norm(x.customer_email)===norm(params.get('email')))||purchases.find(x=>ctpaFor(x)?.id===targetCtpa);
  if(!p){
-  filterable(purchases,p=>[nameFor(p),p.customer_email,p.order_number,p.status,p.account_status].join(' '),list=>table(['Company','Purchase','Intake','Account','Manage'],list.map(p=>'<tr><td><strong>'+esc(nameFor(p))+'</strong><small>'+esc(p.customer_email)+'</small></td><td>'+esc(p.order_number||'—')+'<small>'+date(p.created_at)+'</small></td><td>'+stat(p.status)+'</td><td>'+stat(p.account_status)+'</td><td>'+link(companyLink(p),'Manage company','lab-primary')+'</td></tr>'),'No House Lab Account purchases found.'),'');
+  filterable(purchasedCompanies(),p=>[nameFor(p),p.customer_email,p.order_number,p.status,p.account_status].join(' '),list=>table(['Company','Latest purchase','Intake','Account','Manage'],list.map(p=>'<tr><td><strong>'+esc(nameFor(p))+'</strong><small>'+esc(p.customer_email)+'</small></td><td>'+esc(p.order_number||'—')+'<small>'+date(p.created_at)+'</small></td><td>'+stat(p.status)+'</td><td>'+stat(p.account_status)+'</td><td>'+link(companyLink(p),'Manage company','lab-primary')+'</td></tr>'),'No House Lab Account purchases found.'),'');
   return;
  }
  const c=ctpaFor(p),org=orgFor(p.customer_email),same=purchases.filter(x=>norm(x.customer_email)===norm(p.customer_email)),count=numbers.filter(x=>x.ctpa_id===c?.id).length;
@@ -66,7 +67,9 @@ async function companies(){
   const profileFields=[['legal_name','Legal business name',profile.legal_name],['dba_name','DBA / trade name',profile.dba_name],['phone','Company phone',profile.phone],['website','Website',profile.website],['address_line1','Street',profile.address_line1],['address_line2','Suite',profile.address_line2],['city','City',profile.city],['state_region','State',profile.state_region],['postal_code','ZIP',profile.postal_code],['support_email','Support email',support.support_email],['support_phone','Support phone',support.support_phone]];
   content.innerHTML+=section('Edit company profile','<form class="lab-edit-grid" id="companyEditForm">'+profileFields.map(([key,label,value])=>'<label>'+esc(label)+'<input name="'+key+'" maxlength="250" value="'+esc(value||'')+'" '+(key==='legal_name'?'required':'')+'></label>').join('')+'<div class="lab-form-actions"><button class="lab-primary" type="submit">Save company changes</button></div></form><p id="companySaveNotice" role="status"></p>','Update the existing C/TPA business record. The customer identity email is managed separately to avoid duplicate accounts.');
  }
+ if(!c){content.innerHTML+=section('Connect company C/TPA','<p class="lab-muted">A purchased company must be linked to a C/TPA profile before laboratory account numbers can be assigned.</p><div class="lab-form-actions"><button id="linkCompanyCtpa" class="lab-primary" type="button">Create / link C/TPA profile</button></div><p id="linkCtpaNotice" role="status"></p>');}
  content.innerHTML+=section('Related purchases',table(['Order','Intake','Account','Manage'],same.map(x=>'<tr><td>'+esc(x.order_number)+'</td><td>'+stat(x.status)+'</td><td>'+stat(x.account_status)+'</td><td>'+link(companyLink(x),'Manage')+'</td></tr>'),'No additional purchases.'));
+ if(!c){content.querySelector('#linkCompanyCtpa').onclick=async e=>{const button=e.currentTarget;busy(button,true);try{await call('house-lab-ctpa-provision',{action:'provision',intake_id:p.id});location.assign(companyLink(p))}catch(error){content.querySelector('#linkCtpaNotice').textContent=error.message;busy(button,false)}}}
  if(c){const profileForm=content.querySelector('#companyEditForm');profileForm.onsubmit=async e=>{e.preventDefault();const button=profileForm.querySelector('[type=submit]');busy(button,true);try{await labs({action:'update_ctpa_profile',ctpa_id:c.id,...Object.fromEntries(new FormData(profileForm).entries())});content.querySelector('#companySaveNotice').textContent='Company profile saved.';busy(button,false)}catch(error){content.querySelector('#companySaveNotice').textContent=error.message;busy(button,false)}}}
 
 }
@@ -99,10 +102,10 @@ async function trackingPage(){
 }
 async function numbersPage(){
  await loadCore({ctpa:true});
- const eligible=purchases.map(p=>({...p,ctpa:ctpaFor(p)}));
+ const eligible=purchasedCompanies().map(p=>({...p,ctpa:ctpaFor(p)}));
  note(purchases.length+' purchased company accounts · '+numbers.length+' laboratory account numbers');
  content.innerHTML=stats([['Purchased companies',new Set(purchases.map(p=>norm(p.customer_email))).size],['Linked C/TPAs',new Set(eligible.map(x=>x.ctpa?.id).filter(Boolean)).size],['Assigned lab numbers',numbers.filter(x=>eligible.some(e=>e.ctpa?.id===x.ctpa_id)).length]]);
- const p=purchases.find(x=>x.id===params.get('intake_id'))||purchases.find(x=>ctpaFor(x)?.id===params.get('ctpa_id'));
+ const p=purchases.find(x=>x.id===params.get('intake_id'))||purchases.find(x=>ctpaFor(x)?.id===params.get('ctpa_id'))||purchases.find(x=>ctpaFor(x)?.id===numbers.find(a=>a.id===params.get('id'))?.ctpa_id);
  if(!p){filterable(eligible,x=>[nameFor(x),x.customer_email,x.order_number,x.ctpa?.company_code,...numbers.filter(n=>n.ctpa_id===x.ctpa?.id).map(n=>n.account_code)].join(' '),list=>table(['Purchased company','C/TPA','Assigned numbers','Manage'],list.map(x=>'<tr><td><strong>'+esc(nameFor(x))+'</strong><small>'+esc(x.customer_email)+'</small></td><td>'+esc(x.ctpa?.company_code||'Not linked')+'</td><td>'+numbers.filter(n=>n.ctpa_id===x.ctpa?.id).length+'</td><td>'+link(url('numbers',x.id),'Manage lab numbers','lab-primary')+'</td></tr>'),'No purchased accounts.'));return}
  const ctpa=ctpaFor(p),assigned=numbers.filter(n=>n.ctpa_id===ctpa?.id),edit=assigned.find(x=>x.id===params.get('number_id'));
  content.innerHTML+=section('Laboratory account numbers',selectCompany(p.id)+'<p class="lab-muted">Unlimited laboratory account numbers may be assigned to each linked C/TPA. Edit the existing row rather than creating duplicate assignments.</p>');wireSelect('numbers');
