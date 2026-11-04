@@ -144,7 +144,9 @@ Deno.serve(async(req)=>{
         if(numbers.error)throw numbers.error;
         if(!numbers.count)return J({error:"Assign at least one active laboratory account number before activation."},409);
       }
-      const q=await db.from("lab_account_intakes").update({account_status:accountStatus,updated_at:now()}).eq("id",id).select("id,order_number,account_status,status").maybeSingle();
+      const activated=await db.rpc("s4u_set_house_lab_activation",{p_intake_id:id,p_status:accountStatus});
+      if(activated.error)return J({error:activated.error.message},409);
+      const q=await db.from("lab_account_intakes").select("id,order_number,account_status,status").eq("id",id).maybeSingle();
       if(q.error)throw q.error;
       if(!q.data)return J({error:"Lab account purchase not found."},404);
       return J({ok:true,purchase:q.data});
