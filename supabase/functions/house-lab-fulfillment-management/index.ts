@@ -62,6 +62,13 @@ Deno.serve(async req=>{
    if(amount!==0||!/^TEST\b/i.test(V(b.description)))return J({error:"The $1 workflow test allows only $0 TEST-marked invoice drafts, never real testing charges."},409);
  }
  if(action==="save_shipment"){
+   if(p.account_status!=="active"||p.status!=="completed")return J({error:"Review the intake, assign laboratory numbers and activate the C/TPA before ordering physical supplies."},409);
+   const org=await db.from("organizations").select("id").ilike("primary_email",p.customer_email).neq("status","archived").limit(2);
+   if(org.error)throw org.error;
+   if(org.data?.length!==1)return J({error:"Verify the customer C/TPA organization before fulfilling supplies."},409);
+   const ctpa=await db.from("ctpas").select("id,status").eq("organization_id",org.data[0].id).maybeSingle();
+   if(ctpa.error)throw ctpa.error;
+   if(ctpa.data?.status!=="active")return J({error:"Activate C/TPA operational access before shipping laboratory supplies."},409);
    const id=V(b.id),status=V(b.status||"preparing"),carrier=V(b.carrier||"Other"),number=V(b.tracking_number),trackingURL=V(b.tracking_url);
    if(!["preparing","ordered","shipped","delivered","cancelled"].includes(status)||carrier.length>80||number.length>160||V(b.items_description).length>2000||V(b.notes).length>2000)return J({error:"Invalid shipment details"},400);
    if(trackingURL&&(!/^https:\/\//i.test(trackingURL)||trackingURL.length>1000))return J({error:"Tracking URL must use HTTPS"},400);
