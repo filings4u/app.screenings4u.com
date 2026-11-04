@@ -5,7 +5,7 @@ const E=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt
 const UUID=/^[a-f0-9-]{36}$/i,params=new URLSearchParams(location.search),intakeId=params.get('intake_id')||'';
 const link=(href,title)=>'<a class="lab-action" href="'+E(href)+'">'+E(title)+'</a>';
 const call=async(body)=>{const {data,error}=await dotSupabase.functions.invoke('house-lab-fulfillment-management',{body});if(error){const detail=await error.context?.json?.().catch(()=>null);throw Error(detail?.error||error.message||'Management request failed')}if(data?.error)throw Error(data.error);return data;};
-root.innerHTML='<div class="lab-wrap"><h1>House Lab Account Fulfillment</h1><p id="status" role="status">Loading laboratory accounts…</p><div class="lab-detail-nav">'+link('lab-account-intakes.html','Customer intakes')+link('lab-account-numbers.html','Lab account numbers')+link('lab-account-assignment.html','Assign numbers')+link('house-lab-fulfillment.html','All fulfillment records')+'</div><div id="content"></div></div>';
+root.innerHTML='<div class="lab-wrap"><h1>House Lab Account Fulfillment</h1><p id="status" role="status">Loading laboratory accounts…</p><div class="lab-detail-nav">'+link('lab-account-intakes.html','Customer intakes')+link('lab-account-numbers.html','Lab account numbers')+link('lab-account-numbers.html','Customer accounts')+link('house-lab-fulfillment.html','All fulfillment records')+'</div><div id="content"></div></div>';
 const content=root.querySelector('#content'),status=root.querySelector('#status'),date=d=>d?new Date(d).toLocaleDateString():'—';
 const accountHref=id=>'house-lab-fulfillment.html?intake_id='+encodeURIComponent(id);
 const formValue=(form,key)=>String(new FormData(form).get(key)||'').trim();
