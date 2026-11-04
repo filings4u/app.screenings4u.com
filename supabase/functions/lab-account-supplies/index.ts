@@ -31,6 +31,7 @@ if(ids.length){const sh=await db.from("house_lab_supply_shipments").select("id,i
 return {supplies:catalog.data||[],orders:orders.data||[],inventory:inventory.data||[],houseShipments};
 };
 if(action==="workspace")return reply(await list());
+if(grant.plan==="lab-account-workflow-test-1"&&["create","cancel"].includes(action))return reply({error:"The $1 workflow test does not include physical supply requests."},403);
 if(action==="create"){
 const lines=Array.isArray(b.lines)?b.lines:[];if(!lines.length||lines.length>40)return reply({error:"Select supply quantities"},400);
 const uniq=new Set<string>();for(const l of lines){if(!/^[0-9a-f-]{36}$/i.test(String(l.item_id))||!Number.isInteger(l.quantity)||l.quantity<1||l.quantity>1000||uniq.has(l.item_id))return reply({error:"Invalid supply quantities"},400);uniq.add(l.item_id)}
