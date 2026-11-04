@@ -24,7 +24,7 @@ Deno.serve(async(request)=>{
   const action=String(body.action||"status");
   const intakeId=String(body.intake_id||"");
   if(!/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(intakeId))return json({error:"Valid purchase intake ID required"},400);
-  const purchase=await db.from("lab_account_intakes").select("id,order_id,customer_email,status,account_status").eq("id",intakeId).maybeSingle();
+  const purchase=await db.from("lab_account_intakes").select("id,order_id,customer_user_id,customer_email,status,account_status").eq("id",intakeId).maybeSingle();
   if(purchase.error)throw purchase.error;
   if(!purchase.data)return json({error:"Purchase not found"},404);
   const paid=await db.from("orders").select("payment_status").eq("id",purchase.data.order_id).maybeSingle();
@@ -46,15 +46,17 @@ Deno.serve(async(request)=>{
   if((org.data||[]).length>1)return json({error:"Duplicate matching organizations require review"},409);
   const ctpa=org.data?.length?await db.from("ctpas").select("id,organization_id,tenant_id,status,company_code").eq("organization_id",org.data[0].id).maybeSingle():{data:null,error:null};
   if(ctpa.error)throw ctpa.error;
-  const [forms,accounts,ships,bills,collectors,emails]=await Promise.all([
+  const [forms,accounts,ships,bills,collectors,emails,orderEmails,cases]=await Promise.all([
    db.from("standalone_form_submissions").select("id,status").in("form_key",["lab_account_intake","lab_account_intake_standalone"]).ilike("submitter_email",purchase.data.customer_email).order("created_at",{ascending:false}).limit(5),
    ctpa.data?db.from("ctpa_lab_accounts").select("id,status").eq("ctpa_id",ctpa.data.id):Promise.resolve({data:[],error:null}),
    db.from("house_lab_supply_shipments").select("id,status,tracking_url,notification_sent_at").eq("intake_id",intakeId),
    db.from("invoices").select("id,status,sent_at").eq("order_id",purchase.data.order_id),
    db.from("collector_network_submissions").select("id,status").ilike("email",purchase.data.customer_email).neq("status","superseded").limit(5),
-   db.from("testing_email_events").select("event_type,status").ilike("recipient_email",purchase.data.customer_email).limit(100)
+   db.from("testing_email_events").select("event_type,status").ilike("recipient_email",purchase.data.customer_email).limit(100),
+   db.from("testing_email_events").select("event_type,status").eq("related_entity_id",purchase.data.order_id).limit(100),
+   purchase.data.customer_user_id?db.from("testing_cases").select("id,status,metadata").eq("customer_user_id",purchase.data.customer_user_id).limit(500):Promise.resolve({data:[],error:null})
   ]);
-  for(const result of [forms,accounts,ships,bills,collectors,emails])if(result.error)throw result.error;
+  for(const result of [forms,accounts,ships,bills,collectors,emails,orderEmails,cases])if(result.error)throw result.error;
   const stages={
     payment_verified:true,
     intake_submitted:(forms.data||[]).some(x=>["submitted","reviewing","completed"].includes(x.status)),
@@ -70,7 +72,11 @@ Deno.serve(async(request)=>{
     collector_referrals:(collectors.data||[]).length,
     invoices:(bills.data||[]).length,
     sent_invoices:(bills.data||[]).filter(x=>x.sent_at).length,
-    audited_customer_emails:(emails.data||[]).filter(x=>x.status==="sent").length
+    audited_customer_emails:(emails.data||[]).filter(x=>x.status==="sent").length,
+    receipt_dispatch_recorded:(orderEmails.data||[]).some(x=>["website_receipt","website_order_confirmation"].includes(x.event_type)&&x.status==="sent"),
+    admin_purchase_alert_recorded:(orderEmails.data||[]).some(x=>x.event_type==="website_admin_order"&&x.status==="sent"),
+    intake_invitation_recorded:(orderEmails.data||[]).some(x=>x.event_type==="website_lab_intake_invitation"&&x.status==="sent"),
+    specimen_shipments_reported:(cases.data||[]).filter(x=>x.metadata?.house_lab_specimen_shipment?.reported_shipped_at).length
   };
   return json({ok:true,ctpa:ctpa.data||null,organization:org.data?.[0]||null,purchase:purchase.data,stages});
  }catch(error){console.error("house lab ctpa provision",error);return json({error:"C/TPA management request failed"},500)}
