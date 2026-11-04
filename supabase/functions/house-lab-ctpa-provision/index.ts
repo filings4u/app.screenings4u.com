@@ -57,6 +57,12 @@ Deno.serve(async(request)=>{
    purchase.data.customer_user_id?db.from("testing_cases").select("id,status,metadata").eq("customer_user_id",purchase.data.customer_user_id).limit(500):Promise.resolve({data:[],error:null})
   ]);
   for(const result of [forms,accounts,ships,bills,collectors,emails,orderEmails,cases])if(result.error)throw result.error;
+  const formIds=(forms.data||[]).map(x=>x.id);
+  const [intakeEmails,readyEmails]=await Promise.all([
+   formIds.length?db.from("testing_email_events").select("event_type,status").in("related_entity_id",formIds).limit(100):Promise.resolve({data:[],error:null}),
+   ctpa.data?db.from("testing_email_events").select("event_type,status").eq("related_entity_id",ctpa.data.id).eq("event_type","ctpa_lab_account_ready").limit(50):Promise.resolve({data:[],error:null})
+  ]);
+  if(intakeEmails.error||readyEmails.error)throw intakeEmails.error||readyEmails.error;
   const stages={
     payment_verified:true,
     intake_submitted:(forms.data||[]).some(x=>["submitted","reviewing","completed"].includes(x.status)),
@@ -73,6 +79,9 @@ Deno.serve(async(request)=>{
     invoices:(bills.data||[]).length,
     sent_invoices:(bills.data||[]).filter(x=>x.sent_at).length,
     audited_customer_emails:(emails.data||[]).filter(x=>x.status==="sent").length,
+    customer_intake_confirmation_recorded:(intakeEmails.data||[]).some(x=>x.event_type==="house_lab_customer_intake"&&x.status==="sent"),
+    admin_intake_notification_recorded:(intakeEmails.data||[]).some(x=>x.event_type==="house_lab_admin_intake"&&x.status==="sent"),
+    ctpa_ready_notification_recorded:(readyEmails.data||[]).some(x=>x.status==="sent"),
     receipt_dispatch_recorded:(orderEmails.data||[]).some(x=>["website_receipt","website_order_confirmation"].includes(x.event_type)&&x.status==="sent"),
     admin_purchase_alert_recorded:(orderEmails.data||[]).some(x=>x.event_type==="website_admin_order"&&x.status==="sent"),
     intake_invitation_recorded:(orderEmails.data||[]).some(x=>x.event_type==="website_lab_intake_invitation"&&x.status==="sent"),
