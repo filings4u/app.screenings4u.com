@@ -37,6 +37,11 @@ async function render(){
  '<a class="lab-action" href="lab-account-status.html?id='+encodeURIComponent(id)+'">Manage activation</a>'+
  '<a class="lab-action" href="'+url(id)+'">Manage supplies and invoices</a></div></div>';
  mount.insertAdjacentHTML("beforeend",workflow);
+ if(ctpa&&t.intake_completed){
+   const finalize=document.createElement("button");finalize.type="button";finalize.className="lab-primary";finalize.textContent="Apply reviewed intake to C/TPA profile";
+   finalize.onclick=async()=>{finalize.disabled=true;const errorNode=document.getElementById("ctpaError");errorNode.textContent="";try{await request("finalize_profile");await render()}catch(e){errorNode.textContent=e.message;finalize.disabled=false}};
+   document.getElementById("ctpaActions").append(finalize);
+ }
  if(!ctpa){
    const button=document.createElement("button");button.className="lab-primary";button.textContent="Create / link C/TPA onboarding profile";button.type="button";
    button.onclick=async()=>{button.disabled=true;const errorNode=document.getElementById("ctpaError");errorNode.textContent="";try{await request("provision");await render()}catch(e){errorNode.textContent=e.message;button.disabled=false}};
