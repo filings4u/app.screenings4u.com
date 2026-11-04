@@ -129,3 +129,6 @@
 body[data-lab-page="tracking-form"] .lab-module #trackingEntryForm{margin-top:12px}
 body[data-lab-page="tracking-form"] .lab-module-tabs a[href="lab-tracking.html"]{background:#fff;color:#1a538a;box-shadow:0 1px 7px #1c365c1b}
 @media(max-width:640px){.lab-tracking-toolbar-simple{grid-template-columns:1fr}.lab-tracking-toolbar-simple .lab-tracking-create .lab-action{width:100%}}
+
+.lab-module-feedback.lab-feedback-success{background:#e8f7ee;border:1px solid #bbdfc8;border-radius:9px;color:#17603b;padding:13px 16px;margin:0 0 16px;font-size:13px;font-weight:750}
+.lab-module-feedback.error{background:#fff0ed;border:1px solid #e9c1ba;border-radius:9px;padding:13px 16px;margin:0 0 16px}
