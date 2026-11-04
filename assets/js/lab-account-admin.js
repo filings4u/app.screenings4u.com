@@ -90,23 +90,35 @@ async function loadDetail(){
 const assignUrl=id=>'lab-account-assignment.html'+(id?'?id='+encodeURIComponent(id):'');
 const buyerName=x=>{const d=x.intake_data||{};return d.legal_business_name||d.business_name||d.company_name||d.contact_name||[d.first_name,d.last_name].filter(Boolean).join(' ')||x.customer_email||'Customer'};
 async function loadNumbers(){
- const [data,purchasesData]=await Promise.all([call('lab-account-management',{action:'list'}),call('enterprise-forms-management',{action:'lab_account_purchases'})]);
- accounts=data.accounts||[];ctpas=data.ctpas||[];organizations=data.organizations||[];
- const purchases=(purchasesData.purchases||[]).filter(x=>x.status!=='archived');
- const orgName=id=>{const o=organizations.find(x=>x.id===id);return o?.display_name||o?.legal_name||o?.name||id||'—'};
- msg.textContent=accounts.length+' assigned lab account records • '+purchases.length+' house lab account purchase records';
- container.innerHTML='<div class="lab-panel"><div class="lab-detail-header"><div><h2>Customer laboratory accounts</h2><p class="lab-muted">Assigned lab account numbers and customers who purchased a house lab account. A purchase is not an active assignment until it has been provisioned.</p></div><div class="lab-row-actions">'+actionLink('lab-account-intakes.html','Customer intakes')+actionLink('house-lab-fulfillment.html','Fulfillment & invoices')+actionLink(assignUrl(''),'Assign lab account','lab-primary')+'</div></div><div class="lab-toolbar"><label class="lab-search-label">Search customers and lab account records<input id="labSearch" type="search" placeholder="Customer, laboratory, account number, email or order"></label><label class="lab-status-label">Record type<select id="labType"><option value="">All records</option><option value="assigned">Assigned accounts</option><option value="purchase">House account purchases</option></select></label><label class="lab-status-label">Account status<select id="labActivation"><option value="">All statuses</option><option value="pending">Pending</option><option value="active">Active</option></select></label></div><div class="lab-table-scroll"><table class="lab-table"><thead><tr><th>Customer / C/TPA</th><th>Type</th><th>Laboratory</th><th>Account number / Order</th><th>Primary</th><th>Status</th><th>Actions</th></tr></thead><tbody id="labRows"></tbody></table></div></div>';
- const rows=[
- ...accounts.map(x=>({type:'assigned',name:orgName(x.organization_id),lab:x.lab_name||x.laboratory_name||'—',code:x.account_code||'—',primary:x.is_primary?'Yes':'No',status:x.status||'—',href:assignUrl(x.id),action:'Edit account'})),
- ...purchases.map(x=>({type:'purchase',name:buyerName(x),email:x.customer_email||'',lab:'Pending assignment',code:x.order_number||'—',primary:'—',status:x.account_status||'pending',workflow_status:x.status||'pending',href:statusUrl(x.id),action:'Manage status'}))
- ];
- const draw=()=>{const q=norm(container.querySelector('#labSearch').value),type=container.querySelector('#labType').value;
-  const activation=container.querySelector('#labActivation').value;const shown=rows.filter(x=>(!type||x.type===type)&&(!activation||norm(x.status)===activation)&&(!q||[x.name,x.email,x.lab,x.code,x.status,x.type].some(v=>norm(v).includes(q))));
-  container.querySelector('#labRows').innerHTML=shown.map(x=>'<tr><td>'+actionLink(x.href,x.name,'lab-customer-link')+(x.email?'<div class="lab-muted">'+E(x.email)+'</div>':'')+'</td><td><span class="lab-pill">'+(x.type==='purchase'?'House account purchase':'Assigned lab account')+'</span></td><td>'+E(x.lab)+'</td><td>'+E(x.code)+'</td><td>'+E(x.primary)+'</td><td>'+E(x.status)+'</td><td>'+actionLink(x.href,x.action,'lab-primary')+'</td></tr>').join('')||'<tr><td colspan="7" class="lab-empty">No records match this search.</td></tr>';
+ const [d,p]=await Promise.all([call('lab-account-management',{action:'list'}),call('enterprise-forms-management',{action:'lab_account_purchases'})]);
+ accounts=d.accounts||[];ctpas=d.ctpas||[];organizations=d.organizations||[];
+ const purchases=(p.purchases||[]).filter(x=>x.status!=='archived');
+ const orgById=new Map(organizations.map(o=>[o.id,o]));
+ const ctpaMap=new Map(ctpas.map(c=>[c.organization_id,c]));
+ const purchaseByEmail=new Map();
+ for(const purchase of purchases){const k=norm(purchase.customer_email);if(!purchaseByEmail.has(k))purchaseByEmail.set(k,[]);purchaseByEmail.get(k).push(purchase);}
+ const list=ctpas.map(c=>{
+  const org=orgById.get(c.organization_id)||{};
+  const name=org.legal_name||org.name||c.company_code||c.id;
+  const numbers=accounts.filter(a=>a.ctpa_id===c.id);
+  return {ctpa:c,org,name,numbers,purchases:purchaseByEmail.get(norm(org.primary_email))||[]};
+ }).sort((a,b)=>a.name.localeCompare(b.name));
+ const profile=c=>'lab-ctpa-profile.html?ctpa_id='+encodeURIComponent(c.id);
+ msg.textContent=list.length+' unique C/TPA profiles · '+accounts.length+' assigned laboratory numbers · '+purchases.length+' House Lab purchases';
+ container.innerHTML='<div class="lab-panel"><div class="lab-detail-header"><div><h2>C/TPA laboratory account management</h2><p class="lab-muted">One row per C/TPA. Open the business profile to edit customer information, or assign and edit laboratory numbers directly.</p></div><div class="lab-row-actions">'+actionLink('lab-account-assignment.html','+ Assign lab number','lab-primary')+actionLink('lab-account-intakes.html','Review intakes')+actionLink('house-lab-fulfillment.html','Supplies & invoices')+'</div></div><div class="lab-toolbar"><label class="lab-search-label">Search C/TPA, email, laboratory, or account number<input id="labSearch" type="search" placeholder="Search business, laboratory, account number..."></label><label class="lab-status-label">C/TPA status<select id="labActivation"><option value="">All statuses</option><option value="active">Active</option><option value="onboarding">Onboarding</option><option value="inactive">Inactive</option></select></label></div><div class="lab-table-scroll"><table class="lab-table"><thead><tr><th>C/TPA profile</th><th>Laboratory account numbers</th><th>Setup status</th><th>Management</th></tr></thead><tbody id="labRows"></tbody></table></div></div>';
+ const draw=()=>{
+  const q=norm(container.querySelector('#labSearch').value),status=container.querySelector('#labActivation').value;
+  const shown=list.filter(x=>(!status||norm(x.ctpa.status)===status)&&(!q||[x.name,x.org.primary_email,x.ctpa.company_code,...x.numbers.flatMap(a=>[a.lab_name,a.account_code,a.config?.account_type])].some(v=>norm(v).includes(q))));
+  container.querySelector('#labRows').innerHTML=shown.map(x=>{
+   const nums=x.numbers.length?x.numbers.map(a=>'<div class="lab-directory-number"><strong>'+E(a.lab_name||'Laboratory')+'</strong> '+E(a.config?.account_type||'')+' · '+E(a.account_code||'')+' <span class="lab-pill">'+E(a.status||'')+'</span> '+actionLink(assignUrl(a.id),'Edit')+'</div>').join(''):'<span class="lab-muted">No laboratory numbers assigned</span>';
+   const order=x.purchases.length?'<div class="lab-muted">'+x.purchases.length+' purchased Lab Account(s) · '+E(x.purchases[0].account_status||'pending')+'</div>':'';
+   return '<tr><td>'+actionLink(profile(x.ctpa),x.name,'lab-customer-link')+'<div class="lab-muted">'+E(x.org.primary_email||x.ctpa.company_code||'')+'</div></td><td>'+nums+'</td><td><span class="lab-pill">'+E(x.ctpa.status||'unknown')+'</span>'+order+'</td><td><div class="lab-row-actions">'+actionLink(profile(x.ctpa),'Open / edit profile','lab-primary')+actionLink('lab-account-assignment.html?ctpa_id='+encodeURIComponent(x.ctpa.id),'Assign number')+'</div></td></tr>';
+  }).join('')||'<tr><td colspan="4" class="lab-empty">No matching C/TPAs.</td></tr>';
  };
  container.querySelector('#labSearch').addEventListener('input',draw);
- container.querySelector('#labType').addEventListener('change',draw);container.querySelector('#labActivation').addEventListener('change',draw);draw();
+ container.querySelector('#labActivation').addEventListener('change',draw);draw();
 }
+
 async function loadStatus(){
  const id=new URLSearchParams(location.search).get('id')||'';
  if(!safeId(id)){msg.textContent='Valid purchase ID required';container.innerHTML=actionLink('lab-account-numbers.html','Back to Lab Account Numbers');return}
@@ -121,70 +133,52 @@ async function loadStatus(){
 async function loadAssignment(){
  const data=await call('lab-account-management',{action:'list'});
  accounts=data.accounts||[];ctpas=data.ctpas||[];organizations=data.organizations||[];
- // Include submitted lab-account applications as C/TPA onboarding candidates.
- const intakeResult=await call('enterprise-forms-management',{action:'submissions'});
- const intakeRows=(intakeResult.submissions||[]).filter(x=>['lab_account_intake_standalone','lab_account_intake'].includes(x.form_key)&&x.status!=='archived');
- const existingOrgIds=new Set(ctpas.map(c=>c.organization_id));
- const intakeMap=new Map();
- for(const x of intakeRows){if(x.organization_id&&existingOrgIds.has(x.organization_id))continue;const email=norm(x.submitter_email);if(!email)continue;const old=intakeMap.get(email);if(!old||new Date(x.created_at)>new Date(old.created_at))intakeMap.set(email,x)}
- const candidates=[...intakeMap.values()];
  const params=new URLSearchParams(location.search),id=params.get('id')||'';
  const existing=id?accounts.find(x=>x.id===id):null;
- if(id&&!existing){msg.textContent='Assignment not found';container.innerHTML=actionLink('lab-account-numbers.html','Back to Lab Account Numbers');return}
- const selectedId=existing?.ctpa_id||params.get('ctpa_id')||'';
- const nameFor=c=>{const o=organizations.find(x=>x.id===c.organization_id);return o?.display_name||o?.legal_name||o?.name||c.id};
- const ctpaChoices=[...ctpas].sort((x,y)=>nameFor(x).localeCompare(nameFor(y))).map(c=>'<option value="'+E(c.id)+'" '+(c.id===selectedId?'selected':'')+'>'+E(nameFor(c))+' ('+E(c.status||'unknown')+')</option>').join('');
- const choices=ctpaChoices+candidates.map(x=>'<option disabled>'+E(x.payload?.legal_business_name||x.submitter_name||x.submitter_email)+' — Intake pending C/TPA setup</option>').join('');
- root.querySelector('h1').textContent=existing?'Edit Lab Account Number':'Assign Lab Account Numbers';
- msg.textContent='Add as many laboratory account numbers as needed. Every saved account belongs to the selected C/TPA.';
- container.innerHTML='<div class="lab-detail-nav">'+actionLink('lab-account-numbers.html','← Lab Account Numbers')+'</div><div class="lab-panel"><div class="lab-detail-header"><div><h2>Choose the C/TPA</h2><p class="lab-muted">All new account numbers will be assigned to this C/TPA and displayed in its authorized portals.</p></div></div><label class="lab-search-label">C/TPA<select id="assignmentCtpa" '+(existing?'disabled':'')+'><option value="">Select C/TPA</option>'+choices+'</select></label></div><div class="lab-panel"><div class="lab-detail-header"><div><h2>Laboratory account numbers</h2><p class="lab-muted">Each row is a separate account. Add multiple rows, including different numbers for the same laboratory.</p></div><button type="button" class="lab-action lab-primary" id="addNumber">+ Add another number</button></div><div id="accountEditors"></div><div class="lab-row-actions" style="margin-top:18px"><button type="button" class="lab-primary" id="saveNumbers">Save account numbers</button>'+actionLink('lab-account-numbers.html','Cancel')+'</div><p id="saveStatus" class="lab-notice" role="status"></p></div><div class="lab-panel"><h2>Existing numbers for selected C/TPA</h2><div id="assignmentExisting" class="lab-table-scroll"></div></div><div class="lab-panel lab-ctpa-directory"><div class="lab-detail-header"><div><h2>All C/TPAs and assigned lab account numbers</h2><p class="lab-muted" id="directoryCount"></p></div><label class="lab-directory-search">Search C/TPAs or account numbers<input type="search" id="directorySearch" placeholder="Search customer, laboratory, number..." autocomplete="off"></label></div><div id="ctpaDirectory" class="lab-table-scroll"></div></div>';
- const editor=container.querySelector('#accountEditors'),ctpa=container.querySelector('#assignmentCtpa'),message=container.querySelector('#saveStatus');
+ if(id&&!existing){msg.textContent='Lab account number not found';container.innerHTML=actionLink('lab-account-numbers.html','Return to Lab Account Numbers');return}
+ const selected=existing?.ctpa_id||params.get('ctpa_id')||'';
+ const orgById=new Map(organizations.map(o=>[o.id,o]));
+ const nameOf=c=>orgById.get(c.organization_id)?.legal_name||c.company_code||c.id;
+ const options=[...ctpas].sort((a,b)=>nameOf(a).localeCompare(nameOf(b))).map(c=>'<option value="'+E(c.id)+'" '+(c.id===selected?'selected':'')+'>'+E(nameOf(c))+' ('+E(c.status)+')</option>').join('');
+ root.querySelector('h1').textContent=existing?'Edit Laboratory Account Number':'Assign Laboratory Account Number';
+ msg.textContent='One record per laboratory number. Select the C/TPA and save changes to the existing record.';
+ container.innerHTML='<div class="lab-detail-nav">'+actionLink('lab-account-numbers.html','← Lab Account Numbers')+'<span id="profileNav"></span></div><div class="lab-panel"><h2>C/TPA customer</h2><label class="lab-search-label">Choose C/TPA<select id="assignmentCtpa" '+(existing?'disabled':'')+'><option value="">Select a C/TPA</option>'+options+'</select></label><p class="lab-muted" id="selectedAccountStatus"></p></div><div class="lab-panel"><div class="lab-detail-header"><div><h2>'+ (existing?'Edit assigned number':'Laboratory account numbers') +'</h2><p class="lab-muted">Edit this laboratory number, or add a new number for the selected C/TPA. Existing records are never duplicated when editing.</p></div>'+(existing?'':'<button type="button" class="lab-action lab-primary" id="addNumber">+ Add another number</button>')+'</div><div id="accountEditors"></div><div class="lab-row-actions" style="margin-top:16px"><button id="saveNumbers" type="button" class="lab-primary">'+(existing?'Save changes':'Save laboratory numbers')+'</button>'+actionLink('lab-account-numbers.html','Cancel')+'<button type="button" id="setupReady" class="lab-action">Send setup-ready email</button></div><p class="lab-notice" id="saveStatus" role="status"></p></div>';
+ const ctpa=container.querySelector('#assignmentCtpa'),editors=container.querySelector('#accountEditors'),output=container.querySelector('#saveStatus');
+ function profileLink(){
+  const c=ctpas.find(x=>x.id===ctpa.value);
+  container.querySelector('#profileNav').innerHTML=c?actionLink('lab-ctpa-profile.html?ctpa_id='+encodeURIComponent(c.id),'Open / edit C/TPA profile'):'';
+  container.querySelector('#selectedAccountStatus').textContent=c?'Customer: '+nameOf(c)+' · '+c.status+' · '+accounts.filter(x=>x.ctpa_id===c.id).length+' existing laboratory number(s)':'Select a C/TPA to continue';
+ }
  const types=['dot','non_dot','hair','oral','other'];
- const typeField=(value='dot')=>'<select name="account_type">'+types.map(t=>'<option value="'+t+'" '+(value===t?'selected':'')+'>'+E(t.replaceAll('_',' ').toUpperCase())+'</option>').join('')+'</select>';
  function addRow(record={}){
   const box=document.createElement('div');box.className='lab-account-editor';
   const type=record.config?.account_type||'dot';
-  box.innerHTML='<div class="lab-edit-grid"><label>Laboratory<input name="lab_name" maxlength="180" required placeholder="Labcorp, CRL, Quest..." value="'+E(record.lab_name||record.laboratory_name||'')+'"></label><label>Account type'+typeField(type)+'</label><label>Account number<input name="account_code" maxlength="120" required placeholder="Enter lab account number" value="'+E(record.account_code||'')+'"></label><label>Status<select name="status"><option value="active" '+(record.status!=='inactive'?'selected':'')+'>Active</option><option value="inactive" '+(record.status==='inactive'?'selected':'')+'>Inactive</option></select></label><label>Primary<select name="is_primary"><option value="false" '+(!record.is_primary?'selected':'')+'>No</option><option value="true" '+(record.is_primary?'selected':'')+'>Yes</option></select></label><label>Notes<input name="notes" maxlength="2000" value="'+E(record.notes||'')+'"></label></div><div class="lab-row-actions"><button class="lab-danger removeNumber" type="button">Remove row</button></div>';
-  box.querySelector('.removeNumber').onclick=()=>{box.remove();renderExisting()};
-  editor.append(box);
+  box.innerHTML='<div class="lab-edit-grid"><label>Laboratory<input name="lab_name" maxlength="180" required placeholder="Labcorp, CRL, Quest..." value="'+E(record.lab_name||record.laboratory_name||'')+'"></label><label>Account type<select name="account_type">'+types.map(t=>'<option value="'+t+'" '+(t===type?'selected':'')+'>'+E(t.replaceAll('_',' ').toUpperCase())+'</option>').join('')+'</select></label><label>Account number<input name="account_code" maxlength="120" required placeholder="Enter laboratory account number" value="'+E(record.account_code||'')+'"></label><label>Status<select name="status"><option value="active" '+(record.status!=='inactive'?'selected':'')+'>Active</option><option value="inactive" '+(record.status==='inactive'?'selected':'')+'>Inactive</option></select></label><label>Primary<select name="is_primary"><option value="false" '+(!record.is_primary?'selected':'')+'>No</option><option value="true" '+(record.is_primary?'selected':'')+'>Yes</option></select></label><label>Notes<input name="notes" maxlength="2000" value="'+E(record.notes||'')+'"></label></div>'+(existing?'':'<div class="lab-row-actions"><button type="button" class="lab-action removeNumber">Remove row</button></div>');
+  box.querySelector('.removeNumber')?.addEventListener('click',()=>{if(editors.children.length>1)box.remove();else output.textContent='At least one laboratory number is required.'});
+  editors.append(box);
  }
- function renderExisting(){
-  const rows=accounts.filter(x=>x.ctpa_id===ctpa.value);
-  const mount=container.querySelector('#assignmentExisting');
-  mount.innerHTML=rows.length?'<table class="lab-table"><thead><tr><th>Laboratory</th><th>Type</th><th>Number</th><th>Status</th><th>Manage</th></tr></thead><tbody>'+rows.map(x=>'<tr><td>'+E(x.lab_name)+'</td><td>'+E(x.config?.account_type||'DOT')+'</td><td>'+E(x.account_code)+'</td><td>'+E(x.status)+'</td><td>'+actionLink('lab-account-assignment.html?id='+encodeURIComponent(x.id),'Edit')+'</td></tr>').join('')+'</tbody></table>':'<p class="lab-muted">No lab account numbers assigned yet.</p>';
- }
- function renderDirectory(){
-  const query=norm(container.querySelector('#directorySearch').value);
-  const list=[...ctpas].sort((x,y)=>nameFor(x).localeCompare(nameFor(y))).map(c=>({ctpa:c,name:nameFor(c),numbers:accounts.filter(a=>a.ctpa_id===c.id)}));
-  const shown=list.filter(x=>!query||[x.name,x.ctpa.status,...x.numbers.flatMap(a=>[a.lab_name,a.account_code,a.config?.account_type])].some(v=>norm(v).includes(query)));
-  container.querySelector('#directoryCount').textContent=ctpas.length+' provisioned C/TPAs • '+candidates.length+' intake applicants awaiting setup • '+accounts.length+' assigned numbers';
-  const body=shown.map(x=>'<tr><td><strong>'+E(x.name)+'</strong><div class="lab-muted">'+E(x.ctpa.status||'Unknown')+'</div></td><td><span class="lab-count">'+x.numbers.length+'</span></td><td>'+(x.numbers.length?x.numbers.map(a=>'<div class="lab-directory-number"><strong>'+E(a.lab_name||'Laboratory')+'</strong><span>'+E(a.config?.account_type||'DOT')+' · '+E(a.account_code||'—')+'</span><span class="lab-pill">'+E(a.status||'—')+'</span></div>').join(''):'<span class="lab-muted">No numbers assigned</span>')+'</td><td><div class="lab-row-actions"><button type="button" class="lab-action selectCtpa" data-id="'+E(x.ctpa.id)+'">Select C/TPA</button>'+x.numbers.map(a=>actionLink('lab-account-assignment.html?id='+encodeURIComponent(a.id),'Edit '+(a.lab_name||'account'))).join('')+'</div></td></tr>').join('');
-  const applicants=candidates.filter(x=>!query||[x.submitter_email,x.submitter_name,x.payload?.legal_business_name].some(v=>norm(v).includes(query)));
-  const candidateRows=applicants.map(x=>'<tr><td><strong>'+E(x.payload?.legal_business_name||x.submitter_name||x.submitter_email)+'</strong><div class="lab-muted">'+E(x.submitter_email)+'</div></td><td>—</td><td><span class="lab-pill">Intake pending C/TPA setup</span></td><td>'+actionLink(detailUrl(x.submitter_email,'submission',x.id,''),'Review intake')+actionLink('dot-ctpas.html','Create C/TPA account')+'</td></tr>').join('');
-  container.querySelector('#ctpaDirectory').innerHTML='<table class="lab-table lab-directory-table"><thead><tr><th>C/TPA</th><th>Accounts</th><th>Laboratory account numbers</th><th>Management</th></tr></thead><tbody>'+ (body+candidateRows||'<tr><td colspan="4">No matching C/TPAs.</td></tr>')+'</tbody></table>';
-  container.querySelectorAll('.selectCtpa').forEach(b=>b.onclick=()=>{if(existing){location.href='lab-account-assignment.html?ctpa_id='+encodeURIComponent(b.dataset.id);return}ctpa.value=b.dataset.id;renderExisting();ctpa.scrollIntoView({behavior:'smooth',block:'center'});});
- }
- container.querySelector('#directorySearch').addEventListener('input',renderDirectory);
- renderDirectory();
- const setupButton=document.createElement('button');setupButton.type='button';setupButton.className='lab-action';setupButton.textContent='Send setup-ready email';
- setupButton.onclick=async()=>{if(!ctpa.value){message.textContent='Select a C/TPA first.';return;}setupButton.disabled=true;try{const result=await call('lab-account-management',{action:'notify_setup',ctpa_id:ctpa.value});message.textContent='Setup email: '+(result.notification_status||'unknown');}catch(e){message.textContent=e.message;}finally{setupButton.disabled=false}};
- container.querySelector('#saveNumbers').parentElement.appendChild(setupButton);
- container.querySelector('#addNumber').onclick=()=>addRow();
- ctpa.onchange=renderExisting;
- const readRow=box=>Object.fromEntries([...box.querySelectorAll('[name]')].map(e=>[e.name,e.value]));
- container.querySelector('#saveNumbers').onclick=async()=>{
-  if(!ctpa.value){message.textContent='Select a C/TPA first.';ctpa.focus();return}
-  const rows=[...editor.children].map(readRow).map(r=>({...r,is_primary:r.is_primary==='true'}));
-  if(!rows.length||rows.some(r=>!r.lab_name.trim()||!r.account_code.trim())){message.textContent='Enter a laboratory and account number for every row.';return}
-  if(rows.filter(r=>r.is_primary).length>1){message.textContent='Only one number can be marked primary.';return}
-  const button=container.querySelector('#saveNumbers');button.disabled=true;
-  try{
-   if(existing){await call('lab-account-management',{action:'save',ctpa_id:ctpa.value,id:existing.id,...rows[0]})}
-   else{for(let i=0;i<rows.length;i+=100)await call('lab-account-management',{action:'save_many',ctpa_id:ctpa.value,accounts:rows.slice(i,i+100)})}
-   location.href='lab-account-numbers.html';
-  }catch(e){message.textContent=e.message;button.disabled=false}
+ addRow(existing||{});
+ container.querySelector('#addNumber')?.addEventListener('click',()=>addRow());
+ ctpa.addEventListener('change',profileLink);profileLink();
+ container.querySelector('#setupReady').onclick=async()=>{
+  if(!ctpa.value){output.textContent='Choose a C/TPA first.';return}
+  const btn=container.querySelector('#setupReady');btn.disabled=true;
+  try{const result=await call('lab-account-management',{action:'notify_setup',ctpa_id:ctpa.value});output.textContent='Setup email: '+(result.notification_status||'unknown')}
+  catch(e){output.textContent=e.message}finally{btn.disabled=false}
  };
- addRow(existing||{});container.querySelector('#addNumber').disabled=!!existing;renderExisting();
+ container.querySelector('#saveNumbers').onclick=async()=>{
+  if(!ctpa.value){output.textContent='Select a C/TPA first.';ctpa.focus();return}
+  const rows=[...editors.children].map(box=>Object.fromEntries([...box.querySelectorAll('[name]')].map(field=>[field.name,field.value]))).map(x=>({...x,is_primary:x.is_primary==='true'}));
+  if(rows.some(x=>!x.lab_name.trim()||!x.account_code.trim())){output.textContent='Every row requires a laboratory and account number.';return}
+  if(rows.filter(x=>x.is_primary).length>1){output.textContent='Only one number can be marked primary.';return}
+  const button=container.querySelector('#saveNumbers');button.disabled=true;output.textContent='Saving…';
+  try{
+   if(existing)await call('lab-account-management',{action:'save',ctpa_id:ctpa.value,id:existing.id,...rows[0]});
+   else await call('lab-account-management',{action:'save_many',ctpa_id:ctpa.value,accounts:rows});
+   location.href='lab-ctpa-profile.html?ctpa_id='+encodeURIComponent(ctpa.value);
+  }catch(e){output.textContent=e.message;button.disabled=false}
+ };
 }
+
 try{if(isNumbers)await loadNumbers();else if(isAssignment)await loadAssignment();else if(isStatus)await loadStatus();else if(isDetail)await loadDetail();else await loadIntakes()}catch(err){msg.textContent=err.message}
 })();
