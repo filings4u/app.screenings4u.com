@@ -123,6 +123,27 @@ Deno.serve(async(req)=>{
       const permit=await db.from("staff_business_access").select("id").eq("user_id",user.id).eq("business_unit_code","testing").eq("active",true).limit(1);
       if(permit.error)throw permit.error;
       if(!permit.data?.length)return J({error:"Testing Management access required."},403);
+      if(accountStatus==="active"){
+        const purchase=await db.from("lab_account_intakes").select("id,order_id,customer_email,service_sku").eq("id",id).maybeSingle();
+        if(purchase.error)throw purchase.error;
+        if(!purchase.data)return J({error:"Purchase not found"},404);
+        if(purchase.data.service_sku==="lab-account-workflow-test-1")return J({error:"The $1 test plan cannot activate a production laboratory account."},409);
+        const paid=await db.from("orders").select("payment_status").eq("id",purchase.data.order_id).maybeSingle();
+        if(paid.error)throw paid.error;
+        if(paid.data?.payment_status!=="paid")return J({error:"Payment must be confirmed before activation."},409);
+        const form=await db.from("standalone_form_submissions").select("id").in("form_key",["lab_account_intake","lab_account_intake_standalone"]).ilike("submitter_email",purchase.data.customer_email).eq("status","completed").limit(1);
+        if(form.error)throw form.error;
+        if(!form.data?.length)return J({error:"Complete the customer intake review before activation."},409);
+        const org=await db.from("organizations").select("id").ilike("primary_email",purchase.data.customer_email).neq("status","archived").limit(2);
+        if(org.error)throw org.error;
+        if(org.data?.length!==1)return J({error:"Link and verify the customer's single C/TPA organization before activation."},409);
+        const ctpa=await db.from("ctpas").select("id").eq("organization_id",org.data[0].id).maybeSingle();
+        if(ctpa.error)throw ctpa.error;
+        if(!ctpa.data)return J({error:"Provision the customer's C/TPA account before activation."},409);
+        const numbers=await db.from("ctpa_lab_accounts").select("id",{head:true,count:"exact"}).eq("ctpa_id",ctpa.data.id).eq("status","active");
+        if(numbers.error)throw numbers.error;
+        if(!numbers.count)return J({error:"Assign at least one active laboratory account number before activation."},409);
+      }
       const q=await db.from("lab_account_intakes").update({account_status:accountStatus,updated_at:now()}).eq("id",id).select("id,order_number,account_status,status").maybeSingle();
       if(q.error)throw q.error;
       if(!q.data)return J({error:"Lab account purchase not found."},404);
