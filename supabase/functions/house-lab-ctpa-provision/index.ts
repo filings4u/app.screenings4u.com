@@ -35,6 +35,11 @@ Deno.serve(async(request)=>{
     if(call.error)return json({error:"Could not link C/TPA: "+call.error.message},409);
     return json({ok:true,ctpa:call.data});
   }
+  if(action==="finalize_profile"){
+    const finish=await db.rpc("s4u_finalize_house_lab_ctpa",{p_intake_id:intakeId});
+    if(finish.error)return json({error:finish.error.message},409);
+    return json({ok:true,profile:finish.data});
+  }
   if(action!=="status")return json({error:"Unsupported action"},400);
   const org=await db.from("organizations").select("id,legal_name,primary_email").ilike("primary_email",purchase.data.customer_email.trim()).neq("status","archived").limit(3);
   if(org.error)throw org.error;
