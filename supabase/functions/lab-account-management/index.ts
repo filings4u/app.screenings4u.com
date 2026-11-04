@@ -67,6 +67,15 @@ Deno.serve(async(req:Request)=>{
     if(ct.error||ac.error||org.error)throw ct.error||ac.error||org.error;
     return send({ctpas:ct.data||[],accounts:ac.data||[],organizations:org.data||[]});
   }
+  if(action==="notify_setup"){
+    const c=await ctpaLookup(val(body.ctpa_id));
+    if(!c)return send({error:"Choose a valid C/TPA"},400);
+    const q=await db.from("ctpa_lab_accounts").select("id",{head:true,count:"exact"}).eq("ctpa_id",c.id);
+    if(q.error)throw q.error;
+    if(!q.count)return send({error:"Assign at least one laboratory account number before sending setup notice"},409);
+    const status=await notifyAssigned(c.id,c.organization_id);
+    return send({ok:true,notification_status:status});
+  }
   if(action==="save"||action==="save_many"){
     const ctpaId=val(body.ctpa_id),c=await ctpaLookup(ctpaId);
     if(!c)return send({error:"Choose a valid C/TPA."},400);
