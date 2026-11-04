@@ -2,7 +2,7 @@
 const user=await DOTAuth.requireAuth();if(!user)return;DOTShell.render(user);
 const root=document.getElementById('dotPageMount');if(!root)return;
 const E=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const call=async(fn,body)=>{const {data,error}=await dotSupabase.functions.invoke(fn,{body});if(error||data?.error)throw Error(data?.error||error?.message||'Request failed');return data};
+const call=async(fn,body)=>{const {data,error}=await dotSupabase.functions.invoke(fn,{body});if(error){const detail=await error.context?.json?.().catch(()=>null);throw Error(detail?.error||error.message||'Request failed')}if(data?.error)throw Error(data.error);return data};
 const isNumbers=location.pathname.endsWith('lab-account-numbers.html');
 const isDetail=location.pathname.endsWith('lab-account-intake-detail.html');
 const isAssignment=location.pathname.endsWith('lab-account-assignment.html');
