@@ -121,15 +121,46 @@ async function loadStatus(){
 async function loadAssignment(){
  const data=await call('lab-account-management',{action:'list'});
  accounts=data.accounts||[];ctpas=data.ctpas||[];organizations=data.organizations||[];
- const id=new URLSearchParams(location.search).get('id')||'';
- const record=id?accounts.find(x=>x.id===id):null;
- if(id&&!record){msg.textContent='Lab account not found';container.innerHTML=actionLink('lab-account-numbers.html','Back to Lab Account Numbers');return}
- const orgName=id=>{const o=organizations.find(x=>x.id===id);return o?.display_name||o?.legal_name||o?.name||id||'Unknown organization'};
- const opts=ctpas.map(c=>'<option value="'+E(c.id)+'" '+(record?.ctpa_id===c.id?'selected':'')+'>'+E(orgName(c.organization_id))+' ('+E(c.status||'')+')</option>').join('');
- root.querySelector('h1').textContent=record?'Edit Lab Account Assignment':'Assign Lab Account';
- msg.textContent=record?'Edit this laboratory account number and assignment.':'Assign an account number to an existing C/TPA.';
- container.innerHTML='<div class="lab-detail-nav">'+actionLink('lab-account-numbers.html','← Lab Account Numbers')+actionLink('lab-account-intakes.html','Customer Intakes')+'</div><div class="lab-panel"><h2>'+(record?'Edit laboratory assignment':'New laboratory assignment')+'</h2><form id="assignmentForm" class="lab-edit-grid"><label>C/TPA<select name="ctpa_id" required '+(record?'disabled':'')+'><option value="">Select C/TPA</option>'+opts+'</select></label><label>Laboratory<input name="lab_name" required maxlength="180" value="'+E(record?.lab_name||record?.laboratory_name||'')+'"></label><label>Lab account number<input name="account_code" required maxlength="120" value="'+E(record?.account_code||'')+'"></label><label>Status<select name="status"><option value="active" '+(record?.status!=='inactive'?'selected':'')+'>Active</option><option value="inactive" '+(record?.status==='inactive'?'selected':'')+'>Inactive</option></select></label><label>Primary account<select name="is_primary"><option value="false">No</option><option value="true" '+(record?.is_primary?'selected':'')+'>Yes</option></select></label><label>Notes<textarea name="notes" rows="3" maxlength="2000">'+E(record?.notes||'')+'</textarea></label><div class="lab-form-actions"><button class="lab-primary" type="submit">Save assignment</button>'+actionLink('lab-account-numbers.html','Cancel')+'</div></form><p class="lab-notice" id="saveStatus" role="status"></p></div>';
- container.querySelector('#assignmentForm').addEventListener('submit',async event=>{event.preventDefault();const b=Object.fromEntries(new FormData(event.target).entries());const button=event.target.querySelector('button[type="submit"]');button.disabled=true;try{await call('lab-account-management',{action:'save',id:record?.id||null,...b,ctpa_id:record?.ctpa_id||b.ctpa_id,is_primary:b.is_primary==='true'});location.href='lab-account-numbers.html'}catch(err){container.querySelector('#saveStatus').textContent=err.message;button.disabled=false}});
+ const params=new URLSearchParams(location.search),id=params.get('id')||'';
+ const existing=id?accounts.find(x=>x.id===id):null;
+ if(id&&!existing){msg.textContent='Assignment not found';container.innerHTML=actionLink('lab-account-numbers.html','Back to Lab Account Numbers');return}
+ const selectedId=existing?.ctpa_id||params.get('ctpa_id')||'';
+ const nameFor=c=>{const o=organizations.find(x=>x.id===c.organization_id);return o?.display_name||o?.legal_name||o?.name||c.id};
+ const choices=ctpas.map(c=>'<option value="'+E(c.id)+'" '+(c.id===selectedId?'selected':'')+'>'+E(nameFor(c))+'</option>').join('');
+ root.querySelector('h1').textContent=existing?'Edit Lab Account Number':'Assign Lab Account Numbers';
+ msg.textContent='Add as many laboratory account numbers as needed. Every saved account belongs to the selected C/TPA.';
+ container.innerHTML='<div class="lab-detail-nav">'+actionLink('lab-account-numbers.html','← Lab Account Numbers')+'</div><div class="lab-panel"><div class="lab-detail-header"><div><h2>Choose the C/TPA</h2><p class="lab-muted">All new account numbers will be assigned to this C/TPA and displayed in its authorized portals.</p></div></div><label class="lab-search-label">C/TPA<select id="assignmentCtpa" '+(existing?'disabled':'')+'><option value="">Select C/TPA</option>'+choices+'</select></label></div><div class="lab-panel"><div class="lab-detail-header"><div><h2>Laboratory account numbers</h2><p class="lab-muted">Each row is a separate account. Add multiple rows, including different numbers for the same laboratory.</p></div><button type="button" class="lab-action lab-primary" id="addNumber">+ Add another number</button></div><div id="accountEditors"></div><div class="lab-row-actions" style="margin-top:18px"><button type="button" class="lab-primary" id="saveNumbers">Save account numbers</button>'+actionLink('lab-account-numbers.html','Cancel')+'</div><p id="saveStatus" class="lab-notice" role="status"></p></div><div class="lab-panel"><h2>Existing numbers for selected C/TPA</h2><div id="assignmentExisting" class="lab-table-scroll"></div></div>';
+ const editor=container.querySelector('#accountEditors'),ctpa=container.querySelector('#assignmentCtpa'),message=container.querySelector('#saveStatus');
+ const types=['dot','non_dot','hair','oral','other'];
+ const typeField=(value='dot')=>'<select name="account_type">'+types.map(t=>'<option value="'+t+'" '+(value===t?'selected':'')+'>'+E(t.replaceAll('_',' ').toUpperCase())+'</option>').join('')+'</select>';
+ function addRow(record={}){
+  const box=document.createElement('div');box.className='lab-account-editor';
+  const type=record.config?.account_type||'dot';
+  box.innerHTML='<div class="lab-edit-grid"><label>Laboratory<input name="lab_name" maxlength="180" required placeholder="Labcorp, CRL, Quest..." value="'+E(record.lab_name||record.laboratory_name||'')+'"></label><label>Account type'+typeField(type)+'</label><label>Account number<input name="account_code" maxlength="120" required placeholder="Enter lab account number" value="'+E(record.account_code||'')+'"></label><label>Status<select name="status"><option value="active" '+(record.status!=='inactive'?'selected':'')+'>Active</option><option value="inactive" '+(record.status==='inactive'?'selected':'')+'>Inactive</option></select></label><label>Primary<select name="is_primary"><option value="false" '+(!record.is_primary?'selected':'')+'>No</option><option value="true" '+(record.is_primary?'selected':'')+'>Yes</option></select></label><label>Notes<input name="notes" maxlength="2000" value="'+E(record.notes||'')+'"></label></div><div class="lab-row-actions"><button class="lab-danger removeNumber" type="button">Remove row</button></div>';
+  box.querySelector('.removeNumber').onclick=()=>{box.remove();renderExisting()};
+  editor.append(box);
+ }
+ function renderExisting(){
+  const rows=accounts.filter(x=>x.ctpa_id===ctpa.value);
+  const mount=container.querySelector('#assignmentExisting');
+  mount.innerHTML=rows.length?'<table class="lab-table"><thead><tr><th>Laboratory</th><th>Type</th><th>Number</th><th>Status</th><th>Manage</th></tr></thead><tbody>'+rows.map(x=>'<tr><td>'+E(x.lab_name)+'</td><td>'+E(x.config?.account_type||'DOT')+'</td><td>'+E(x.account_code)+'</td><td>'+E(x.status)+'</td><td>'+actionLink('lab-account-assignment.html?id='+encodeURIComponent(x.id),'Edit')+'</td></tr>').join('')+'</tbody></table>':'<p class="lab-muted">No lab account numbers assigned yet.</p>';
+ }
+ container.querySelector('#addNumber').onclick=()=>addRow();
+ ctpa.onchange=renderExisting;
+ const readRow=box=>Object.fromEntries([...box.querySelectorAll('[name]')].map(e=>[e.name,e.value]));
+ container.querySelector('#saveNumbers').onclick=async()=>{
+  if(!ctpa.value){message.textContent='Select a C/TPA first.';ctpa.focus();return}
+  const rows=[...editor.children].map(readRow).map(r=>({...r,is_primary:r.is_primary==='true'}));
+  if(!rows.length||rows.some(r=>!r.lab_name.trim()||!r.account_code.trim())){message.textContent='Enter a laboratory and account number for every row.';return}
+  if(rows.filter(r=>r.is_primary).length>1){message.textContent='Only one number can be marked primary.';return}
+  const button=container.querySelector('#saveNumbers');button.disabled=true;
+  try{
+   if(existing){await call('lab-account-management',{action:'save',ctpa_id:ctpa.value,id:existing.id,...rows[0]})}
+   else{for(let i=0;i<rows.length;i+=100)await call('lab-account-management',{action:'save_many',ctpa_id:ctpa.value,accounts:rows.slice(i,i+100)})}
+   location.href='lab-account-numbers.html';
+  }catch(e){message.textContent=e.message;button.disabled=false}
+ };
+ addRow(existing||{});container.querySelector('#addNumber').disabled=!!existing;renderExisting();
 }
 try{if(isNumbers)await loadNumbers();else if(isAssignment)await loadAssignment();else if(isStatus)await loadStatus();else if(isDetail)await loadDetail();else await loadIntakes()}catch(err){msg.textContent=err.message}
 })();
