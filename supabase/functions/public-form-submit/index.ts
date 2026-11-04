@@ -66,7 +66,7 @@ Deno.serve(async(req)=>{if(req.method==="OPTIONS")return new Response("ok",{head
        const oq=await db.from("orders").select("id,order_number,user_id,customer_email,metadata,status,payment_status").ilike("customer_email",email).eq("payment_status","paid").order("created_at",{ascending:false}).limit(50);if(oq.error)throw oq.error;
        for(const order of oq.data||[]){
          const iq=await db.from("order_items").select("metadata,services(sku,slug,name)").eq("order_id",order.id);if(iq.error)throw iq.error;
-         const hasLab=(iq.data||[]).some((it:any)=>{const s:any=it.services||{};const sku=low(it.metadata?.service_sku||s.sku||s.slug||"");return sku==="lab-account"||sku==="lab_account"||low(s.name)==="lab account"});
+         const hasLab=(iq.data||[]).some((it:any)=>{const v:any=it.services||{};const sku=low(it.metadata?.service_sku||v.sku||v.slug||"").replaceAll("_","-");return ["lab-account","lab-account-random-consortium","lab-account-random-consortium-docs","lab-account-workflow-test-1"].includes(sku)});
          if(!hasLab)continue;
          const token=crypto.randomUUID(),row={id:crypto.randomUUID(),token,order_id:order.id,order_number:order.order_number,customer_user_id:order.user_id||null,customer_email:email,service_sku:"lab-account",workforce_dot_plan_code:order.metadata?.plan_code||null,status:"pending",intake_data:{},created_at:now(),updated_at:now()};
          const ins=await db.from("lab_account_intakes").upsert(row,{onConflict:"order_id"}).select("*").single();if(ins.error)throw ins.error;li={data:ins.data,error:null};break;
@@ -85,7 +85,7 @@ Deno.serve(async(req)=>{if(req.method==="OPTIONS")return new Response("ok",{head
    if(!organizationId){const o=await db.from("organizations").select("id").ilike("primary_email",email).limit(1).maybeSingle();if(o.error)throw o.error;if(o.data)organizationId=o.data.id}
  }
  if(organizationId&&form.business_unit_code==="testing"){const te=await db.from("testing_employers").select("id").eq("organization_id",organizationId).maybeSingle();if(te.error)throw te.error;if(te.data)testingEmployerId=te.data.id}
- const orderField=clean(settings.order_id_field||"order_id"),requestedOrder=clean(payload[orderField]);if(requestedOrder){const oq=await db.from("orders").select("id").eq("id",requestedOrder).maybeSingle();if(oq.error)throw oq.error;if(oq.data)relatedOrderId=oq.data.id}
+ const orderField=clean(settings.order_id_field||"order_id"),requestedOrder=clean(payload[orderField]);if(requestedOrder){if(labIntake&&requestedOrder!==String(labIntake.order_id))return R({error:"The supplied order does not match your purchased Lab Account intake."},400);if(!labIntake){const oq=await db.from("orders").select("id").eq("id",requestedOrder).maybeSingle();if(oq.error)throw oq.error;if(oq.data)relatedOrderId=oq.data.id}}
  if(["lab_account_intake","lab_account_intake_standalone"].includes(form.form_key)){
    if(!email&&!customerUserId)return R({error:"A verified customer email is required for a lab account application."},400);
    const activeStatuses=["submitted","reviewing","completed"];
