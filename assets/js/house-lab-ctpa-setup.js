@@ -12,8 +12,8 @@ async function render(){
  const t=d.stages||{},intakeUrl="lab-account-intake-detail.html?email="+encodeURIComponent(purchase.customer_email||"");
  const steps=[
  ["Paid lab account purchase",!!t.payment_verified,"house-lab-fulfillment.html?intake_id="+encodeURIComponent(id)],
- ["Branded customer receipt",null,intakeUrl],
- ["Branded administrator purchase alert",null,intakeUrl],
+ ["Branded customer receipt",t.receipt_dispatch_recorded===true?true:null,intakeUrl],
+ ["Branded administrator purchase alert",t.admin_purchase_alert_recorded===true?true:null,intakeUrl],
  ["Complete customer intake",!!t.intake_submitted,intakeUrl],
  ["Branded intake confirmation",null,intakeUrl],
  ["Administrator intake notification",null,intakeUrl],
@@ -24,10 +24,10 @@ async function render(){
  ["Tracking email and portal link",(t.shipment_notices||0)>0,url(id)],
  ["Join collector network",(t.collector_referrals||0)>0,intakeUrl],
  ["Receive supplies and begin testing",(t.delivered||0)>0,url(id)],
- ["Submit specimens to laboratory",null,url(id)],
+ ["Report collected specimen sent",(t.specimen_shipments_reported||0)>0,"https://lab-account.screenings4u.com/specimen-shipment.html"],
  ["Issue invoice and notify customer",(t.sent_invoices||0)>0,url(id)]
  ];
- const workflow='<div class="lab-panel"><h2>15-step workflow verification</h2><p class="lab-muted">Live database checkpoints are marked Recorded. Email delivery and physical test processing remain Unverified until confirmed by their systems.</p><div class="lab-table-scroll"><table class="lab-table"><thead><tr><th>Step</th><th>Workflow</th><th>Verification</th><th>Management</th></tr></thead><tbody>'+steps.map((item,i)=>'<tr><td>'+String(i+1).padStart(2,"0")+'</td><td>'+html(item[0])+'</td><td><span class="lab-pill">'+(item[1]===true?"Recorded":item[1]===false?"Pending":"Unverified")+'</span></td><td><a class="lab-action" href="'+html(item[2])+'">Manage</a></td></tr>').join("")+'</tbody></table></div></div>';
+ const workflow='<div class="lab-panel"><h2>15-step workflow verification</h2><p class="lab-muted">Live database checkpoints are marked Recorded. Emails count as recorded when the sending provider accepts dispatch, not proof of inbox delivery. Physical laboratory receipt and processing require separate verification.</p><div class="lab-table-scroll"><table class="lab-table"><thead><tr><th>Step</th><th>Workflow</th><th>Verification</th><th>Management</th></tr></thead><tbody>'+steps.map((item,i)=>'<tr><td>'+String(i+1).padStart(2,"0")+'</td><td>'+html(item[0])+'</td><td><span class="lab-pill">'+(item[1]===true?"Recorded":item[1]===false?"Pending":"Unverified")+'</span></td><td><a class="lab-action" href="'+html(item[2])+'">Manage</a></td></tr>').join("")+'</tbody></table></div></div>';
 
  message.textContent=ctpa?"C/TPA profile is linked to this purchase.":"This paid purchase needs a C/TPA onboarding record.";
  mount.innerHTML='<div class="lab-panel"><h2>House Lab Account identity</h2><div class="lab-detail"><div class="lab-detail-field"><span>Customer</span><strong>'+html(purchase.customer_email||"—")+'</strong></div><div class="lab-detail-field"><span>Intake stage</span><strong>'+html(purchase.status||"pending")+'</strong></div><div class="lab-detail-field"><span>Lab account activation</span><strong>'+html(purchase.account_status||"pending")+'</strong></div><div class="lab-detail-field"><span>C/TPA onboarding</span><strong>'+html(ctpa?.status||"Not yet linked")+'</strong></div>'+(ctpa?'<div class="lab-detail-field"><span>C/TPA company code</span><strong>'+html(ctpa.company_code||"—")+'</strong></div>':'')+'</div><div class="lab-row-actions" id="ctpaActions"></div><p id="ctpaError" role="status" class="lab-notice"></p></div>'+
