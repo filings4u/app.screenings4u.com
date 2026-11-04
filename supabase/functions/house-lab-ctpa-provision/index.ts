@@ -42,6 +42,32 @@ Deno.serve(async(request)=>{
   if(!org.data?.length)return json({ok:true,ctpa:null,purchase:purchase.data});
   const ctpa=await db.from("ctpas").select("id,organization_id,tenant_id,status,company_code").eq("organization_id",org.data[0].id).maybeSingle();
   if(ctpa.error)throw ctpa.error;
-  return json({ok:true,ctpa:ctpa.data||null,organization:org.data[0],purchase:purchase.data});
+  const [forms,accounts,ships,bills,collectors,emails]=await Promise.all([
+   db.from("standalone_form_submissions").select("id,status").in("form_key",["lab_account_intake","lab_account_intake_standalone"]).ilike("submitter_email",purchase.data.customer_email).order("created_at",{ascending:false}).limit(5),
+   ctpa.data?db.from("ctpa_lab_accounts").select("id,status").eq("ctpa_id",ctpa.data.id):Promise.resolve({data:[],error:null}),
+   db.from("house_lab_supply_shipments").select("id,status,tracking_url,notification_sent_at").eq("intake_id",intakeId),
+   db.from("invoices").select("id,status,sent_at").eq("order_id",purchase.data.order_id),
+   db.from("collector_network_submissions").select("id,status").ilike("email",purchase.data.customer_email).neq("status","superseded").limit(5),
+   db.from("testing_email_events").select("event_type,status").ilike("recipient_email",purchase.data.customer_email).limit(100)
+  ]);
+  for(const result of [forms,accounts,ships,bills,collectors,emails])if(result.error)throw result.error;
+  const stages={
+    payment_verified:true,
+    intake_submitted:(forms.data||[]).some(x=>["submitted","reviewing","completed"].includes(x.status)),
+    intake_completed:(forms.data||[]).some(x=>x.status==="completed"),
+    ctpa_linked:!!ctpa.data,
+    assigned_lab_numbers:(accounts.data||[]).length,
+    active_lab_numbers:(accounts.data||[]).filter(x=>x.status==="active").length,
+    account_status:purchase.data.account_status,
+    shipments:(ships.data||[]).length,
+    shipped:(ships.data||[]).filter(x=>["shipped","delivered"].includes(x.status)).length,
+    delivered:(ships.data||[]).filter(x=>x.status==="delivered").length,
+    shipment_notices:(ships.data||[]).filter(x=>x.notification_sent_at).length,
+    collector_referrals:(collectors.data||[]).length,
+    invoices:(bills.data||[]).length,
+    sent_invoices:(bills.data||[]).filter(x=>x.sent_at).length,
+    audited_customer_emails:(emails.data||[]).filter(x=>x.status==="sent").length
+  };
+  return json({ok:true,ctpa:ctpa.data||null,organization:org.data[0],purchase:purchase.data,stages});
  }catch(error){console.error("house lab ctpa provision",error);return json({error:"C/TPA management request failed"},500)}
 });
