@@ -88,11 +88,11 @@ Deno.serve(async(req)=>{if(req.method==="OPTIONS")return new Response("ok",{head
  const orderField=clean(settings.order_id_field||"order_id"),requestedOrder=clean(payload[orderField]);if(requestedOrder){const oq=await db.from("orders").select("id").eq("id",requestedOrder).maybeSingle();if(oq.error)throw oq.error;if(oq.data)relatedOrderId=oq.data.id}
  if(["lab_account_intake","lab_account_intake_standalone"].includes(form.form_key)){
    if(!email&&!customerUserId)return R({error:"A verified customer email is required for a lab account application."},400);
-   const activeStatuses=["submitted","reviewing"];
+   const activeStatuses=["submitted","reviewing","completed"];
    let existing:any={data:null,error:null};
    if(customerUserId){existing=await db.from("standalone_form_submissions").select("id").in("form_key",["lab_account_intake","lab_account_intake_standalone"]).in("status",activeStatuses).eq("customer_user_id",customerUserId).limit(1).maybeSingle();if(existing.error)throw existing.error;}
    if(!existing.data&&email){existing=await db.from("standalone_form_submissions").select("id").in("form_key",["lab_account_intake","lab_account_intake_standalone"]).in("status",activeStatuses).ilike("submitter_email",email).limit(1).maybeSingle();if(existing.error)throw existing.error;}
-   if(existing.data)return R({error:"An open lab account application already exists for this customer. Please sign in or contact screenings4u to manage the existing application rather than submit another."},409);
+   if(existing.data)return R({error:"A lab account intake already exists for this customer. Please use the existing intake for future purchases rather than submitting a duplicate."},409);
  }
  const id=uid(),prefix=form.form_key==="lab_account_intake"?"INT":"FORM",num=`${prefix}-${new Date().toISOString().slice(0,10).replaceAll("-","")}-${id.slice(0,8).toUpperCase()}`;
  const insert=await db.from("standalone_form_submissions").insert({
