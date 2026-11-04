@@ -1,0 +1,34 @@
+(async()=>{'use strict';
+const user=await DOTAuth.requireAuth();if(!user)return;DOTShell.render(user);
+const root=document.getElementById('dotPageMount');if(!root)return;
+const E=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const params=new URLSearchParams(location.search),intakeId=params.get('intake_id')||'',UUID=/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i;
+const href=(url,label)=>'<a class="lab-action" href="'+E(url)+'">'+E(label)+'</a>';
+const accountUrl=id=>'house-lab-invoices.html?intake_id='+encodeURIComponent(id);
+const call=async body=>{const {data,error}=await dotSupabase.functions.invoke('house-lab-fulfillment-management',{body});if(error){const detail=await error.context?.json?.().catch(()=>null);throw Error(detail?.error||error.message||'Invoice request failed')}if(data?.error)throw Error(data.error);return data};
+const date=v=>v?new Date(v).toLocaleDateString():'—',money=v=>'$'+Number(v||0).toFixed(2);
+root.innerHTML='<div class="lab-wrap"><header class="lab-page-header"><div><span class="lab-eyebrow">SCREENINGS4U / HOUSE LAB ACCOUNT</span><h1>Testing Invoices</h1><p class="lab-page-subtitle">Create invoices for testing services, review billing and deliver invoices to the C/TPA portal.</p></div></header><nav class="lab-section-nav" aria-label="House Lab Account pages"><a class="lab-section-tab" href="lab-account-numbers.html">Customer accounts</a><a class="lab-section-tab" href="lab-account-intakes.html">Intake review</a><a class="lab-section-tab" href="house-lab-fulfillment.html">Supplies & shipping</a><a class="lab-section-tab current" href="house-lab-invoices.html">Invoices</a></nav><p role="status" id="invoiceStatus">Loading invoices…</p><div id="invoiceContent"></div></div>';
+const status=root.querySelector('#invoiceStatus'),content=root.querySelector('#invoiceContent');
+const show=t=>status.textContent=t;
+async function directory(){
+ const data=await call({action:'list'}),purchases=data.purchases||[],invoices=data.invoices||[];
+ show(purchases.length+' customer purchases · '+invoices.length+' invoice records');
+ content.innerHTML='<div class="lab-panel"><h2>Customer invoice directory</h2><p class="lab-muted">Choose a customer to create, view or deliver testing invoices. Supplies and shipping are managed separately.</p><div class="lab-toolbar"><label class="lab-search-label">Find customer or order<input id="findInvoice" type="search" placeholder="Search customer email or order number"></label></div><div class="lab-table-scroll"><table class="lab-table"><thead><tr><th>Order</th><th>C/TPA customer</th><th>Account status</th><th>Invoices</th><th>Manage</th></tr></thead><tbody id="invoiceRows"></tbody></table></div></div>';
+ const input=content.querySelector('#findInvoice');
+ const paint=()=>{const q=input.value.trim().toLowerCase();content.querySelector('#invoiceRows').innerHTML=purchases.filter(p=>!q||[p.order_number,p.customer_email,p.status].some(v=>String(v||'').toLowerCase().includes(q))).map(p=>'<tr><td>'+E(p.order_number||'—')+'</td><td>'+E(p.customer_email||'—')+'</td><td><span class="lab-pill">'+E(p.account_status||'pending')+'</span></td><td>'+invoices.filter(x=>x.order_id===p.order_id).length+'</td><td>'+href(accountUrl(p.id),'Manage invoices')+'</td></tr>').join('')||'<tr><td colspan="5" class="lab-empty">No customers match your search.</td></tr>';};
+ input.oninput=paint;paint();
+}
+async function detail(){
+ const data=await call({action:'purchase',intake_id:intakeId}),p=data.purchase,invoices=data.invoices||[];
+ if(!p)throw Error('The selected purchase could not be found');
+ show('Order '+(p.order_number||'—')+' · '+(p.customer_email||'—'));
+ content.innerHTML='<div class="lab-detail-nav">'+href('house-lab-invoices.html','All invoices')+href('lab-account-intake-detail.html?email='+encodeURIComponent(p.customer_email||''),'Customer intake')+href('house-lab-fulfillment.html?intake_id='+encodeURIComponent(p.id),'Supplies & tracking')+'</div>'+
+ '<div class="lab-panel"><div class="lab-detail-header"><div><h2>Create testing invoice</h2><p class="lab-muted">Enter services performed and save a draft. Sending delivers the invoice to the C/TPA portal with its notification.</p></div><span class="lab-pill">'+E(p.account_status||'pending')+'</span></div><form id="invoiceForm" class="lab-edit-grid"><label>Testing service description<input name="description" required maxlength="1000" placeholder="Description of testing performed"></label><label>Quantity<input name="quantity" type="number" min="1" max="10000" step="1" value="1" required></label><label>Unit price (USD)<input name="unit_price" type="number" min="0" max="1000000" step="0.01" required></label><div class="lab-form-actions"><button class="lab-primary" type="submit">Create draft invoice</button></div></form><p id="invoiceNotice" class="lab-notice" role="status"></p></div>'+
+ '<div class="lab-panel"><h2>Invoice history</h2><div class="lab-table-scroll"><table class="lab-table"><thead><tr><th>Invoice</th><th>Created</th><th>Status</th><th>Total</th><th>Delivery</th><th>Action</th></tr></thead><tbody>'+invoices.map(x=>'<tr><td><strong>'+E(x.invoice_number||'—')+'</strong></td><td>'+date(x.created_at)+'</td><td><span class="lab-pill">'+E(x.status||'draft')+'</span></td><td>'+money(x.total)+'</td><td>'+ (x.sent_at?'Sent '+date(x.sent_at):'Not sent')+'</td><td>'+(x.sent_at?'Delivered':x.status==='paid'||x.status==='void'?'Unavailable':'<button type="button" data-send-invoice="'+E(x.id)+'" class="lab-primary">Send to C/TPA</button>')+'</td></tr>').join('')+'</tbody></table></div></div>';
+ const notice=content.querySelector('#invoiceNotice'),form=content.querySelector('#invoiceForm');
+ if(p.service_sku==='lab-account-workflow-test-1'){form.hidden=true;notice.textContent='Workflow test accounts cannot be billed for real testing here.';}
+ form.onsubmit=async e=>{e.preventDefault();const button=form.querySelector('[type=submit]');button.disabled=true;notice.textContent='Creating draft…';try{const v=Object.fromEntries(new FormData(form).entries());await call({action:'create_invoice',intake_id:p.id,description:v.description,quantity:Number(v.quantity),unit_price:Number(v.unit_price)});await detail()}catch(error){notice.textContent=error.message;button.disabled=false}};
+ content.querySelectorAll('[data-send-invoice]').forEach(button=>button.onclick=async()=>{button.disabled=true;notice.textContent='Sending invoice…';try{await call({action:'send_invoice',intake_id:p.id,invoice_id:button.dataset.sendInvoice});await detail()}catch(error){notice.textContent=error.message;button.disabled=false}});
+}
+try{if(intakeId&&UUID.test(intakeId))await detail();else await directory()}catch(e){show(e.message);content.innerHTML='<div class="lab-panel">'+href('house-lab-invoices.html','Back to invoices')+'</div>'}
+})();
