@@ -139,6 +139,8 @@ async function loadAssignment(){
  const existing=id?accounts.find(x=>x.id===id):null;
  if(id&&!existing){msg.textContent='Lab account number not found';container.innerHTML=actionLink('lab-account-numbers.html','Return to Lab Account Numbers');return}
  const selected=existing?.ctpa_id||params.get('ctpa_id')||'';
+ if(selected){location.replace('lab-ctpa-profile.html?ctpa_id='+encodeURIComponent(selected)+(existing?'&account_id='+encodeURIComponent(existing.id):'')+'#accountSection');return}
+ if(!id){location.replace('lab-account-numbers.html');return}
  const selectionExists=ctpas.some(c=>c.id===selected);
  if(selected&&!selectionExists){msg.textContent='The selected C/TPA no longer exists. Choose an existing customer.';}
  const orgById=new Map(organizations.map(o=>[o.id,o]));
