@@ -29,15 +29,18 @@ const groupsFor=rows=>{
 };
 async function fetchIntakes(){
  const [forms,purchases]=await Promise.all([call('enterprise-forms-management',{action:'submissions'}),call('enterprise-forms-management',{action:'lab_account_purchases'})]);
- const fromForms=(forms.submissions||[]).filter(x=>['lab_account_intake_standalone','lab_account_intake'].includes(x.form_key)).map(x=>({...x,kind:'submission',details:x.payload||{}}));
+ const purchaseList=purchases.purchases||[];
+ const linkedByOrder=new Map(purchaseList.filter(x=>x.order_id).map(x=>[x.order_id,x]));
+ const fromForms=(forms.submissions||[]).filter(x=>['lab_account_intake_standalone','lab_account_intake'].includes(x.form_key)).map(x=>({...x,kind:'submission',details:x.payload||{},linked_purchase:linkedByOrder.get(x.related_order_id)||null}));
  const known=new Set(fromForms.map(x=>x.related_order_id).filter(Boolean));
- const fromPurchases=(purchases.purchases||[]).filter(x=>!known.has(x.order_id)).map(x=>({...x,kind:'purchase',submission_number:x.order_number,submitter_email:x.customer_email,submitter_name:x.customer_email,details:x.intake_data||{}}));
+ const fromPurchases=purchaseList.filter(x=>!known.has(x.order_id)).map(x=>({...x,kind:'purchase',submission_number:x.order_number,submitter_email:x.customer_email,submitter_name:x.customer_email,details:x.intake_data||{}}));
  return [...fromForms,...fromPurchases].filter(x=>x.status!=='archived').sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
 }
 const actionLink=(href,label,extra='')=>'<a class="lab-action '+extra+'" href="'+E(href)+'">'+E(label)+'</a>';
 const names=x=>x.rows.map(r=>r.submitter_name).find(v=>v&&v.includes(' '))||x.rows.find(r=>r.submitter_name)?.submitter_name||x.email||'Customer';
 const business=x=>x.rows.map(r=>r.details?.legal_business_name||r.details?.business_name).find(Boolean)||'—';
 const latest=x=>x.rows[0]||{};
+const linkedPurchases=g=>g.rows.filter(x=>x.linked_purchase).map(x=>x.linked_purchase);
 async function loadIntakes(){
  submissions=await fetchIntakes();const grouped=groupsFor(submissions);
  msg.textContent=grouped.length+' unique customers • '+submissions.length+' active intake and purchase records';
@@ -63,8 +66,8 @@ async function loadDetail(){
  const pageUrl=detailUrl(group.email,'','','');
  if(!record){
   root.querySelector('h1').textContent=names(group);
-  msg.textContent=group.rows.length+' records associated with '+group.email+' • One customer account';
-  container.innerHTML='<div class="lab-detail-nav">'+actionLink('lab-account-intakes.html','← All customers')+actionLink('lab-account-numbers.html','Manage Lab Account Numbers')+'</div><div class="lab-panel"><h2>Customer profile</h2><div class="lab-detail"><div class="lab-detail-field"><span>Customer</span><strong>'+E(names(group))+'</strong></div><div class="lab-detail-field"><span>Account email</span><strong>'+E(group.email)+'</strong></div><div class="lab-detail-field"><span>Business</span><strong>'+E(business(group))+'</strong></div><div class="lab-detail-field"><span>Linked records</span><strong>'+group.rows.length+'</strong></div></div></div><div class="lab-panel"><h2>Intake &amp; purchase history</h2><p class="lab-muted">These are records belonging to one customer account, not separate customer accounts. Purchase and submission history is retained.</p><div class="lab-table-scroll"><table class="lab-table"><thead><tr><th>Reference</th><th>Type</th><th>Status</th><th>Date</th><th>Manage</th></tr></thead><tbody>'+group.rows.map(x=>'<tr><td>'+actionLink(detailUrl(group.email,x.kind,x.id,''),x.submission_number||x.id,'lab-customer-link')+'</td><td>'+E(x.kind==='purchase'?'Purchase intake':'Submitted form')+'</td><td><span class="lab-pill">'+E(x.status||'unknown')+'</span></td><td>'+when(x.created_at)+'</td><td><div class="lab-row-actions">'+actionLink(detailUrl(group.email,x.kind,x.id,''),'View')+actionLink(detailUrl(group.email,x.kind,x.id,'edit'),'Edit')+'</div></td></tr>').join('')+'</tbody></table></div></div>';
+  msg.textContent=group.rows.length+' active intake record'+(group.rows.length===1?'':'s')+' • '+linkedPurchases(group).length+' linked house lab account purchase'+(linkedPurchases(group).length===1?'':'s')+' • One customer identity';
+  container.innerHTML='<div class="lab-detail-nav">'+actionLink('lab-account-intakes.html','← All customers')+actionLink('lab-account-numbers.html','Manage Lab Account Numbers')+'</div><div class="lab-panel"><h2>Customer profile</h2><div class="lab-detail"><div class="lab-detail-field"><span>Customer</span><strong>'+E(names(group))+'</strong></div><div class="lab-detail-field"><span>Account email</span><strong>'+E(group.email)+'</strong></div><div class="lab-detail-field"><span>Business</span><strong>'+E(business(group))+'</strong></div><div class="lab-detail-field"><span>Active intake forms</span><strong>'+group.rows.filter(x=>x.kind==='submission').length+'</strong></div></div></div><div class="lab-panel"><h2>Customer intake &amp; purchase</h2><p class="lab-muted">One managed lab account intake per customer. Matching purchases stay linked to this record; original order and payment history remain in Supabase.</p><div class="lab-table-scroll"><table class="lab-table"><thead><tr><th>Intake reference</th><th>Type</th><th>Status</th><th>Linked purchase / order</th><th>Date</th><th>Manage</th></tr></thead><tbody>'+group.rows.map(x=>'<tr><td>'+actionLink(detailUrl(group.email,x.kind,x.id,''),x.submission_number||x.id,'lab-customer-link')+'</td><td>'+E(x.kind==='purchase'?'Purchase intake':'Submitted form')+'</td><td><span class="lab-pill">'+E(x.status||'unknown')+'</span></td><td>'+when(x.created_at)+'</td><td><div class="lab-row-actions">'+actionLink(detailUrl(group.email,x.kind,x.id,''),'View')+actionLink(detailUrl(group.email,x.kind,x.id,'edit'),'Edit')+'</div></td></tr>').join('')+'</tbody></table></div></div>';
   return;
  }
  root.querySelector('h1').textContent=record.submission_number||'Lab account record';
