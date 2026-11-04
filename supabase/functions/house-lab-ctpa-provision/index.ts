@@ -39,8 +39,7 @@ Deno.serve(async(request)=>{
   const org=await db.from("organizations").select("id,legal_name,primary_email").ilike("primary_email",purchase.data.customer_email.trim()).neq("status","archived").limit(3);
   if(org.error)throw org.error;
   if((org.data||[]).length>1)return json({error:"Duplicate matching organizations require review"},409);
-  if(!org.data?.length)return json({ok:true,ctpa:null,purchase:purchase.data});
-  const ctpa=await db.from("ctpas").select("id,organization_id,tenant_id,status,company_code").eq("organization_id",org.data[0].id).maybeSingle();
+  const ctpa=org.data?.length?await db.from("ctpas").select("id,organization_id,tenant_id,status,company_code").eq("organization_id",org.data[0].id).maybeSingle():{data:null,error:null};
   if(ctpa.error)throw ctpa.error;
   const [forms,accounts,ships,bills,collectors,emails]=await Promise.all([
    db.from("standalone_form_submissions").select("id,status").in("form_key",["lab_account_intake","lab_account_intake_standalone"]).ilike("submitter_email",purchase.data.customer_email).order("created_at",{ascending:false}).limit(5),
@@ -68,6 +67,6 @@ Deno.serve(async(request)=>{
     sent_invoices:(bills.data||[]).filter(x=>x.sent_at).length,
     audited_customer_emails:(emails.data||[]).filter(x=>x.status==="sent").length
   };
-  return json({ok:true,ctpa:ctpa.data||null,organization:org.data[0],purchase:purchase.data,stages});
+  return json({ok:true,ctpa:ctpa.data||null,organization:org.data?.[0]||null,purchase:purchase.data,stages});
  }catch(error){console.error("house lab ctpa provision",error);return json({error:"C/TPA management request failed"},500)}
 });
