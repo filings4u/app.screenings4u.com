@@ -31,6 +31,28 @@ if(ids.length){const sh=await db.from("house_lab_supply_shipments").select("id,i
 return {supplies:catalog.data||[],orders:orders.data||[],inventory:inventory.data||[],houseShipments};
 };
 if(action==="workspace")return reply(await list());
+if(action==="confirm_house_delivery"){
+ if(grant.plan==="lab-account-workflow-test-1")return reply({error:"Test plans cannot receive physical shipments"},403);
+ const shipmentId=String(b.id||"");
+ if(!/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(shipmentId))return reply({error:"Valid shipment required"},400);
+ const shipment=await db.from("house_lab_supply_shipments").select("id,intake_id,status,notes").eq("id",shipmentId).maybeSingle();
+ if(shipment.error)throw shipment.error;
+ if(!shipment.data)return reply({error:"Shipment not found"},404);
+ const purchase=await db.from("lab_account_intakes").select("id,customer_user_id,customer_email,service_sku").eq("id",shipment.data.intake_id).maybeSingle();
+ if(purchase.error)throw purchase.error;
+ const own=purchase.data&&(purchase.data.customer_user_id===user.id||String(purchase.data.customer_email||"").toLowerCase()===String(user.email||"").toLowerCase());
+ if(!own||purchase.data.service_sku==="lab-account-workflow-test-1")return reply({error:"Shipment does not belong to your lab account"},403);
+ if(shipment.data.status!=="shipped")return reply({error:"Only shipped supply orders can be confirmed received"},409);
+ const now=new Date().toISOString(),oldNotes=String(shipment.data.notes||"").slice(0,3000);
+ const updated=await db.from("house_lab_supply_shipments").update({
+   status:"delivered",updated_at:now,
+   notes:oldNotes+(oldNotes?"\n":"")+"Customer confirmed physical delivery via Lab Account portal at "+now
+ }).eq("id",shipmentId).eq("intake_id",purchase.data.id).eq("status","shipped").select("id,status,updated_at").maybeSingle();
+ if(updated.error)throw updated.error;
+ if(!updated.data)return reply({error:"Shipment status changed before confirmation"},409);
+ return reply({ok:true,shipment:updated.data});
+}
+
 if(grant.plan==="lab-account-workflow-test-1"&&["create","cancel"].includes(action))return reply({error:"The $1 workflow test does not include physical supply requests."},403);
 if(action==="create"){
 const lines=Array.isArray(b.lines)?b.lines:[];if(!lines.length||lines.length>40)return reply({error:"Select supply quantities"},400);
