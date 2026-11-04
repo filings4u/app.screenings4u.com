@@ -6,7 +6,8 @@ const call=async(fn,body)=>{const {data,error}=await dotSupabase.functions.invok
 const isNumbers=location.pathname.endsWith('lab-account-numbers.html');
 const isDetail=location.pathname.endsWith('lab-account-intake-detail.html');
 const isAssignment=location.pathname.endsWith('lab-account-assignment.html');
-const heading=isNumbers?'Lab Account Numbers':isAssignment?'Lab Account Assignment':isDetail?'Lab Account Record':'Lab Account Intakes';
+const isStatus=location.pathname.endsWith('lab-account-status.html');
+const heading=isNumbers?'Lab Account Numbers':isAssignment?'Lab Account Assignment':isStatus?'House Lab Account Status':isDetail?'Lab Account Record':'Lab Account Intakes';
 root.innerHTML='<div class="lab-wrap"><h1>'+heading+'</h1><p id="labMessage" role="status">Loading…</p><div id="labContent"></div></div>';
 const msg=root.querySelector('#labMessage'),container=root.querySelector('#labContent');
 const when=x=>x?new Date(x).toLocaleDateString():'—';
@@ -16,6 +17,7 @@ function modal(html){const el=document.createElement('div');el.className='modal'
 
 const norm=v=>String(v||'').trim().toLowerCase();
 const safeId=v=>/^[0-9a-f-]{36}$/i.test(v||'');
+const statusUrl=id=>'lab-account-status.html?id='+encodeURIComponent(id||'');
 const detailUrl=(email,kind,id,mode)=>'lab-account-intake-detail.html?'+new URLSearchParams(Object.fromEntries(Object.entries({email,kind,id,mode}).filter(([,v])=>v))).toString();
 const groupsFor=rows=>{
  const groups=new Map();
@@ -31,8 +33,10 @@ async function fetchIntakes(){
  const [forms,purchases]=await Promise.all([call('enterprise-forms-management',{action:'submissions'}),call('enterprise-forms-management',{action:'lab_account_purchases'})]);
  const purchaseList=purchases.purchases||[];
  const linkedByOrder=new Map(purchaseList.filter(x=>x.order_id).map(x=>[x.order_id,x]));
+ const byCustomer=new Map();for(const p of purchaseList){const key=norm(p.customer_email);if(!byCustomer.has(key))byCustomer.set(key,[]);byCustomer.get(key).push(p)}
  const fromForms=(forms.submissions||[]).filter(x=>['lab_account_intake_standalone','lab_account_intake'].includes(x.form_key)).map(x=>({...x,kind:'submission',details:x.payload||{},linked_purchase:linkedByOrder.get(x.related_order_id)||null}));
- const known=new Set(fromForms.map(x=>x.related_order_id).filter(Boolean));
+ for(const form of fromForms){form.linked_purchases=byCustomer.get(norm(form.submitter_email))||[];if(!form.linked_purchase)form.linked_purchase=form.linked_purchases[0]||null;}
+ const known=new Set(fromForms.flatMap(x=>(x.linked_purchases||[]).map(p=>p.order_id)).filter(Boolean));
  const fromPurchases=purchaseList.filter(x=>!known.has(x.order_id)).map(x=>({...x,kind:'purchase',submission_number:x.order_number,submitter_email:x.customer_email,submitter_name:x.customer_email,details:x.intake_data||{}}));
  return [...fromForms,...fromPurchases].filter(x=>x.status!=='archived').sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
 }
@@ -40,7 +44,7 @@ const actionLink=(href,label,extra='')=>'<a class="lab-action '+extra+'" href="'
 const names=x=>x.rows.map(r=>r.submitter_name).find(v=>v&&v.includes(' '))||x.rows.find(r=>r.submitter_name)?.submitter_name||x.email||'Customer';
 const business=x=>x.rows.map(r=>r.details?.legal_business_name||r.details?.business_name).find(Boolean)||'—';
 const latest=x=>x.rows[0]||{};
-const linkedPurchases=g=>g.rows.filter(x=>x.linked_purchase).map(x=>x.linked_purchase);
+const linkedPurchases=g=>[...new Map(g.rows.flatMap(x=>[...(x.linked_purchases||[]),...(x.linked_purchase?[x.linked_purchase]:[])]).map(x=>[x.id,x])).values()];
 async function loadIntakes(){
  submissions=await fetchIntakes();const grouped=groupsFor(submissions);
  msg.textContent=grouped.length+' unique customers • '+submissions.length+' active intake and purchase records';
@@ -90,17 +94,28 @@ async function loadNumbers(){
  const purchases=(purchasesData.purchases||[]).filter(x=>x.status!=='archived');
  const orgName=id=>{const o=organizations.find(x=>x.id===id);return o?.display_name||o?.legal_name||o?.name||id||'—'};
  msg.textContent=accounts.length+' assigned lab account records • '+purchases.length+' house lab account purchase records';
- container.innerHTML='<div class="lab-panel"><div class="lab-detail-header"><div><h2>Customer laboratory accounts</h2><p class="lab-muted">Assigned lab account numbers and customers who purchased a house lab account. A purchase is not an active assignment until it has been provisioned.</p></div><div class="lab-row-actions">'+actionLink('lab-account-intakes.html','Customer intakes')+actionLink(assignUrl(''),'Assign lab account','lab-primary')+'</div></div><div class="lab-toolbar"><label class="lab-search-label">Search customers and lab account records<input id="labSearch" type="search" placeholder="Customer, laboratory, account number, email or order"></label><label class="lab-status-label">Record type<select id="labType"><option value="">All records</option><option value="assigned">Assigned accounts</option><option value="purchase">House account purchases</option></select></label></div><div class="lab-table-scroll"><table class="lab-table"><thead><tr><th>Customer / C/TPA</th><th>Type</th><th>Laboratory</th><th>Account number / Order</th><th>Primary</th><th>Status</th><th>Actions</th></tr></thead><tbody id="labRows"></tbody></table></div></div>';
+ container.innerHTML='<div class="lab-panel"><div class="lab-detail-header"><div><h2>Customer laboratory accounts</h2><p class="lab-muted">Assigned lab account numbers and customers who purchased a house lab account. A purchase is not an active assignment until it has been provisioned.</p></div><div class="lab-row-actions">'+actionLink('lab-account-intakes.html','Customer intakes')+actionLink(assignUrl(''),'Assign lab account','lab-primary')+'</div></div><div class="lab-toolbar"><label class="lab-search-label">Search customers and lab account records<input id="labSearch" type="search" placeholder="Customer, laboratory, account number, email or order"></label><label class="lab-status-label">Record type<select id="labType"><option value="">All records</option><option value="assigned">Assigned accounts</option><option value="purchase">House account purchases</option></select></label><label class="lab-status-label">Account status<select id="labActivation"><option value="">All statuses</option><option value="pending">Pending</option><option value="active">Active</option></select></label></div><div class="lab-table-scroll"><table class="lab-table"><thead><tr><th>Customer / C/TPA</th><th>Type</th><th>Laboratory</th><th>Account number / Order</th><th>Primary</th><th>Status</th><th>Actions</th></tr></thead><tbody id="labRows"></tbody></table></div></div>';
  const rows=[
  ...accounts.map(x=>({type:'assigned',name:orgName(x.organization_id),lab:x.lab_name||x.laboratory_name||'—',code:x.account_code||'—',primary:x.is_primary?'Yes':'No',status:x.status||'—',href:assignUrl(x.id),action:'Edit account'})),
- ...purchases.map(x=>({type:'purchase',name:buyerName(x),email:x.customer_email||'',lab:'Pending assignment',code:x.order_number||'—',primary:'—',status:x.status||'Pending',href:detailUrl(x.customer_email||'','purchase',x.id,''),action:'Manage purchase'}))
+ ...purchases.map(x=>({type:'purchase',name:buyerName(x),email:x.customer_email||'',lab:'Pending assignment',code:x.order_number||'—',primary:'—',status:x.account_status||'pending',workflow_status:x.status||'pending',href:statusUrl(x.id),action:'Manage status'}))
  ];
  const draw=()=>{const q=norm(container.querySelector('#labSearch').value),type=container.querySelector('#labType').value;
-  const shown=rows.filter(x=>(!type||x.type===type)&&(!q||[x.name,x.email,x.lab,x.code,x.status,x.type].some(v=>norm(v).includes(q))));
+  const activation=container.querySelector('#labActivation').value;const shown=rows.filter(x=>(!type||x.type===type)&&(!activation||norm(x.status)===activation)&&(!q||[x.name,x.email,x.lab,x.code,x.status,x.type].some(v=>norm(v).includes(q))));
   container.querySelector('#labRows').innerHTML=shown.map(x=>'<tr><td>'+actionLink(x.href,x.name,'lab-customer-link')+(x.email?'<div class="lab-muted">'+E(x.email)+'</div>':'')+'</td><td><span class="lab-pill">'+(x.type==='purchase'?'House account purchase':'Assigned lab account')+'</span></td><td>'+E(x.lab)+'</td><td>'+E(x.code)+'</td><td>'+E(x.primary)+'</td><td>'+E(x.status)+'</td><td>'+actionLink(x.href,x.action,'lab-primary')+'</td></tr>').join('')||'<tr><td colspan="7" class="lab-empty">No records match this search.</td></tr>';
  };
  container.querySelector('#labSearch').addEventListener('input',draw);
- container.querySelector('#labType').addEventListener('change',draw);draw();
+ container.querySelector('#labType').addEventListener('change',draw);container.querySelector('#labActivation').addEventListener('change',draw);draw();
+}
+async function loadStatus(){
+ const id=new URLSearchParams(location.search).get('id')||'';
+ if(!safeId(id)){msg.textContent='Valid purchase ID required';container.innerHTML=actionLink('lab-account-numbers.html','Back to Lab Account Numbers');return}
+ const data=await call('enterprise-forms-management',{action:'get_lab_purchase',id});
+ const p=data.purchase;if(!p){msg.textContent='Purchase not found';return}
+ root.querySelector('h1').textContent='Manage House Lab Account';
+ msg.textContent='Order '+(p.order_number||'—')+' • Customer '+(p.customer_email||'—');
+ const current=String(p.account_status||'pending').toLowerCase();
+ container.innerHTML='<div class="lab-detail-nav">'+actionLink('lab-account-numbers.html','← Lab Account Numbers')+actionLink(detailUrl(p.customer_email||'','','',''),'Customer intake')+'</div><div class="lab-panel"><h2>Account activation</h2><p class="lab-muted">Set this house lab account to Pending or Active. This does not change purchase payment status, order status, or intake workflow.</p><div class="lab-detail"><div class="lab-detail-field"><span>Customer email</span><strong>'+E(p.customer_email||'—')+'</strong></div><div class="lab-detail-field"><span>Order</span><strong>'+E(p.order_number||'—')+'</strong></div><div class="lab-detail-field"><span>Intake workflow</span><strong>'+E(p.status||'—')+'</strong></div></div><form id="statusForm" class="lab-edit-grid"><label>Account status<select name="account_status" required><option value="pending" '+(current==='pending'?'selected':'')+'>Pending</option><option value="active" '+(current==='active'?'selected':'')+'>Active</option></select></label><div class="lab-form-actions"><button type="submit" class="lab-primary">Save status</button>'+actionLink('lab-account-numbers.html','Cancel')+'</div></form><p class="lab-notice" role="status" id="saveStatus"></p></div>';
+ container.querySelector('#statusForm').addEventListener('submit',async event=>{event.preventDefault();const button=event.target.querySelector('button[type="submit"]');button.disabled=true;try{await call('enterprise-forms-management',{action:'set_lab_account_status',id,account_status:new FormData(event.target).get('account_status')});location.href='lab-account-numbers.html'}catch(error){container.querySelector('#saveStatus').textContent=error.message;button.disabled=false}});
 }
 async function loadAssignment(){
  const data=await call('lab-account-management',{action:'list'});
@@ -115,5 +130,5 @@ async function loadAssignment(){
  container.innerHTML='<div class="lab-detail-nav">'+actionLink('lab-account-numbers.html','← Lab Account Numbers')+actionLink('lab-account-intakes.html','Customer Intakes')+'</div><div class="lab-panel"><h2>'+(record?'Edit laboratory assignment':'New laboratory assignment')+'</h2><form id="assignmentForm" class="lab-edit-grid"><label>C/TPA<select name="ctpa_id" required '+(record?'disabled':'')+'><option value="">Select C/TPA</option>'+opts+'</select></label><label>Laboratory<input name="lab_name" required maxlength="180" value="'+E(record?.lab_name||record?.laboratory_name||'')+'"></label><label>Lab account number<input name="account_code" required maxlength="120" value="'+E(record?.account_code||'')+'"></label><label>Status<select name="status"><option value="active" '+(record?.status!=='inactive'?'selected':'')+'>Active</option><option value="inactive" '+(record?.status==='inactive'?'selected':'')+'>Inactive</option></select></label><label>Primary account<select name="is_primary"><option value="false">No</option><option value="true" '+(record?.is_primary?'selected':'')+'>Yes</option></select></label><label>Notes<textarea name="notes" rows="3" maxlength="2000">'+E(record?.notes||'')+'</textarea></label><div class="lab-form-actions"><button class="lab-primary" type="submit">Save assignment</button>'+actionLink('lab-account-numbers.html','Cancel')+'</div></form><p class="lab-notice" id="saveStatus" role="status"></p></div>';
  container.querySelector('#assignmentForm').addEventListener('submit',async event=>{event.preventDefault();const b=Object.fromEntries(new FormData(event.target).entries());const button=event.target.querySelector('button[type="submit"]');button.disabled=true;try{await call('lab-account-management',{action:'save',id:record?.id||null,...b,ctpa_id:record?.ctpa_id||b.ctpa_id,is_primary:b.is_primary==='true'});location.href='lab-account-numbers.html'}catch(err){container.querySelector('#saveStatus').textContent=err.message;button.disabled=false}});
 }
-try{if(isNumbers)await loadNumbers();else if(isAssignment)await loadAssignment();else if(isDetail)await loadDetail();else await loadIntakes()}catch(err){msg.textContent=err.message}
+try{if(isNumbers)await loadNumbers();else if(isAssignment)await loadAssignment();else if(isStatus)await loadStatus();else if(isDetail)await loadDetail();else await loadIntakes()}catch(err){msg.textContent=err.message}
 })();
