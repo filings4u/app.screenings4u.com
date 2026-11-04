@@ -166,6 +166,9 @@ async function loadAssignment(){
  }
  container.querySelector('#directorySearch').addEventListener('input',renderDirectory);
  renderDirectory();
+ const setupButton=document.createElement('button');setupButton.type='button';setupButton.className='lab-action';setupButton.textContent='Send setup-ready email';
+ setupButton.onclick=async()=>{if(!ctpa.value){message.textContent='Select a C/TPA first.';return;}setupButton.disabled=true;try{const result=await call('lab-account-management',{action:'notify_setup',ctpa_id:ctpa.value});message.textContent='Setup email: '+(result.notification_status||'unknown');}catch(e){message.textContent=e.message;}finally{setupButton.disabled=false}};
+ container.querySelector('#saveNumbers').parentElement.appendChild(setupButton);
  container.querySelector('#addNumber').onclick=()=>addRow();
  ctpa.onchange=renderExisting;
  const readRow=box=>Object.fromEntries([...box.querySelectorAll('[name]')].map(e=>[e.name,e.value]));
