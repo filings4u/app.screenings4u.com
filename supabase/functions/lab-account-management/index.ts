@@ -58,6 +58,37 @@ Deno.serve(async(req:Request)=>{
     if(record.error)console.error("lab setup email audit",record.error.code);
     return status;
   };
+  if(action==="get_ctpa_profile"||action==="update_ctpa_profile"){
+    const ctpaId=val(body.ctpa_id),c=await ctpaLookup(ctpaId);
+    if(!c)return send({error:"C/TPA record not found"},404);
+    if(!c.organization_id)return send({error:"C/TPA organization is not linked"},409);
+    if(action==="update_ctpa_profile"){
+      const fields=["legal_name","dba_name","phone","website","ein","address_line1","address_line2","city","state_region","postal_code","support_email","support_phone"];
+      const payload:any={};
+      for(const key of fields){
+        if(!Object.prototype.hasOwnProperty.call(body,key))continue;
+        const value=val(body[key]);
+        if(value.length>250)return send({error:"Field "+key+" exceeds 250 characters"},400);
+        payload[key]=value||null;
+      }
+      if(!val(payload.legal_name||body.legal_name))return send({error:"Legal business name is required"},400);
+      const orgPatch:any={};const ctpaPatch:any={};
+      for(const [k,v] of Object.entries(payload)){if(k==="support_email"||k==="support_phone")ctpaPatch[k]=v;else orgPatch[k]=v;}
+      if(Object.keys(orgPatch).length){
+        const updated=await db.from("organizations").update({...orgPatch,updated_at:new Date().toISOString(),last_management_update_at:new Date().toISOString(),profile_source:"management"}).eq("id",c.organization_id).select("id").maybeSingle();
+        if(updated.error)throw updated.error;if(!updated.data)return send({error:"Could not update the organization"},409);
+      }
+      if(Object.keys(ctpaPatch).length){const updated=await db.from("ctpas").update({...ctpaPatch,updated_at:new Date().toISOString()}).eq("id",c.id).select("id").maybeSingle();if(updated.error)throw updated.error;}
+    }
+    const [org,ctpa,accts,purchases]=await Promise.all([
+      db.from("organizations").select("id,legal_name,dba_name,primary_email,phone,website,ein,address_line1,address_line2,city,state_region,postal_code,status,metadata").eq("id",c.organization_id).maybeSingle(),
+      db.from("ctpas").select("id,company_code,status,support_email,support_phone,organization_id").eq("id",c.id).maybeSingle(),
+      db.from("ctpa_lab_accounts").select("id,lab_name,account_code,status,is_primary,config").eq("ctpa_id",c.id).order("created_at",{ascending:true}),
+      db.from("lab_account_intakes").select("id,order_number,status,account_status,service_sku,created_at").eq("customer_email",(await db.from("organizations").select("primary_email").eq("id",c.organization_id).single()).data?.primary_email||"__none__").order("created_at",{ascending:false})
+    ]);
+    if(org.error||ctpa.error||accts.error||purchases.error)throw org.error||ctpa.error||accts.error||purchases.error;
+    return send({ok:true,organization:org.data,ctpa:ctpa.data,accounts:accts.data||[],purchases:purchases.data||[]});
+  }
   if(action==="list"){
     const [ct,ac,org]=await Promise.all([
       db.from("ctpas").select("id,tenant_id,organization_id,status").order("created_at",{ascending:false}).limit(2000),
