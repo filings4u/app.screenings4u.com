@@ -88,71 +88,66 @@ async function suppliesPage(){
 }
 async function trackingPage(){
  await loadCore({logistics:true,ctpa:true});
- const companies=purchasedCompanies();
- const companyEmail=p=>norm(p?.customer_email);
- const ordersFor=p=>purchases.filter(x=>companyEmail(x)===companyEmail(p));
- const recordsFor=p=>shipments.filter(x=>ordersFor(p).some(o=>o.id===x.intake_id));
- const selectedPurchase=purchases.find(x=>x.id===params.get('intake_id'));
- const selected=selectedPurchase||purchases.find(x=>ctpaFor(x)?.id===params.get('ctpa_id'));
- const chosen=selected?companies.find(x=>companyEmail(x)===companyEmail(selected)):null;
- const filtered=chosen?recordsFor(chosen):shipments;
- const editing=shipments.find(x=>x.id===params.get('shipment_id'));
- const creating=params.get('new')==='1';
- const target=editing? purchases.find(x=>x.id===editing.intake_id):selected;
- const destination=(p,extra='')=>url('tracking',p?.id||'')+(extra?(p?'&':'?')+extra:'');
+ note(shipments.length+' tracking record'+(shipments.length===1?'':'s'));
  const trackingRow=x=>{
   const customer=purchases.find(p=>p.id===x.intake_id);
-  return '<tr><td><strong>'+esc(x.tracking_number||'Not assigned')+'</strong><small>'+esc(x.items_description||'Package')+'</small></td><td><strong>'+esc(customer?nameFor(customer):'Unknown company')+'</strong><small>'+esc(customer?.customer_email||'')+'</small></td><td>'+esc(x.carrier||'—')+'</td><td>'+stat(x.status)+'</td><td>'+date(x.created_at)+'</td><td>'+(x.notification_sent_at?'Sent '+date(x.notification_sent_at):'Not sent')+'</td><td><div class="lab-row-actions">'+link(destination(customer,'shipment_id='+encodeURIComponent(x.id)),'Edit')+(x.tracking_url?link(x.tracking_url,'Track package'):'')+'</div></td></tr>';
+  return '<tr><td><strong>'+esc(x.tracking_number||'Not assigned')+'</strong><small>'+esc(x.items_description||'Package')+'</small></td><td><strong>'+esc(customer?nameFor(customer):'Unknown company')+'</strong><small>'+esc(customer?.customer_email||'')+'</small></td><td>'+esc(x.carrier||'—')+'</td><td>'+stat(x.status)+'</td><td>'+date(x.created_at)+'</td><td>'+(x.notification_sent_at?'Sent '+date(x.notification_sent_at):'Not sent')+'</td><td><div class="lab-row-actions">'+link('lab-tracking-number.html?shipment_id='+encodeURIComponent(x.id),'Edit')+(x.tracking_url?link(x.tracking_url,'Track package'):'')+'</div></td></tr>';
  };
- note('Tracking register · '+filtered.length+' package record'+(filtered.length===1?'':'s'));
- const filterHtml='<div class="lab-tracking-toolbar"><label>Company / C/TPA<select id="trackingCompany"><option value="">All companies</option>'+companies.map(x=>'<option value="'+esc(x.id)+'" '+(chosen&&companyEmail(x)===companyEmail(chosen)?'selected':'')+'>'+esc(nameFor(x))+' — '+esc(x.customer_email)+'</option>').join('')+'</select></label><label>Search tracking numbers<input id="trackingSearch" type="search" placeholder="Tracking #, company, carrier or package"></label><label>Status<select id="trackingFilter"><option value="">All statuses</option>'+['preparing','ordered','shipped','delivered','cancelled'].map(x=>'<option value="'+x+'">'+x.replaceAll('_',' ')+'</option>').join('')+'</select></label><div class="lab-tracking-create"><button id="trackingAdd" class="lab-primary" type="button">+ New Tracking Number</button></div></div>';
- content.innerHTML=section('Tracking Number Management',filterHtml+'<div class="lab-tracking-register" id="trackingRegister"></div><p class="lab-muted">Each C/TPA can have multiple independent package and tracking records. Select a company or search the register to find a specific package.</p>','Create, search and edit individual tracking records. Notifications are handled per shipment.');
- const picker=content.querySelector('#trackingCompany'),search=content.querySelector('#trackingSearch'),filter=content.querySelector('#trackingFilter'),register=content.querySelector('#trackingRegister');
- picker.onchange=()=>location.assign(destination(purchases.find(x=>x.id===picker.value)));
- const draw=()=>{const q=norm(search.value),status=norm(filter.value);
-  const rows=filtered.filter(x=>{const p=purchases.find(p=>p.id===x.intake_id);return (!status||norm(x.status)===status)&&(!q||[x.tracking_number,x.carrier,x.items_description,x.status,p?.customer_email,p?nameFor(p):''].some(v=>norm(v).includes(q)))});
-  register.innerHTML=table(['Tracking number / package','Company / C/TPA','Carrier','Status','Created','Notification','Actions'],rows.map(trackingRow),'No tracking records match the selected filters.');
+ content.innerHTML=section('Tracking Number Management',
+  '<div class="lab-tracking-toolbar lab-tracking-toolbar-simple"><label>Search tracking numbers<input id="trackingSearch" type="search" placeholder="Search tracking number, company, carrier or package"></label><div class="lab-tracking-create">'+link('lab-tracking-number.html','+ New Tracking Number','lab-primary')+'</div></div>'+
+  '<div class="lab-tracking-register" id="trackingRegister"></div>',
+  'Search and manage all tracking numbers.');
+ const search=content.querySelector('#trackingSearch'),register=content.querySelector('#trackingRegister');
+ const draw=()=>{const q=norm(search.value),rows=shipments.filter(x=>{const p=purchases.find(p=>p.id===x.intake_id);return !q||[x.tracking_number,x.carrier,x.items_description,x.status,p?.customer_email,p?nameFor(p):''].some(v=>norm(v).includes(q))});
+  register.innerHTML=table(['Tracking number / package','Company / C/TPA','Carrier','Status','Created','Notification','Actions'],rows.map(trackingRow),'No tracking numbers match your search.');
  };
- search.oninput=draw;filter.onchange=draw;draw();
- content.querySelector('#trackingAdd').onclick=()=>{
-  if(chosen){location.assign(destination(chosen,'new=1'));return;}
-  const sel=picker;
-  if(!sel.value){sel.focus();note('Select a company first, then choose New Tracking Number.',true);return}
-  location.assign(destination(purchases.find(x=>x.id===sel.value),'new=1'));
- };
- if(!editing&&!creating)return;
- const company=target&&purchases.find(x=>x.id===target.id);
- if(!company){note('Select a purchased company before creating a tracking number.',true);return}
- const numbers=recordsFor(company),defaultOrder=editing?.intake_id||target.id;
- const orderField='<label>House Lab Account purchase<select name="intake_id">'+ordersFor(company).map(x=>'<option value="'+esc(x.id)+'" '+(x.id===defaultOrder?'selected':'')+'>'+esc(x.order_number||x.id)+'</option>').join('')+'</select></label>';
- const form=section(editing?'Edit Tracking Number':'Add Tracking Number',
-  '<div class="lab-company-identity"><div><h3>'+esc(nameFor(company))+'</h3><p>'+esc(company.customer_email)+'</p></div><span class="lab-state">'+numbers.length+' package record(s)</span></div>'+
-  '<form id="trackingEntryForm" class="lab-edit-grid">'+orderField+
-  '<label>Carrier<select name="carrier_choice">'+['FedEx','UPS','USPS','DHL','OnTrac','Other'].map(x=>'<option value="'+x+'" '+(norm(editing?.carrier)===norm(x)?'selected':'')+'>'+x+'</option>').join('')+'</select></label>'+
-  '<label>Carrier name (if Other)<input name="other_carrier" maxlength="80" value="'+esc(editing?.carrier&&!['fedex','ups','usps','dhl','ontrac'].includes(norm(editing.carrier))?editing.carrier:'')+'"></label>'+
-  '<label>Tracking number<input required name="tracking_number" maxlength="160" value="'+esc(editing?.tracking_number||'')+'" placeholder="Enter carrier tracking number"></label>'+
-  '<label>Carrier tracking URL (HTTPS)<input name="tracking_url" type="url" maxlength="1000" value="'+esc(editing?.tracking_url||'')+'" placeholder="https://carrier.example/track/..."></label>'+
-  '<label>Package / contents<input name="items_description" maxlength="2000" value="'+esc(editing?.items_description||'')+'" placeholder="What is in this package?"></label>'+
-  '<label>Shipping status<select name="status">'+['preparing','ordered','shipped','delivered','cancelled'].map(x=>'<option value="'+x+'" '+(x===(editing?.status||'ordered')?'selected':'')+'>'+x.replaceAll('_',' ')+'</option>').join('')+'</select></label>'+
-  '<label>Internal tracking notes<textarea name="notes" rows="3" maxlength="2000">'+esc(editing?.notes||'')+'</textarea></label>'+
-  '<div class="lab-form-actions"><button type="submit" class="lab-primary">'+(editing?'Save Tracking Changes':'Create Tracking Number')+'</button>'+link(destination(company),'Cancel')+'</div></form>'+
-  '<p id="trackingNotice" role="status"></p><p class="lab-muted">An existing branded shipping email is triggered when a record is saved as Shipped and meets activation and tracking requirements. The customer portal reads shipment tracking records separately.</p>');
- content.innerHTML+=form;
- const editor=content.querySelector('#trackingEntryForm');
- editor.scrollIntoView({block:'nearest'});
- editor.onsubmit=async e=>{
-  e.preventDefault();const btn=editor.querySelector('[type=submit]'),v=Object.fromEntries(new FormData(editor).entries()),out=content.querySelector('#trackingNotice');
-  const carrier=v.carrier_choice==='Other'?v.other_carrier.trim():v.carrier_choice;
+ search.oninput=draw;draw();
+}
+async function trackingFormPage(){
+ await loadCore({logistics:true,ctpa:true});
+ const companies=purchasedCompanies(),editing=shipments.find(x=>x.id===params.get('shipment_id'));
+ const currentPurchase=editing?purchases.find(x=>x.id===editing.intake_id):purchases.find(x=>x.id===params.get('intake_id'));
+ const currentCompany=currentPurchase&&companies.find(x=>norm(x.customer_email)===norm(currentPurchase.customer_email));
+ const ordersFor=p=>purchases.filter(x=>norm(x.customer_email)===norm(p.customer_email));
+ const currentLabel=editing?'Edit Tracking Number':'New Tracking Number';
+ root.querySelector('.lab-module-head h1').textContent=currentLabel;
+ root.querySelector('.lab-module-head p').textContent='Select a purchased C/TPA and manage an individual shipment tracking number.';
+ note(editing?'Editing an existing tracking record.':'Create a new tracking record for any purchased C/TPA.');
+ if(params.get('shipment_id')&&!editing){note('Tracking record not found.',true);content.innerHTML=section('Tracking not found',link('lab-tracking.html','Back to tracking register'));return}
+ const companyOptions=companies.map(p=>'<option value="'+esc(p.id)+'" '+(currentCompany&&norm(p.customer_email)===norm(currentCompany.customer_email)?'selected':'')+'>'+esc(nameFor(p))+' — '+esc(p.customer_email)+'</option>').join('');
+ content.innerHTML='<div class="lab-detail-nav">'+link('lab-tracking.html','← All tracking numbers')+'</div>'+
+ section(currentLabel,
+ '<form id="trackingEntryForm" class="lab-edit-grid">'+
+ '<label>Company / C/TPA<select name="company" id="trackingCompany" required '+(editing?'disabled':'')+'><option value="">Select a company / C/TPA</option>'+companyOptions+'</select></label>'+
+ '<label>House Lab Account purchase<select name="intake_id" id="trackingPurchase" required><option value="">Select a company first</option></select></label>'+
+ '<label>Carrier<select name="carrier_choice">'+['FedEx','UPS','USPS','DHL','OnTrac','Other'].map(x=>'<option value="'+x+'" '+(norm(editing?.carrier)===norm(x)?'selected':'')+'>'+x+'</option>').join('')+'</select></label>'+
+ '<label>Carrier name (if Other)<input name="other_carrier" maxlength="80" value="'+esc(editing?.carrier&&!['fedex','ups','usps','dhl','ontrac'].includes(norm(editing.carrier))?editing.carrier:'')+'"></label>'+
+ '<label>Tracking number<input required name="tracking_number" maxlength="160" value="'+esc(editing?.tracking_number||'')+'" placeholder="Enter carrier tracking number"></label>'+
+ '<label>Tracking URL (HTTPS)<input name="tracking_url" type="url" maxlength="1000" value="'+esc(editing?.tracking_url||'')+'" placeholder="https://carrier.example/track/..."></label>'+
+ '<label>Package / contents<input name="items_description" maxlength="2000" value="'+esc(editing?.items_description||'')+'" placeholder="Package contents"></label>'+
+ '<label>Shipping status<select name="status">'+['preparing','ordered','shipped','delivered','cancelled'].map(x=>'<option value="'+x+'" '+(x===(editing?.status||'ordered')?'selected':'')+'>'+x.replaceAll('_',' ')+'</option>').join('')+'</select></label>'+
+ '<label>Internal tracking notes<textarea name="notes" rows="3" maxlength="2000">'+esc(editing?.notes||'')+'</textarea></label>'+
+ '<div class="lab-form-actions"><button type="submit" class="lab-primary">'+(editing?'Save Tracking Changes':'Create Tracking Number')+'</button>'+link('lab-tracking.html','Cancel')+'</div></form>'+
+ '<p id="trackingNotice" role="status"></p><p class="lab-muted">Each save creates or edits one independent tracking record. The existing branded notification workflow applies when a record is marked Shipped.</p>',
+ 'Add multiple tracking numbers to a C/TPA by creating a separate record for each package.');
+ const form=content.querySelector('#trackingEntryForm'),company=form.querySelector('#trackingCompany'),purchase=form.querySelector('#trackingPurchase'),out=content.querySelector('#trackingNotice');
+ function setOrders(){
+  const p=companies.find(x=>x.id===company.value),orders=p?ordersFor(p):[];
+  purchase.innerHTML='<option value="">Select a purchase</option>'+orders.map(x=>'<option value="'+esc(x.id)+'" '+(x.id===currentPurchase?.id?'selected':'')+'>'+esc(x.order_number||x.id)+'</option>').join('');
+  if(editing)purchase.disabled=true;
+ }
+ company.onchange=()=>{setOrders();out.textContent=''};setOrders();
+ form.onsubmit=async e=>{
+  e.preventDefault();
+  const btn=form.querySelector('[type=submit]'),v=Object.fromEntries(new FormData(form).entries()),carrier=v.carrier_choice==='Other'?String(v.other_carrier||'').trim():v.carrier_choice;
+  const intakeId=editing?.intake_id||v.intake_id;
+  if(!company.value||!intakeId){out.textContent='Select a company and a House Lab Account purchase.';return}
   if(!carrier){out.textContent='Enter a carrier name.';return}
-  if(v.status==='shipped'&&(!v.tracking_number.trim()||!v.tracking_url.trim())){out.textContent='Shipped packages require both a tracking number and HTTPS tracking URL.';return}
-  const existing=shipments.find(x=>x.id!==editing?.id&&norm(x.carrier)===norm(carrier)&&norm(x.tracking_number)===norm(v.tracking_number)&&x.intake_id===v.intake_id);
-  if(existing){out.textContent='This carrier and tracking number are already registered for the selected purchase. Edit the existing tracking record instead.';return}
-  busy(btn,true);out.textContent=editing?'Saving tracking changes…':'Creating tracking entry…';
-  try{
-   const r=await logistics({action:'save_shipment',intake_id:v.intake_id,id:editing?.id||null,carrier,tracking_number:v.tracking_number.trim(),tracking_url:v.tracking_url.trim(),items_description:v.items_description.trim(),status:v.status,notes:v.notes.trim()});
-   const msg='Tracking '+(editing?'updated':'created')+'. Email: '+(r.email_status||'not required')+'.';
-   location.assign(destination(company)); 
-  }catch(error){out.textContent=error.message;busy(btn,false)}
+  if(v.status==='shipped'&&(!v.tracking_number.trim()||!v.tracking_url.trim())){out.textContent='Shipped records require a tracking number and HTTPS URL.';return}
+  if(shipments.some(x=>x.id!==editing?.id&&x.intake_id===intakeId&&norm(x.carrier)===norm(carrier)&&norm(x.tracking_number)===norm(v.tracking_number))){out.textContent='This tracking number already exists for this carrier and purchase. Edit its record instead.';return}
+  busy(btn,true);out.textContent='Saving tracking number…';
+  try{await logistics({action:'save_shipment',intake_id:intakeId,id:editing?.id||null,carrier,tracking_number:v.tracking_number.trim(),tracking_url:v.tracking_url.trim(),items_description:v.items_description.trim(),status:v.status,notes:v.notes.trim()});location.assign('lab-tracking.html')}
+  catch(error){out.textContent=error.message;busy(btn,false)}
  };
 }
 async function numbersPage(){
@@ -204,5 +199,5 @@ async function onboardingPage(){
  content.querySelector('#saveReview').onclick=async e=>{busy(e.currentTarget,true);try{await forms({action:'update_submission',id:selected.id,status:content.querySelector('#reviewStatus').value});location.assign(url('onboarding',p.id))}catch(error){content.querySelector('#reviewNotice').textContent=error.message;busy(e.currentTarget,false)}};
  content.querySelector('#saveActivation').onclick=async e=>{busy(e.currentTarget,true);try{await forms({action:'set_lab_account_status',id:p.id,account_status:content.querySelector('#accountStatus').value});location.assign(url('onboarding',p.id))}catch(error){content.querySelector('#reviewNotice').textContent=error.message;busy(e.currentTarget,false)}};
 }
-try{if(page==='companies')await companies();else if(page==='supplies')await suppliesPage();else if(page==='tracking')await trackingPage();else if(page==='numbers')await numbersPage();else if(page==='onboarding')await onboardingPage();else throw Error('Unknown lab module page')}catch(error){note(error.message,true);content.innerHTML='<section class="lab-panel"><h2>Could not load lab management</h2><p>'+esc(error.message)+'</p><button type="button" class="lab-action" id="labRetry">Retry</button></section>';content.querySelector('#labRetry').onclick=()=>location.reload()}
+try{if(page==='companies')await companies();else if(page==='supplies')await suppliesPage();else if(page==='tracking')await trackingPage();else if(page==='tracking-form')await trackingFormPage();else if(page==='numbers')await numbersPage();else if(page==='onboarding')await onboardingPage();else throw Error('Unknown lab module page')}catch(error){note(error.message,true);content.innerHTML='<section class="lab-panel"><h2>Could not load lab management</h2><p>'+esc(error.message)+'</p><button type="button" class="lab-action" id="labRetry">Retry</button></section>';content.querySelector('#labRetry').onclick=()=>location.reload()}
 })();
