@@ -28,3 +28,31 @@
 .lab-ctpa-directory .lab-row-actions .lab-action{font-size:11px}
 @media(max-width:1020px){.lab-account-editor .lab-edit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:720px){.lab-account-editor{padding:13px}.lab-account-editor .lab-edit-grid{grid-template-columns:1fr}.lab-ctpa-directory .lab-detail-header{align-items:stretch}.lab-directory-search{width:100%}.lab-directory-table{min-width:720px}}
+
+
+/* Unified lab operations workspace */
+.lab-wrap{max-width:1450px!important;padding:24px 28px 72px!important}
+.lab-page-header{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:22px 28px;background:linear-gradient(115deg,#16345f,#24518a);border-radius:16px;color:#fff;margin-bottom:16px}
+.lab-page-header h1{color:#fff!important;margin:5px 0 4px!important;font-size:30px!important}
+.lab-eyebrow{display:block;font-size:10px;letter-spacing:.16em;font-weight:850;color:#bcd4f6}
+.lab-page-subtitle{font-size:13px;color:#e2ecfb;line-height:1.5;margin:0}
+.lab-header-home{display:inline-flex;align-items:center;padding:10px 14px;background:#fff;color:#1d477a!important;border-radius:8px;text-decoration:none;font-size:12px;font-weight:800;white-space:nowrap}
+.lab-section-nav{display:flex;gap:6px;padding:6px;background:#f1f5fa;border:1px solid #dae5f0;border-radius:12px;margin-bottom:20px;overflow-x:auto}
+.lab-section-tab{padding:11px 16px;border-radius:8px;color:#526984;font-weight:750;font-size:13px;text-decoration:none;white-space:nowrap}
+.lab-section-tab:hover{background:#e6edf7;color:#173f70}
+.lab-section-tab.current{background:#fff;color:#1a4d84;box-shadow:0 1px 5px #19375c18}
+.lab-assignment-existing{margin-top:14px}
+.lab-assignment-existing h3{font-size:13px;margin:0 0 10px;color:#203f68}
+.lab-existing-list{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.lab-existing-item{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border:1px solid #d6e3f1;border-radius:9px;background:#f8fbff;text-decoration:none;color:#254e7e!important;font-size:12px}
+.lab-existing-item span:last-child{color:#d15b08;font-weight:800}
+.lab-existing-item:hover{background:#edf5ff;border-color:#86b0da}
+.lab-wrap .lab-primary{background:#ed6b16!important;border-color:#ed6b16!important;color:#fff!important}
+.lab-wrap .lab-primary:hover{background:#d85a09!important}
+.lab-wrap .lab-panel{border-radius:13px;box-shadow:0 6px 20px #213f6110}
+.lab-wrap .lab-table th{background:#edf3fa;color:#445e7d}
+.lab-wrap .lab-table td{padding:16px 13px}
+.lab-wrap .lab-customer-link{font-weight:850;color:#17568d!important}
+.lab-wrap .lab-edit-grid label{font-weight:750}
+.lab-wrap .lab-notice:not(:empty){padding:10px 12px;border-radius:8px;background:#fff8ee;border:1px solid #f5dab9;color:#835012}
+@media(max-width:680px){.lab-wrap{padding:12px 12px 48px!important}.lab-page-header{padding:20px 18px;align-items:flex-start;flex-direction:column}.lab-page-header h1{font-size:25px!important}.lab-section-tab{padding:10px 11px}.lab-wrap .lab-panel{padding:16px}}
