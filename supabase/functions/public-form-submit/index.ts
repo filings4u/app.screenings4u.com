@@ -105,7 +105,23 @@ Deno.serve(async(req)=>{if(req.method==="OPTIONS")return new Response("ok",{head
  if(form.form_key==="lab_account_intake"&&labIntake){
    const lu=await db.from("lab_account_intakes").update({status:"submitted",intake_data:payload,submitted_at:now(),updated_at:now(),customer_user_id:customerUserId||labIntake.customer_user_id,customer_email:email||labIntake.customer_email}).eq("id",labIntake.id);if(lu.error)throw lu.error;
  }
- const isLabIntake=form.form_key==="lab_account_intake_standalone";
+ if(["lab_account_intake_standalone","lab_account_intake"].includes(form.form_key)&&email){
+   try{
+     const existing=await db.from("collector_network_submissions").select("id").ilike("email",email).neq("status","superseded").limit(1);
+     if(existing.error)throw existing.error;
+     if(!existing.data?.length){
+       const joined=await db.from("collector_network_submissions").insert({
+         full_name:[first,last].filter(Boolean).join(" ")||clean(payload.contact_name)||clean(payload.legal_business_name)||email,
+         email,phone:phone||null,company_name:clean(payload.legal_business_name||payload.business_name)||null,
+         status:"new",availability_status:"inactive",
+         internal_notes:"House Lab Account intake referral. Certification and collector credentials require verification before approval.",
+         application_details:{source:"house_lab_account_intake",intake_submission_id:id,certification_verified:false,referral_only:true}
+       });
+       if(joined.error)throw joined.error;
+     }
+   }catch(e){console.error("Lab intake collector referral failed",e instanceof Error?e.message:"unknown")}
+ }
+ const isLabIntake=["lab_account_intake_standalone","lab_account_intake"].includes(form.form_key);
  const emailEscape=(x:any)=>clean(x).replace(/[&<>"']/g,(c:string)=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]||c));
  const branded=(heading:string,intro:string,detail:string,buttonLabel:string,buttonUrl:string)=>'<div style="margin:0;padding:32px 15px;background:#f2f6fb;font-family:Arial,sans-serif;color:#183a61"><table role="presentation" style="width:100%;max-width:620px;margin:auto;border-collapse:separate;border-spacing:0;background:#fff;border:1px solid #dbe5ef;border-radius:14px"><tr><td style="padding:24px 30px;background:#12345b"><img src="https://elpbnytpciqnbexiaebp.supabase.co/storage/v1/object/public/enterprise_branding/workforce2.png" alt="Workforce | screenings4u" width="260" style="display:block;max-width:100%;height:auto"></td></tr><tr><td style="padding:30px"><div style="font-size:12px;font-weight:800;letter-spacing:1px;color:#ea6900">WORKFORCE | SCREENINGS4U</div><h1 style="font-size:25px;line-height:1.3;color:#12345b">'+heading+'</h1><p style="font-size:15px;line-height:1.6">'+intro+'</p><p style="font-size:14px;line-height:1.6">'+detail+'</p><p style="margin:25px 0"><a href="'+buttonUrl+'" style="display:inline-block;background:#f36b00;color:white;text-decoration:none;padding:13px 18px;border-radius:8px;font-size:14px;font-weight:bold">'+buttonLabel+'</a></p></td></tr><tr><td style="padding:16px 30px;background:#f7f9fc;color:#61758b;font-size:12px">Workforce | screenings4u · Lab Account</td></tr></table></div>';
  const reference=emailEscape(num),sender=emailEscape([first,last].filter(Boolean).join(" ")||"Customer"),business=emailEscape(payload.legal_business_name||"");
