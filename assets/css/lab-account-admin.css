@@ -105,3 +105,19 @@
 .lab-module .lab-form-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .lab-module [role=status]:not(.lab-module-feedback){font-size:12px;color:#865225;margin:12px 0}
 @media(max-width:760px){.lab-module{padding:14px!important}.lab-module-head{padding:20px}.lab-module-head h1{font-size:25px!important}.lab-module-tabs a{padding:10px 12px}.lab-stats{grid-template-columns:1fr}.lab-module .lab-panel{padding:16px}}
+
+/* Shipment tracking register — number-first management */
+.lab-tracking-toolbar{display:grid;grid-template-columns:minmax(230px,1.4fr) minmax(210px,1.2fr) minmax(140px,.7fr) auto;gap:12px;align-items:end;margin:12px 0 18px}
+.lab-tracking-toolbar label{display:flex;flex-direction:column;gap:7px;font-size:12px;font-weight:750;color:#4b6480;min-width:0}
+.lab-tracking-toolbar input,.lab-tracking-toolbar select{width:100%;min-height:43px;padding:10px 12px;border:1px solid #cedced;border-radius:8px;background:#fff;color:#17355d}
+.lab-tracking-create{display:flex;align-items:end;height:43px}
+.lab-tracking-create button{height:43px;white-space:nowrap;padding:9px 18px!important}
+.lab-tracking-register .lab-table{min-width:960px}
+.lab-tracking-register .lab-table tbody tr{transition:background .15s}
+.lab-tracking-register .lab-table td:first-child strong{font-size:13px;letter-spacing:.015em;color:#173f73}
+.lab-tracking-register .lab-row-actions{gap:6px;flex-wrap:nowrap}
+.lab-tracking-register .lab-row-actions a{white-space:nowrap}
+.lab-module .lab-panel:has(#trackingEntryForm){border:1px solid #c0d5ee;box-shadow:0 8px 22px #14376215}
+.lab-module #trackingEntryForm{margin-top:16px}
+@media(max-width:1120px){.lab-tracking-toolbar{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){.lab-tracking-toolbar{grid-template-columns:1fr}.lab-tracking-create{height:auto}.lab-tracking-create button{width:100%}}
