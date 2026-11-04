@@ -89,6 +89,25 @@ async function suppliesPage(){
 async function trackingPage(){
  await loadCore({logistics:true,ctpa:true});
  note(shipments.length+' tracking record'+(shipments.length===1?'':'s'));
+ // Show the actual email result from the preceding save after returning to the register.
+ try{
+  const raw=sessionStorage.getItem('s4u_lab_tracking_save_feedback');
+  if(raw){
+   sessionStorage.removeItem('s4u_lab_tracking_save_feedback');
+   const saved=JSON.parse(raw);
+   const feedback=root.querySelector('#labFeedback');
+   if(saved.email_status==='sent'){
+    feedback.textContent='Tracking '+saved.tracking_number+' saved. Branded tracking email sent to '+saved.customer_email+'.';
+    feedback.classList.add('lab-feedback-success');
+   }else if(saved.email_status==='failed'||saved.email_status==='email_not_configured'){
+    feedback.textContent='Tracking '+saved.tracking_number+' saved, but the customer email was not sent. Check notification delivery before proceeding.';
+    feedback.classList.add('error');
+   }else{
+    feedback.textContent='Tracking '+saved.tracking_number+' saved. No new email was required or confirmed for this update.';
+    feedback.classList.add('lab-feedback-success');
+   }
+  }
+ }catch(error){console.warn('Tracking save feedback unavailable',error)}
  const trackingRow=x=>{
   const customer=purchases.find(p=>p.id===x.intake_id);
   return '<tr><td><strong>'+esc(x.tracking_number||'Not assigned')+'</strong><small>'+esc(x.items_description||'Package')+'</small></td><td><strong>'+esc(customer?nameFor(customer):'Unknown company')+'</strong><small>'+esc(customer?.customer_email||'')+'</small></td><td>'+esc(x.carrier||'—')+'</td><td>'+stat(x.status)+'</td><td>'+date(x.created_at)+'</td><td>'+(x.notification_sent_at?'Sent '+date(x.notification_sent_at):'Not sent')+'</td><td><div class="lab-row-actions">'+link('lab-tracking-number.html?shipment_id='+encodeURIComponent(x.id),'Edit')+(x.tracking_url?link(x.tracking_url,'Track package'):'')+'</div></td></tr>';
@@ -146,7 +165,7 @@ async function trackingFormPage(){
   if(v.status==='shipped'&&(!v.tracking_number.trim()||!v.tracking_url.trim())){out.textContent='Shipped records require a tracking number and HTTPS URL.';return}
   if(shipments.some(x=>x.id!==editing?.id&&x.intake_id===intakeId&&norm(x.carrier)===norm(carrier)&&norm(x.tracking_number)===norm(v.tracking_number))){out.textContent='This tracking number already exists for this carrier and purchase. Edit its record instead.';return}
   busy(btn,true);out.textContent='Saving tracking number…';
-  try{await logistics({action:'save_shipment',intake_id:intakeId,id:editing?.id||null,carrier,tracking_number:v.tracking_number.trim(),tracking_url:v.tracking_url.trim(),items_description:v.items_description.trim(),status:v.status,notes:v.notes.trim()});location.assign('lab-tracking.html')}
+  try{const saved=await logistics({action:'save_shipment',intake_id:intakeId,id:editing?.id||null,carrier,tracking_number:v.tracking_number.trim(),tracking_url:v.tracking_url.trim(),items_description:v.items_description.trim(),status:v.status,notes:v.notes.trim()});const customer=companies.find(p=>p.id===company.value);sessionStorage.setItem('s4u_lab_tracking_save_feedback',JSON.stringify({tracking_number:v.tracking_number.trim(),customer_email:customer?.customer_email||'',email_status:saved.email_status||'not_required'}));location.assign('lab-tracking.html')}
   catch(error){out.textContent=error.message;busy(btn,false)}
  };
 }
