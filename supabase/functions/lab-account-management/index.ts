@@ -35,6 +35,29 @@ Deno.serve(async(req:Request)=>{
     return {ctpa_id:c.id,tenant_id:c.tenant_id,lab_name:lab,account_code:number,status:val(item.status)==="inactive"?"inactive":"active",is_primary:item.is_primary===true,notes,
       config:{...cfg,account_type:type,account_numbers:{...nums,[type]:number}},updated_at:new Date().toISOString()};
   };
+  const notifyAssigned=async(ctpaId:string,orgId:string|null)=>{
+    if(!orgId)return "missing_organization";
+    const org=await db.from("organizations").select("legal_name,primary_email").eq("id",orgId).maybeSingle();
+    if(org.error)throw org.error;
+    const to=val(org.data?.primary_email);
+    if(!to)return "missing_email";
+    const previous=await db.from("testing_email_events").select("id").eq("event_type","ctpa_lab_account_ready").eq("related_entity_id",ctpaId).eq("recipient_email",to).eq("status","sent").limit(1);
+    if(previous.error)throw previous.error;
+    if(previous.data?.length)return "already_sent";
+    const key=Deno.env.get("RESEND_API_KEY")||"";
+    const subject="Your Screenings4U laboratory accounts are ready";
+    const html='<div style="background:#f4f7fb;padding:28px;font-family:Arial,sans-serif;color:#17365f"><div style="max-width:620px;margin:auto;background:#fff;border-radius:14px;overflow:hidden;border:1px solid #dce5f0"><div style="padding:24px;background:#24467f"><img width="190" src="https://screenings4u.com/images/logo.webp" alt="Screenings4U"></div><div style="padding:26px"><h1>Your lab accounts are set up</h1><p>Hello '+val(org.data?.legal_name).replace(/[&<>"]/g,"")+', your laboratory account numbers have been assigned by our team.</p><p>Sign in to your authorized Screenings4U workspace to view laboratory account details, available supplies, and testing resources.</p><a href="https://portal.screenings4u.com/" style="display:inline-block;padding:14px 20px;border-radius:9px;background:#f36b00;color:white;text-decoration:none;font-weight:bold">Open your portal</a><p style="color:#64748b;font-size:12px">If you need help, contact support@screenings4u.com.</p></div></div></div>';
+    let status="failed",providerId=null,errorText="";
+    if(!key)errorText="RESEND_API_KEY not configured";
+    else try{
+      const response=await fetch("https://api.resend.com/emails",{method:"POST",headers:{"Authorization":"Bearer "+key,"Content-Type":"application/json"},body:JSON.stringify({from:Deno.env.get("SCREENINGS4U_FROM_EMAIL")||"screenings4u <notifications@screenings4u.com>",to:[to],subject,html})});
+      const data=await response.json().catch(()=>({}));
+      if(response.ok){status="sent";providerId=data.id||null;}else errorText=String(data.message||"Email provider error").slice(0,300);
+    }catch(e){errorText=e instanceof Error?e.message:"Email error"}
+    const record=await db.from("testing_email_events").insert({event_type:"ctpa_lab_account_ready",related_entity_type:"ctpa",related_entity_id:ctpaId,recipient_email:to,subject,status,provider:"resend",provider_message_id:providerId,error_message:errorText||null,sent_at:status==="sent"?new Date().toISOString():null,metadata:{source:"lab-account-management"}});
+    if(record.error)console.error("lab setup email audit",record.error.code);
+    return status;
+  };
   if(action==="list"){
     const [ct,ac,org]=await Promise.all([
       db.from("ctpas").select("id,tenant_id,organization_id,status").order("created_at",{ascending:false}).limit(2000),
@@ -47,6 +70,7 @@ Deno.serve(async(req:Request)=>{
   if(action==="save"||action==="save_many"){
     const ctpaId=val(body.ctpa_id),c=await ctpaLookup(ctpaId);
     if(!c)return send({error:"Choose a valid C/TPA."},400);
+    const before=await db.from("ctpa_lab_accounts").select("id",{count:"exact",head:true}).eq("ctpa_id",c.id);if(before.error)throw before.error;
     if(action==="save_many"){
       const items=body.accounts;
       if(!Array.isArray(items)||!items.length||items.length>100)return send({error:"Provide 1–100 account numbers per save. Additional batches are supported."},400);
@@ -55,7 +79,8 @@ Deno.serve(async(req:Request)=>{
       if(rows.some((x:any)=>x.is_primary)){const reset=await db.from("ctpa_lab_accounts").update({is_primary:false}).eq("ctpa_id",c.id);if(reset.error)throw reset.error;}
       const saved=await db.from("ctpa_lab_accounts").insert(rows).select("id");
       if(saved.error)throw saved.error;
-      return send({ok:true,count:saved.data?.length||0,ids:(saved.data||[]).map((x:any)=>x.id)});
+      const notice=(before.count||0)===0?await notifyAssigned(c.id,c.organization_id).catch(()=>"send_failed"):"not_first_assignment";
+      return send({ok:true,notice,count:saved.data?.length||0,ids:(saved.data||[]).map((x:any)=>x.id)});
     }
     const id=val(body.id);let existing:any=null;
     if(id){
@@ -71,7 +96,8 @@ Deno.serve(async(req:Request)=>{
       await db.from("ctpa_lab_accounts").update(row).eq("id",id).eq("ctpa_id",c.id).select("id").single():
       await db.from("ctpa_lab_accounts").insert({...row,created_by:user.id}).select("id").single();
     if(saved.error)throw saved.error;
-    return send({ok:true,id:saved.data.id});
+    const notice=(!id&&(before.count||0)===0)?await notifyAssigned(c.id,c.organization_id).catch(()=>"send_failed"):"not_first_assignment";
+    return send({ok:true,id:saved.data.id,notice});
   }
   return send({error:"Unsupported action"},400);
  }catch(e){console.error("lab-account-management",e);return send({error:"Lab account request could not be completed"},500)}
