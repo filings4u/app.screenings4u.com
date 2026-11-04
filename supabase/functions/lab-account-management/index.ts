@@ -92,7 +92,7 @@ Deno.serve(async(req:Request)=>{
   if(action==="list"){
     const [ct,ac,org]=await Promise.all([
       db.from("ctpas").select("id,tenant_id,organization_id,status").order("created_at",{ascending:false}).limit(2000),
-      db.from("ctpa_portal_lab_accounts").select("id,ctpa_id,tenant_id,organization_id,company_code,lab_name,laboratory_name,account_code,is_primary,status,notes,config,created_at,updated_at").order("created_at",{ascending:false}).limit(5000),
+      db.from("ctpa_lab_accounts").select("id,ctpa_id,tenant_id,lab_name,account_code,is_primary,status,notes,config,created_at,updated_at").order("created_at",{ascending:false}).limit(5000),
       db.from("organizations").select("id,legal_name,dba_name,primary_email,phone").limit(3000)
     ]);
     if(ct.error||ac.error||org.error)throw ct.error||ac.error||org.error;
@@ -118,6 +118,13 @@ Deno.serve(async(req:Request)=>{
       const items=body.accounts;
       if(!Array.isArray(items)||!items.length||items.length>100)return send({error:"Provide 1–100 account numbers per save. Additional batches are supported."},400);
       const rows=items.map((x:any)=>({...makeRow(x,c),created_by:user.id}));
+      const existingRows=await db.from("ctpa_lab_accounts").select("id,lab_name,account_code,config").eq("ctpa_id",c.id);
+      if(existingRows.error)throw existingRows.error;
+      const key=(x:any)=>val(x.lab_name).toLowerCase()+"|"+val(x.config?.account_type||"dot").toLowerCase();
+      const incomingKeys=rows.map(key);
+      if(new Set(incomingKeys).size!==incomingKeys.length)return send({error:"Each laboratory and account type may appear only once in this save. Edit the existing row instead of adding a duplicate."},409);
+      const duplicate=rows.find((row:any)=>(existingRows.data||[]).some((x:any)=>key(x)===key(row)));
+      if(duplicate)return send({error:"A "+duplicate.lab_name+" "+duplicate.config.account_type+" assignment already exists for this C/TPA. Open Lab Account Numbers and edit its existing record."},409);
       if(rows.filter((x:any)=>x.is_primary).length>1)return send({error:"Only one account can be marked primary per batch."},400);
       if(rows.some((x:any)=>x.is_primary)){const reset=await db.from("ctpa_lab_accounts").update({is_primary:false}).eq("ctpa_id",c.id);if(reset.error)throw reset.error;}
       const saved=await db.from("ctpa_lab_accounts").insert(rows).select("id");
