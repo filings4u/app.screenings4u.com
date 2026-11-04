@@ -218,7 +218,27 @@ Deno.serve(async(req)=>{
       const patch:any={status,updated_at:now()};
       if(status==="reviewing"){patch.reviewed_by=user.id;patch.reviewed_at=now()}
       if(status==="completed")patch.completed_at=now();
-      const q=await db.from("standalone_form_submissions").update(patch).eq("id",id).select("*").single();if(q.error)throw q.error;return J({submission:q.data});
+      const q=await db.from("standalone_form_submissions").update(patch).eq("id",id).select("*").single();
+      if(q.error)throw q.error;
+      let profileSync="not_applicable",profileSyncError=null;
+      if(status==="completed"&&["lab_account_intake","lab_account_intake_standalone"].includes(String(q.data.form_key))){
+        const email=clean(q.data.submitter_email);
+        if(email){
+          const lookup=await db.from("lab_account_intakes").select("id,order_id").ilike("customer_email",email).order("created_at",{ascending:false}).limit(50);
+          if(lookup.error)throw lookup.error;
+          if(!(lookup.data||[]).length)profileSync="awaiting_paid_purchase";
+          else{
+            let completed=0;
+            for(const purchase of lookup.data||[]){
+              const result=await db.rpc("s4u_finalize_house_lab_ctpa",{p_intake_id:purchase.id});
+              if(result.error){profileSyncError=result.error.message;console.error("House Lab CTPA profile synchronization",result.error.message)}
+              else completed++;
+            }
+            profileSync=completed?"completed":"requires_staff_review";
+          }
+        }
+      }
+      return J({submission:q.data,ctpa_profile_sync:profileSync,ctpa_profile_sync_error:profileSyncError});
     }
 
     return J({error:"Unsupported forms action."},400);
