@@ -3,7 +3,7 @@ const H={"Access-Control-Allow-Origin":"*","Access-Control-Allow-Headers":"autho
 const J=(d:any,s=200)=>new Response(JSON.stringify(d),{headers:H,status:s});
 const V=(x:any)=>String(x??"").trim(), UUID=/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i;
 const esc=(s:any)=>V(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]||c));
-const shell=(title:string,body:string)=>'<div style="background:#f2f6fb;padding:28px;font-family:Arial,sans-serif;color:#17365f"><div style="max-width:620px;margin:auto;border-radius:12px;overflow:hidden;background:white;border:1px solid #dce5f0"><div style="background:#24467f;padding:22px"><img src="https://screenings4u.com/images/logo.webp" width="180" alt="Screenings4U"></div><div style="padding:26px"><h1>'+esc(title)+'</h1>'+body+'<p style="margin-top:28px;color:#65758d">screenings4u · support@screenings4u.com</p></div></div></div>';
+const shell=(title:string,body:string)=>'<div style="background:#f2f6fb;padding:28px;font-family:Arial,sans-serif;color:#17365f"><div style="max-width:620px;margin:auto;border-radius:12px;overflow:hidden;background:white;border:1px solid #dce5f0"><div style="background:#24467f;padding:22px"><img src="https://elpbnytpciqnbexiaebp.supabase.co/storage/v1/object/public/enterprise_branding/workforce2.png" width="230" alt="Workforce | screenings4u"></div><div style="padding:26px"><h1>'+esc(title)+'</h1>'+body+'<p style="margin-top:28px;color:#65758d">Workforce | screenings4u · support@screenings4u.com</p></div></div></div>';
 Deno.serve(async req=>{
  if(req.method==="OPTIONS")return new Response(null,{headers:H});
  if(req.method!=="POST")return J({error:"POST required"},405);
@@ -82,7 +82,7 @@ Deno.serve(async req=>{
    if(res.error)throw res.error;
    let emailStatus="not_required";
    if(status==="shipped"&&!res.data.notification_sent_at){
-     const subject="Your Screenings4U lab supplies have shipped — "+p.order_number;
+     const subject="Workforce | screenings4u — Your laboratory supplies have shipped — "+p.order_number;
      const html=shell("Your lab supplies are on the way",'<p>Your House Lab Account supplies for order <strong>'+esc(p.order_number)+'</strong> have shipped.</p><p>Carrier: <strong>'+esc(carrier)+'</strong><br>Tracking number: <strong>'+esc(number)+'</strong></p><p><a href="'+esc(trackingURL)+'" style="display:inline-block;background:#f36b00;color:white;text-decoration:none;border-radius:8px;padding:14px 20px">Track your shipment</a></p><p>Your tracking details are also available in your Lab Account portal.</p>');
      const result=await notify("house_lab_shipment_tracking",p,subject,html,res.data.id).catch(() => ({status:"failed"}));
      emailStatus=result.status;
@@ -111,7 +111,7 @@ Deno.serve(async req=>{
    if(q.error)throw q.error;if(!q.data)return J({error:"Invoice not found"},404);
    if(q.data.status==="paid"||q.data.status==="void")return J({error:"Invoice cannot be sent in its current state"},409);
    if(q.data.sent_at)return J({ok:true,already_sent:true});
-   const subject=(p.service_sku==="lab-account-workflow-test-1"?"TEST ONLY — Sample invoice available — ":"New invoice available in your Screenings4U Lab Account portal — ")+q.data.invoice_number;
+   const subject=(p.service_sku==="lab-account-workflow-test-1"?"Workforce | screenings4u — TEST ONLY sample invoice — ":"Workforce | screenings4u — New invoice available — ")+q.data.invoice_number;
    const html=shell("New lab testing invoice",'<p>Your invoice <strong>'+esc(q.data.invoice_number)+'</strong> is ready to review in your secure portal.</p><p><strong>Amount:</strong> $'+Number(q.data.total||0).toFixed(2)+'</p><a href="'+esc("https://lab-account.screenings4u.com/invoice-view.html?id="+encodeURIComponent(invoiceId))+'" style="display:inline-block;background:#f36b00;color:#fff;padding:14px 20px;border-radius:8px;text-decoration:none;font-weight:bold">View invoice in your portal</a>');
    const response=await notify("house_lab_invoice_available",p,subject,html,invoiceId);
    if(response.status!=="sent")return J({error:"Invoice saved but email could not be sent: "+response.status},503);
