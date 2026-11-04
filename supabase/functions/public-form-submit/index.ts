@@ -75,6 +75,9 @@ Deno.serve(async(req)=>{if(req.method==="OPTIONS")return new Response("ok",{head
    }
    if(li.error)throw li.error;
    if(!li.data)return R({error:"No paid lab account purchase could be matched to this intake. Use the same email address used for the lab account order."},404);
+   const purchased=await db.from("orders").select("payment_status").eq("id",li.data.order_id).maybeSingle();
+   if(purchased.error)throw purchased.error;
+   if(purchased.data?.payment_status!=="paid")return R({error:"This Lab Account purchase has not been confirmed as paid."},403);
    labIntake=li.data;labToken=clean(li.data.token);
    relatedOrderId=li.data.order_id||null;customerUserId=li.data.customer_user_id||null;
    if(li.data.customer_email&&email&&low(li.data.customer_email)!==email)return R({error:"The email on this intake does not match the purchased lab account."},400);
