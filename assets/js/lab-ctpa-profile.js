@@ -6,7 +6,7 @@ const id=new URLSearchParams(location.search).get('ctpa_id')||new URLSearchParam
 const valid=/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(id);
 root.innerHTML='<div class="lab-wrap"><h1>Manage C/TPA Profile</h1><p id="profileNotice" role="status">Loading customer profile…</p><div class="lab-detail-nav"><a class="lab-action" href="lab-account-numbers.html">Lab Account Numbers</a><a class="lab-action" href="lab-account-intakes.html">Customer intakes</a><a class="lab-action" href="house-lab-fulfillment.html">Supplies &amp; invoices</a></div><div id="profileContent"></div></div>';
 const notice=root.querySelector('#profileNotice'),mount=root.querySelector('#profileContent');
-const invoke=async(body)=>{const {data,error}=await dotSupabase.functions.invoke('lab-account-management',{body});if(error||data?.error)throw Error(data?.error||error?.message||'Unable to manage C/TPA');return data;};
+const invoke=async(body)=>{const {data,error}=await dotSupabase.functions.invoke('lab-account-management',{body});if(error){const detail=await error.context?.json?.().catch(()=>null);throw Error(detail?.error||error.message||'Unable to manage C/TPA')}if(data?.error)throw Error(data.error);return data;};
 const fields=[['legal_name','Legal business name',true],['dba_name','DBA / trade name'],['phone','Business phone'],['website','Website'],['ein','EIN'],['address_line1','Street address'],['address_line2','Unit / suite'],['city','City'],['state_region','State'],['postal_code','ZIP code'],['support_email','Support email'],['support_phone','Support phone']];
 const assign='lab-account-assignment.html?ctpa_id='+encodeURIComponent(id);
 async function render(){
