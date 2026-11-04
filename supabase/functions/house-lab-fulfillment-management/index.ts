@@ -112,17 +112,7 @@ Deno.serve(async req=>{
    if(q.data.status==="paid"||q.data.status==="void")return J({error:"Invoice cannot be sent in its current state"},409);
    if(q.data.sent_at)return J({ok:true,already_sent:true});
    const subject=(p.service_sku==="lab-account-workflow-test-1"?"TEST ONLY — Sample invoice available — ":"New invoice available in your Screenings4U Lab Account portal — ")+q.data.invoice_number;
-   const invoiceUrl="https://lab-account.screenings4u.com/invoice-view.html?id="+encodeURIComponent(invoiceId);
-   const html=shell("New lab testing invoice",'<p>Your invoice <strong>'+esc(q.data.invoice_number)+'</strong> is ready to review in your secure portal.</p><p><strong>Amount:</strong> 
-   const response=await notify("house_lab_invoice_available",p,subject,html,invoiceId);
-   if(response.status!=="sent")return J({error:"Invoice saved but email could not be sent: "+response.status},503);
-   const update=await db.from("invoices").update({status:"sent",sent_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq("id",invoiceId).eq("order_id",p.order_id);
-   if(update.error)throw update.error;
-   return J({ok:true,sent:true});
- }
- return J({error:"Unsupported management action"},400);
- }catch(e){console.error("house lab fulfillment",e);return J({error:"House lab management operation failed"},500)}
-});+Number(q.data.total||0).toFixed(2)+'</p><a href="'+esc(invoiceUrl)+'" style="display:inline-block;background:#f36b00;color:#fff;padding:14px 20px;border-radius:8px;text-decoration:none;font-weight:bold">View your invoice</a>');
+   const html=shell("New lab testing invoice",'<p>Your invoice <strong>'+esc(q.data.invoice_number)+'</strong> is ready to review in your secure portal.</p><p><strong>Amount:</strong> $'+Number(q.data.total||0).toFixed(2)+'</p><a href="'+esc("https://lab-account.screenings4u.com/invoice-view.html?id="+encodeURIComponent(invoiceId))+'" style="display:inline-block;background:#f36b00;color:#fff;padding:14px 20px;border-radius:8px;text-decoration:none;font-weight:bold">View invoice in your portal</a>');
    const response=await notify("house_lab_invoice_available",p,subject,html,invoiceId);
    if(response.status!=="sent")return J({error:"Invoice saved but email could not be sent: "+response.status},503);
    const update=await db.from("invoices").update({status:"sent",sent_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq("id",invoiceId).eq("order_id",p.order_id);
