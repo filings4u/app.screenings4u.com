@@ -70,9 +70,12 @@ Deno.serve(async(req:Request)=>{
   if(action==="notify_setup"){
     const c=await ctpaLookup(val(body.ctpa_id));
     if(!c)return send({error:"Choose a valid C/TPA"},400);
-    const q=await db.from("ctpa_lab_accounts").select("id",{head:true,count:"exact"}).eq("ctpa_id",c.id);
+    const ctpaStatus=await db.from("ctpas").select("status").eq("id",c.id).maybeSingle();
+    if(ctpaStatus.error)throw ctpaStatus.error;
+    if(ctpaStatus.data?.status!=="active")return send({error:"Activate the C/TPA after intake review and account assignment before sending the ready notice."},409);
+    const q=await db.from("ctpa_lab_accounts").select("id",{head:true,count:"exact"}).eq("ctpa_id",c.id).eq("status","active");
     if(q.error)throw q.error;
-    if(!q.count)return send({error:"Assign at least one laboratory account number before sending setup notice"},409);
+    if(!q.count)return send({error:"Assign at least one active laboratory account number before sending setup notice"},409);
     const status=await notifyAssigned(c.id,c.organization_id);
     return send({ok:true,notification_status:status});
   }
@@ -88,7 +91,7 @@ Deno.serve(async(req:Request)=>{
       if(rows.some((x:any)=>x.is_primary)){const reset=await db.from("ctpa_lab_accounts").update({is_primary:false}).eq("ctpa_id",c.id);if(reset.error)throw reset.error;}
       const saved=await db.from("ctpa_lab_accounts").insert(rows).select("id");
       if(saved.error)throw saved.error;
-      const notice=(before.count||0)===0?await notifyAssigned(c.id,c.organization_id).catch(()=>"send_failed"):"not_first_assignment";
+      const notice="awaiting_activation_and_staff_setup_notice";
       return send({ok:true,notice,count:saved.data?.length||0,ids:(saved.data||[]).map((x:any)=>x.id)});
     }
     const id=val(body.id);let existing:any=null;
@@ -105,7 +108,7 @@ Deno.serve(async(req:Request)=>{
       await db.from("ctpa_lab_accounts").update(row).eq("id",id).eq("ctpa_id",c.id).select("id").single():
       await db.from("ctpa_lab_accounts").insert({...row,created_by:user.id}).select("id").single();
     if(saved.error)throw saved.error;
-    const notice=(!id&&(before.count||0)===0)?await notifyAssigned(c.id,c.organization_id).catch(()=>"send_failed"):"not_first_assignment";
+    const notice="awaiting_activation_and_staff_setup_notice";
     return send({ok:true,id:saved.data.id,notice});
   }
   return send({error:"Unsupported action"},400);
