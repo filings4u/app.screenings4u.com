@@ -56,6 +56,11 @@ Deno.serve(async req=>{
    ]);
    if(s.error||i.error)throw s.error||i.error;return J({purchase:p,shipments:s.data||[],invoices:i.data||[]});
  }
+ if(action==="save_shipment"&&p.service_sku==="lab-account-workflow-test-1")return J({error:"The $1 workflow test cannot create physical supply shipments. Use a production House Lab Account for real logistics."},409);
+ if(action==="create_invoice"&&p.service_sku==="lab-account-workflow-test-1"){
+   const amount=Number(b.unit_price);
+   if(amount!==0||!/^TEST\b/i.test(V(b.description)))return J({error:"The $1 workflow test allows only $0 TEST-marked invoice drafts, never real testing charges."},409);
+ }
  if(action==="save_shipment"){
    const id=V(b.id),status=V(b.status||"preparing"),carrier=V(b.carrier||"Other"),number=V(b.tracking_number),trackingURL=V(b.tracking_url);
    if(!["preparing","ordered","shipped","delivered","cancelled"].includes(status)||carrier.length>80||number.length>160||V(b.items_description).length>2000||V(b.notes).length>2000)return J({error:"Invalid shipment details"},400);
@@ -94,7 +99,7 @@ Deno.serve(async req=>{
    if(q.error)throw q.error;if(!q.data)return J({error:"Invoice not found"},404);
    if(q.data.status==="paid"||q.data.status==="void")return J({error:"Invoice cannot be sent in its current state"},409);
    if(q.data.sent_at)return J({ok:true,already_sent:true});
-   const subject="New invoice available in your Screenings4U Lab Account portal — "+q.data.invoice_number;
+   const subject=(p.service_sku==="lab-account-workflow-test-1"?"TEST ONLY — Sample invoice available — ":"New invoice available in your Screenings4U Lab Account portal — ")+q.data.invoice_number;
    const html=shell("New lab testing invoice",'<p>Your invoice <strong>'+esc(q.data.invoice_number)+'</strong> is ready to review in your secure portal.</p><p><strong>Amount:</strong> $'+Number(q.data.total||0).toFixed(2)+'</p><a href="https://lab-account.screenings4u.com/billing.html" style="display:inline-block;background:#f36b00;color:#fff;padding:14px 20px;border-radius:8px;text-decoration:none;font-weight:bold">View invoice in your portal</a>');
    const response=await notify("house_lab_invoice_available",p,subject,html,invoiceId);
    if(response.status!=="sent")return J({error:"Invoice saved but email could not be sent: "+response.status},503);
