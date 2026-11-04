@@ -121,3 +121,11 @@
 .lab-module #trackingEntryForm{margin-top:16px}
 @media(max-width:1120px){.lab-tracking-toolbar{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:640px){.lab-tracking-toolbar{grid-template-columns:1fr}.lab-tracking-create{height:auto}.lab-tracking-create button{width:100%}}
+
+/* Tracking register: one search and one dedicated add button */
+.lab-tracking-toolbar-simple{grid-template-columns:minmax(300px,1fr) auto;align-items:end}
+.lab-tracking-toolbar-simple .lab-tracking-create{height:auto}
+.lab-tracking-toolbar-simple .lab-tracking-create .lab-action{min-height:43px;display:inline-flex;align-items:center;justify-content:center;padding:10px 18px!important;white-space:nowrap}
+body[data-lab-page="tracking-form"] .lab-module #trackingEntryForm{margin-top:12px}
+body[data-lab-page="tracking-form"] .lab-module-tabs a[href="lab-tracking.html"]{background:#fff;color:#1a538a;box-shadow:0 1px 7px #1c365c1b}
+@media(max-width:640px){.lab-tracking-toolbar-simple{grid-template-columns:1fr}.lab-tracking-toolbar-simple .lab-tracking-create .lab-action{width:100%}}
