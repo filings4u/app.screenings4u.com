@@ -56,3 +56,14 @@
 .lab-wrap .lab-edit-grid label{font-weight:750}
 .lab-wrap .lab-notice:not(:empty){padding:10px 12px;border-radius:8px;background:#fff8ee;border:1px solid #f5dab9;color:#835012}
 @media(max-width:680px){.lab-wrap{padding:12px 12px 48px!important}.lab-page-header{padding:20px 18px;align-items:flex-start;flex-direction:column}.lab-page-header h1{font-size:25px!important}.lab-section-tab{padding:10px 11px}.lab-wrap .lab-panel{padding:16px}}
+
+.lab-workflow-overview{padding:20px 23px;border:1px solid #c9daed;border-radius:14px;background:#f7faff;margin-bottom:18px}
+.lab-workflow-title{font-weight:850;font-size:11px;letter-spacing:.10em;color:#315780;margin-bottom:13px}
+.lab-workflow-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.lab-workflow-grid>div{border:1px solid #dbe5f1;border-radius:10px;background:#fff;padding:14px;display:flex;flex-direction:column;gap:8px}
+.lab-workflow-grid strong{font-size:13px;color:#244975}
+.lab-workflow-grid span{font-size:12px;line-height:1.5;color:#647892}
+#labNumberEditor:not([hidden]){padding:20px 0 12px;border-top:1px solid #e5eaf2;margin-top:16px}
+#labNumberEditor[hidden]{display:none!important}
+@media(max-width:980px){.lab-workflow-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.lab-workflow-grid{grid-template-columns:1fr}}
