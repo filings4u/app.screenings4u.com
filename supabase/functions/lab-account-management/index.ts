@@ -121,7 +121,7 @@ Deno.serve(async(req:Request)=>{
       if(rows.filter((x:any)=>x.is_primary).length>1)return send({error:"Only one account can be marked primary per batch."},400);
       if(rows.some((x:any)=>x.is_primary)){const reset=await db.from("ctpa_lab_accounts").update({is_primary:false}).eq("ctpa_id",c.id);if(reset.error)throw reset.error;}
       const saved=await db.from("ctpa_lab_accounts").insert(rows).select("id");
-      if(saved.error)throw saved.error;
+      if(saved.error){if(saved.error.code==="23505")return send({error:"This laboratory account number is already assigned to this C/TPA. Open the existing record and click Edit rather than creating a duplicate."},409);throw saved.error;}
       const notice="awaiting_activation_and_staff_setup_notice";
       return send({ok:true,notice,count:saved.data?.length||0,ids:(saved.data||[]).map((x:any)=>x.id)});
     }
@@ -138,7 +138,7 @@ Deno.serve(async(req:Request)=>{
     const saved=id?
       await db.from("ctpa_lab_accounts").update(row).eq("id",id).eq("ctpa_id",c.id).select("id").single():
       await db.from("ctpa_lab_accounts").insert({...row,created_by:user.id}).select("id").single();
-    if(saved.error)throw saved.error;
+    if(saved.error){if(saved.error.code==="23505")return send({error:"This laboratory account number is already assigned to this C/TPA. Open the existing record and click Edit rather than creating a duplicate."},409);throw saved.error;}
     const notice="awaiting_activation_and_staff_setup_notice";
     return send({ok:true,id:saved.data.id,notice});
   }
