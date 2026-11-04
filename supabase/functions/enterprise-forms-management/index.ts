@@ -149,7 +149,19 @@ Deno.serve(async(req)=>{
       const q=await db.from("lab_account_intakes").select("id,order_number,account_status,status").eq("id",id).maybeSingle();
       if(q.error)throw q.error;
       if(!q.data)return J({error:"Lab account purchase not found."},404);
-      return J({ok:true,purchase:q.data});
+      let setup_notification_status="not_required";
+      if(accountStatus==="active"&&activated.data?.ctpa_id){
+        try{
+          const notifyResponse=await fetch(url+"/functions/v1/lab-account-management",{
+            method:"POST",headers:{"Authorization":"Bearer "+token,"apikey":anon,"Content-Type":"application/json"},
+            body:JSON.stringify({action:"notify_setup",ctpa_id:activated.data.ctpa_id})
+          });
+          const outcome=await notifyResponse.json().catch(()=>({}));
+          setup_notification_status=notifyResponse.ok?(outcome.notification_status||"unknown"):"failed";
+          if(!notifyResponse.ok)console.error("House Lab Account ready email",notifyResponse.status);
+        }catch(error){console.error("House Lab setup notification failed",error);setup_notification_status="failed"}
+      }
+      return J({ok:true,purchase:q.data,setup_notification_status});
     }
     if(["get_lab_purchase","edit_lab_purchase","archive_lab_purchase"].includes(action)){
       const purchaseId=clean(body.id);
