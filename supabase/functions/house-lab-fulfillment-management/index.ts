@@ -93,8 +93,13 @@ Deno.serve(async req=>{
  if(action==="create_invoice"){
    const description=V(b.description),quantity=Number(b.quantity),unitPrice=Number(b.unit_price);
    if(!description||description.length>1000||!Number.isInteger(quantity)||quantity<1||quantity>10000||!Number.isFinite(unitPrice)||unitPrice<0||unitPrice>1000000)return J({error:"Valid description, quantity, and unit price are required"},400);
+   const customerOrg=await db.from("organizations").select("id,legal_name").ilike("primary_email",p.customer_email).neq("status","archived").limit(2);
+   if(customerOrg.error)throw customerOrg.error;
+   if((customerOrg.data||[]).length!==1)return J({error:"Link the customer's unique C/TPA organization before creating an invoice."},409);
+   const customerProfile=p.customer_user_id?await db.from("user_profiles").select("id").eq("id",p.customer_user_id).maybeSingle():{data:null,error:null};
+   if(customerProfile.error)throw customerProfile.error;
    const total=Math.round(quantity*unitPrice*100)/100,invoiceId=crypto.randomUUID(),reference="HLA-"+new Date().toISOString().slice(0,10).replaceAll("-","")+"-"+invoiceId.slice(0,8).toUpperCase();
-   const invoice=await db.from("invoices").insert({id:invoiceId,order_id:p.order_id,invoice_number:reference,status:"draft",customer_user_id:p.customer_user_id,customer_email:p.customer_email,subtotal:total,total,amount_due:total,amount_paid:0,discount_total:0,tax_total:0,currency:"USD",customer_name:p.customer_email,created_by:user.id,metadata:{source:"house_lab_account_management",intake_id:p.id}}).select("id,invoice_number,status,total").single();
+   const invoice=await db.from("invoices").insert({id:invoiceId,order_id:p.order_id,invoice_number:reference,status:"draft",employer_id:customerOrg.data[0].id,customer_user_id:customerProfile.data?.id||null,customer_email:p.customer_email,subtotal:total,total,amount_due:total,amount_paid:0,discount_total:0,tax_total:0,currency:"USD",customer_name:customerOrg.data[0].legal_name||p.customer_email,created_by:user.id,metadata:{source:"house_lab_account_management",intake_id:p.id}}).select("id,invoice_number,status,total").single();
    if(invoice.error)throw invoice.error;
    const item=await db.from("invoice_items").insert({invoice_id:invoiceId,description,quantity,unit_price:unitPrice,line_total:total});
    if(item.error){await db.from("invoices").delete().eq("id",invoiceId);throw item.error;}
