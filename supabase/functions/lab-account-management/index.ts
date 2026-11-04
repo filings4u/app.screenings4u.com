@@ -93,7 +93,7 @@ Deno.serve(async(req:Request)=>{
     const [ct,ac,org]=await Promise.all([
       db.from("ctpas").select("id,tenant_id,organization_id,status").order("created_at",{ascending:false}).limit(2000),
       db.from("ctpa_portal_lab_accounts").select("id,ctpa_id,tenant_id,organization_id,company_code,lab_name,laboratory_name,account_code,is_primary,status,notes,config,created_at,updated_at").order("created_at",{ascending:false}).limit(5000),
-      db.from("organizations").select("id,legal_name,dba_name").limit(3000)
+      db.from("organizations").select("id,legal_name,dba_name,primary_email,phone").limit(3000)
     ]);
     if(ct.error||ac.error||org.error)throw ct.error||ac.error||org.error;
     return send({ctpas:ct.data||[],accounts:ac.data||[],organizations:org.data||[]});
