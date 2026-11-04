@@ -128,9 +128,26 @@ Deno.serve(async(req)=>{if(req.method==="OPTIONS")return new Response("ok",{head
  const adminHtml=branded("New Lab Account Intake","A new Lab Account intake has been submitted.",'<strong>Submission:</strong> '+reference+'<br><strong>Business:</strong> '+business+'<br><strong>Submitted by:</strong> '+sender+'<br><strong>Email:</strong> '+emailEscape(email),"Review Intake","https://enterprise.screenings4u.com/");
  const customerHtml=branded("Lab Account Intake Received","Thank you. We received your Lab Account intake and will review the information provided.",'<strong>Submission:</strong> '+reference+'<br><strong>Business:</strong> '+business+'<br>Keep this submission number for your records.',"Continue to Dashboard","https://lab-account.screenings4u.com/dashboard.html");
  const notices=[];
+ const auditLabNotice=async(kind:string,to:string,subject:string,outcome:any)=>{
+   if(!isLabIntake)return;
+   const row={event_type:kind,related_entity_type:"house_lab_intake",related_entity_id:insert.data.id,recipient_email:to,
+     subject,status:outcome.sent?"sent":"failed",provider:"resend",provider_message_id:outcome.id||null,
+     error_message:outcome.sent?null:clean(outcome.reason||"Dispatch failed").slice(0,300),
+     sent_at:outcome.sent?now():null,metadata:{form_key:form.form_key,source:"public_form_submit",order_id:relatedOrderId}};
+   const result=await db.from("testing_email_events").insert(row);
+   if(result.error)console.error("House Lab intake email audit failed",result.error.code);
+ };
  for(const to of form.notification_emails||[]){
-   const result=isLabIntake?await sendEmail(to,"Workforce | screenings4u — New Lab Account Intake "+num,adminHtml):await sendEmail(to,`New form submission: ${form.title}`,`<div style="font-family:Arial,sans-serif;color:#102a52"><h2>New ${form.title} submission</h2><p><strong>Submission:</strong> ${num}</p><p><strong>Submitted by:</strong> ${[first,last].filter(Boolean).join(" ")||"Anonymous"}</p><p><strong>Email:</strong> ${email||"—"}</p><p>Open Forms Management in screenings4u Enterprise to review the complete submission.</p></div>`);notices.push({to,...result});
+   const subject=isLabIntake?"Workforce | screenings4u — New Lab Account Intake "+num:`New form submission: ${form.title}`;
+   const result=isLabIntake?await sendEmail(to,subject,adminHtml):await sendEmail(to,subject,`<div style="font-family:Arial,sans-serif;color:#102a52"><h2>New ${form.title} submission</h2><p><strong>Submission:</strong> ${num}</p><p><strong>Submitted by:</strong> ${[first,last].filter(Boolean).join(" ")||"Anonymous"}</p><p><strong>Email:</strong> ${email||"—"}</p><p>Open Forms Management in screenings4u Enterprise to review the complete submission.</p></div>`);
+   notices.push({to,...result});
+   if(isLabIntake)await auditLabNotice("house_lab_admin_intake",to,subject,result);
  }
- if(isLabIntake&&email){const confirmation=await sendEmail(email,"Workforce | screenings4u — Lab Account Intake Confirmation "+num,customerHtml);notices.push({to:email,type:"customer_confirmation",...confirmation});}
+ if(isLabIntake&&email){
+   const subject="Workforce | screenings4u — Lab Account Intake Confirmation "+num;
+   const confirmation=await sendEmail(email,subject,customerHtml);
+   notices.push({to:email,type:"customer_confirmation",...confirmation});
+   await auditLabNotice("house_lab_customer_intake",email,subject,confirmation);
+ }
  return R({ok:true,submissionId:insert.data.id,submissionNumber:insert.data.submission_number,labIntakeId:labIntake?.id||null,orderId:relatedOrderId||null,successMessage:form.success_message,portalUrl:customerUserId?"https://customers.screenings4u.com/":null,requiresFileUpload:fields.some((f:any)=>f.type==="file"),notificationResults:notices});
 }catch(e){console.error("public-form-submit",e);return R({error:e instanceof Error?e.message:String(e)},500)}});
