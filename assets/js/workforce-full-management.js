@@ -57,11 +57,11 @@ async function workforceNetworkPanel(){
  const cards=section.querySelector('#wfConnectedCards');
  try{
   const data=await WorkforceManagementApi.read('workforce_portal_network');
-  const rows=[...(data.customer_portals||[]).map(p=>({name:p.name||p.portal_code,host:p.hostname,kind:p.portal_type||'Customer'})),...(data.agency_portals||[]).map(p=>({name:p.label||p.portal_code,host:p.domain,kind:p.portal_kind||'Agency'}))];
+  const rows=[...(data.customer_portals||[]).map(p=>({name:p.name||p.portal_code,host:p.hostname,kind:p.portal_type||'Customer',manage:'workforce-portal-control.html'})),...(data.agency_portals||[]).map(p=>({name:p.label||p.portal_code,host:p.domain,kind:p.portal_kind||'Agency',manage:'dot-portal-control.html'})),...(data.managed_surfaces||[]).map(p=>({name:p.display_name,host:p.hostname,kind:p.category||p.surface_kind,manage:p.management_path||'workforce-portal-control.html'}))];
   const unique=new Map();
   rows.forEach(p=>{const host=String(p.host||'').toLowerCase().trim();if(/^[a-z0-9.-]+$/.test(host))unique.set(host,p)});
   const filtered=[...unique.values()].sort((a,b)=>String(a.kind).localeCompare(String(b.kind))||String(a.name).localeCompare(String(b.name)));
-  cards.innerHTML=filtered.map(p=>'<article class="wf-connected-card" data-search="'+esc((p.name+' '+p.host+' '+p.kind).toLowerCase())+'"><div><small>'+esc(String(p.kind).replaceAll('_',' '))+'</small><strong>'+esc(p.name)+'</strong><span>'+esc(p.host)+'</span></div><a class="nd-btn" href="https://'+esc(p.host)+'" target="_blank" rel="noopener noreferrer">Open Portal</a></article>').join('')||'<div class="nd-empty">No active portal registrations found.</div>';
+  cards.innerHTML=filtered.map(p=>'<article class="wf-connected-card" data-search="'+esc((p.name+' '+p.host+' '+p.kind).toLowerCase())+'"><div><small>'+esc(String(p.kind).replaceAll('_',' '))+'</small><strong>'+esc(p.name)+'</strong><span>'+esc(p.host)+'</span></div><div class="wf-connected-card-actions"><a class="nd-btn" href="'+esc(p.manage)+'">Manage</a><a class="nd-btn" href="https://'+esc(p.host)+'" target="_blank" rel="noopener noreferrer">Open Portal</a></div></article>').join('')||'<div class="nd-empty">No active portal registrations found.</div>';
   const search=section.querySelector('#wfConnectedSearch');search.oninput=()=>{const query=search.value.trim().toLowerCase();section.querySelectorAll('.wf-connected-card').forEach(card=>card.hidden=!card.dataset.search.includes(query))};
  }catch(error){cards.textContent='Portal inventory unavailable: '+String(error.message||error)}
 }
