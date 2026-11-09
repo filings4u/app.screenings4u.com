@@ -47,3 +47,101 @@ body.workforce-management-mode .wf-nav-link.active span{color:#01122f!important}
 body.workforce-management-mode .wf-main{background:#f1f5fa!important;min-width:0}
 body.workforce-management-mode .wf-top{background:#fff;border-color:#d8e4ef}
 body.workforce-management-mode .wf-top>strong{color:#01122f}
+
+
+/* 2026-11-09 Workforce visual refresh — CSS only, scoped to the management workspace */
+body.workforce-management-mode{
+  --dot-navy:#01122f;--dot-blue:#17385d;--dot-blue-2:#24466a;
+  --dot-orange:#e8b000;--dot-canvas:#f1f5fa;--dot-text:#102b4c;
+  --dot-muted:#617891;--dot-line:#d7e3ef;
+  --wf-brand-navy:#01122f;--wf-brand-gold:#ffc400;
+}
+body.workforce-management-mode #managementApp .wf-side{
+  overflow-y:auto!important;overflow-x:hidden!important;
+  scrollbar-width:none!important;-ms-overflow-style:none!important;
+  overscroll-behavior:contain;
+}
+body.workforce-management-mode #managementApp .wf-side::-webkit-scrollbar,
+body.workforce-management-mode #managementApp .wf-nav::-webkit-scrollbar{
+  display:none!important;width:0!important;height:0!important;
+}
+body.workforce-management-mode #managementApp .wf-nav{
+  scrollbar-width:none!important;-ms-overflow-style:none!important;
+}
+body.workforce-management-mode #managementApp .wf-top{
+  height:68px!important;min-height:68px!important;padding-inline:clamp(14px,2vw,25px)!important;
+}
+body.workforce-management-mode #managementApp .wf-module-content{
+  width:min(1450px,calc(100% - 32px))!important;
+  max-width:1450px!important;
+  padding:15px 0 48px!important;
+  margin:0 auto!important;
+}
+body.workforce-management-mode #managementApp .wf-module-content:has(.wmd-dashboard){
+  padding-top:15px!important;
+}
+body.workforce-management-mode #managementApp .wf-module-content > :is(.nd-page,.dot-page,.wf-content,.wf-record-page,.wf-customer-editor){
+  padding-top:12px!important;margin-top:0!important;
+}
+body.workforce-management-mode #managementApp :is(.nd-page-head,.dot-page-head,.wf-management-head,.wf-record-head,.dot-content-head,.nd-management-head){
+  margin-top:0!important;padding-top:0!important;margin-bottom:14px!important;
+}
+body.workforce-management-mode #managementApp :is(.nd-page-head,.dot-page-head,.wf-management-head) h1{
+  color:#01122f!important;letter-spacing:-.025em;
+  margin-top:2px!important;margin-bottom:6px!important;
+}
+body.workforce-management-mode #managementApp :is(.nd-page-head,.dot-page-head,.wf-management-head) p{
+  margin-top:4px!important;margin-bottom:0!important;
+}
+body.workforce-management-mode #managementApp :is(.nd-eyebrow,.wf-kicker,.dot-eyebrow,.dot-page-kicker){
+  color:#987100!important;letter-spacing:.09em;
+}
+body.workforce-management-mode #managementApp :is(.nd-card,.dot-card,.wf-panel,.wf-card,.nd-panel){
+  border-color:#d6e2ee!important;border-radius:12px;
+}
+body.workforce-management-mode #managementApp :is(.nd-btn,.dot-btn,.wf-btn,.btn,.button),
+body.workforce-management-mode #managementApp button:not(.wf-nav-link):not(.wf-card){
+  border-radius:9px;
+}
+body.workforce-management-mode #managementApp :is(.nd-btn.primary,.dot-btn-primary,.dot-btn.primary,.wf-btn.primary,.btn.primary,.button.primary,.wmd-primary,[type="submit"].primary){
+  background:#ffc400!important;border-color:#ffc400!important;
+  color:#01122f!important;box-shadow:none!important;
+}
+body.workforce-management-mode #managementApp :is(.nd-btn.primary,.dot-btn-primary,.dot-btn.primary,.wf-btn.primary,.btn.primary,.button.primary,.wmd-primary,[type="submit"].primary):hover{
+  background:#ebae00!important;border-color:#ebae00!important;color:#01122f!important;
+}
+body.workforce-management-mode #managementApp :is(.nd-btn,.dot-btn,.wf-btn,.btn,.button):focus-visible,
+body.workforce-management-mode #managementApp :is(input,textarea,select,a):focus-visible{
+  outline:2px solid #cf9700!important;outline-offset:2px!important;
+}
+body.workforce-management-mode #managementApp :is(input:not([type="checkbox"]):not([type="radio"]),select,textarea){
+  border-color:#c8d8e9;border-radius:8px;color:#01122f;
+}
+body.workforce-management-mode #managementApp :is(table, .nd-table, .dot-table) thead{
+  background:#f5f8fc;color:#23415f;
+}
+body.workforce-management-mode :is(.dot-modal,.dot-modal-backdrop,.notification-modal,.modal-backdrop){
+  background-color:rgba(1,18,47,.58)!important;
+}
+body.workforce-management-mode :is(.dot-modal-card,.notification-modal-content,.modal-dialog,.modal-content){
+  border:1px solid #d8e3ef!important;border-radius:14px!important;
+  box-shadow:0 22px 65px rgba(1,18,47,.19)!important;
+}
+body.workforce-management-mode :is(.dot-modal-card,.notification-modal-content,.modal-dialog,.modal-content) :is(h2,h3){
+  color:#01122f!important;
+}
+body.workforce-management-mode :is(.dot-toast,.toast,.notification-toast){
+  background:#01122f!important;color:#fff!important;
+  border-left:4px solid #ffc400!important;border-radius:10px!important;
+}
+body.workforce-management-mode #managementApp .wf-profile button{
+  border-color:#c8d8e7;color:#01122f;background:#fff;
+}
+@media(max-width:900px){
+  body.workforce-management-mode #managementApp .wf-module-content{
+    width:calc(100% - 24px)!important;padding-top:12px!important;
+  }
+  body.workforce-management-mode #managementApp .wf-top{
+    padding-inline:12px!important;
+  }
+}
