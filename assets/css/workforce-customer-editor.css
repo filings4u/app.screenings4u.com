@@ -25,3 +25,96 @@
 
 /* Expanded C/TPA and Employer company profiles */
 .wf-customer-extra{display:grid;gap:22px;padding:26px 30px;border-top:1px solid #e0e8f1}.wf-customer-extra-section{border:1px solid #dce5f0;border-radius:10px;background:#fff;padding:22px}.wf-customer-extra-section h2{font-size:18px;color:#17365f;margin:0 0 20px}.wf-customer-extra-section .wf-customer-fields{padding:0;border:0;box-shadow:none}.wf-customer-extra-section select,.wf-customer-extra-section textarea,.wf-customer-extra-section input{width:100%;min-width:0;min-height:46px;box-sizing:border-box;border:1px solid #cddaea;border-radius:8px;background:white;padding:10px 13px;font:inherit;color:#17365f}.wf-customer-extra-section textarea{min-height:105px;resize:vertical}@media(max-width:700px){.wf-customer-extra{padding:18px 12px}.wf-customer-extra-section{padding:16px}.wf-customer-extra-section .wf-customer-fields{grid-template-columns:1fr!important}}
+
+/* Workforce employer/C/TPA customer editor visual rebrand — no workflow changes */
+body.workforce-management-mode .wf-customer-editor{
+ width:min(1450px,100%)!important;max-width:1450px!important;
+ margin:0 auto!important;padding:12px 0 44px!important;color:#01122f;
+}
+body.workforce-management-mode .wf-customer-header{
+ align-items:flex-end;gap:14px;margin:0 0 16px!important;
+}
+body.workforce-management-mode .wf-customer-back{
+ margin:0 0 12px!important;min-height:38px;padding:8px 13px;
+ background:#fff;border:1px solid #d0ddeb;border-radius:8px;
+ color:#163b61;font-size:12px;font-weight:750;
+}
+body.workforce-management-mode .wf-customer-back:hover{
+ border-color:#dfb22d;background:#fff9e5;
+}
+body.workforce-management-mode .wf-customer-eyebrow{
+ margin:0 0 5px!important;color:#947100!important;font-size:10px;
+}
+body.workforce-management-mode .wf-customer-header h1{
+ color:#01122f!important;font-size:clamp(25px,2.2vw,33px)!important;
+ margin:0 0 5px!important;line-height:1.18!important;
+}
+body.workforce-management-mode .wf-customer-header p{
+ font-size:12px!important;line-height:1.55!important;max-width:650px;
+}
+body.workforce-management-mode .wf-customer-header-actions{
+ gap:8px;flex-wrap:wrap;justify-content:flex-end;
+}
+body.workforce-management-mode .wf-customer-primary{
+ background:#ffc400!important;border-color:#ffc400!important;
+ color:#01122f!important;box-shadow:none!important;
+ border-radius:8px;min-height:40px;padding:9px 15px;
+}
+body.workforce-management-mode .wf-customer-primary:hover{
+ background:#ecb100!important;border-color:#ecb100!important;
+}
+body.workforce-management-mode .wf-customer-secondary{
+ color:#11385e!important;background:#fff!important;
+ border-color:#cad9e9!important;border-radius:8px;
+ min-height:40px;padding:9px 14px;
+}
+body.workforce-management-mode .wf-customer-secondary:hover{
+ background:#f6f9fd!important;border-color:#dfb22d!important;
+}
+body.workforce-management-mode .wf-customer-card-head{
+ padding:17px 22px!important;
+}
+body.workforce-management-mode .wf-customer-card-head h2{
+ color:#01122f!important;font-size:17px!important;
+}
+body.workforce-management-mode .wf-customer-fields{
+ padding:20px 22px!important;gap:15px 20px!important;
+}
+body.workforce-management-mode .wf-customer-field{
+ font-size:12px!important;gap:6px!important;color:#19385b!important;
+}
+body.workforce-management-mode .wf-customer-field input{
+ height:42px!important;min-height:42px!important;
+ border-color:#cbd9e8!important;color:#01122f!important;
+ font-weight:500!important;
+}
+body.workforce-management-mode .wf-customer-field input:focus{
+ border-color:#ba9200!important;box-shadow:0 0 0 3px #ffc40026!important;
+}
+body.workforce-management-mode .wf-customer-footer{
+ padding:13px 22px!important;min-height:62px!important;
+}
+body.workforce-management-mode .wf-customer-extra{
+ padding:16px 22px!important;gap:14px!important;
+}
+body.workforce-management-mode .wf-customer-extra-section{
+ padding:17px!important;
+}
+@media(max-width:900px){
+ body.workforce-management-mode .wf-customer-editor{
+  padding:10px 0 38px!important;
+ }
+ body.workforce-management-mode .wf-customer-header{
+  align-items:flex-start;flex-direction:column;
+ }
+ body.workforce-management-mode .wf-customer-header-actions{
+  width:100%;justify-content:flex-start;
+ }
+}
+@media(max-width:620px){
+ body.workforce-management-mode .wf-customer-fields{grid-template-columns:1fr}
+ body.workforce-management-mode .wf-customer-header-actions>*{flex:1 1 auto}
+ body.workforce-management-mode .wf-customer-card-head,
+ body.workforce-management-mode .wf-customer-fields,
+ body.workforce-management-mode .wf-customer-footer{padding:14px!important}
+}
