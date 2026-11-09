@@ -1,0 +1,68 @@
+/* Workforce Control Center. Scopes all dashboard styles, leaving other management modules unchanged. */
+body.workforce-management-mode{--wmd-navy:#01122f;--wmd-gold:#ffc400;--wmd-ink:#0b2444;--wmd-muted:#637993;--wmd-line:#d8e3ef;background:#f1f5fa}
+body.workforce-management-mode .wf-side{background:#01122f!important;color:#fff;border-right:0}
+body.workforce-management-mode .wf-brand{background:#01122f!important;border-color:rgba(255,255,255,.14);padding:20px 17px}
+body.workforce-management-mode .wf-brand img{width:190px!important;max-width:100%;max-height:58px;height:auto;object-fit:contain;object-position:left center;background:transparent!important;padding:0!important;border-radius:0!important}
+body.workforce-management-mode .wf-nav-section h2{color:#8aa7c8!important;font-size:10px}
+body.workforce-management-mode .wf-nav-link{color:#e4ecf8!important;font-size:12px;min-height:40px}
+body.workforce-management-mode .wf-nav-link strong{color:inherit!important}
+body.workforce-management-mode .wf-nav-link span{color:#ffd04d!important}
+body.workforce-management-mode .wf-nav-link:hover,body.workforce-management-mode .wf-nav-link:focus{background:#142e51!important;color:#fff!important}
+body.workforce-management-mode .wf-nav-link.active,body.workforce-management-mode .wf-nav-link[aria-current=page]{background:#ffc400!important;color:#01122f!important;border-radius:9px}
+body.workforce-management-mode .wf-nav-link.active span{color:#01122f!important}
+body.workforce-management-mode .wf-top{border-color:#d8e4ef;background:#fff}
+body.workforce-management-mode .wf-top>strong{color:#01122f}
+body.workforce-management-mode .wf-main{min-width:0;background:#f1f5fa}
+body.workforce-management-mode .wmd-root{width:min(1450px,calc(100% - 48px));max-width:1450px;margin-inline:auto;padding:28px 0 56px!important}
+.wmd-dashboard{display:grid;gap:22px;color:#01122f}
+.wmd-hero{position:relative;overflow:hidden;display:flex;align-items:center;min-height:235px;border-radius:17px;background:#01122f;padding:31px 38px;color:#fff;isolation:isolate}
+.wmd-hero:before{content:"";position:absolute;right:-135px;top:-160px;width:570px;height:490px;border-radius:50%;border:52px solid rgba(255,196,0,.12);z-index:-1;transform:rotate(-25deg)}
+.wmd-hero:after{content:"";position:absolute;right:180px;bottom:-170px;width:260px;height:260px;border-radius:35px;transform:rotate(36deg);border:26px solid rgba(255,255,255,.055);z-index:-1}
+.wmd-hero-content{max-width:720px;position:relative;z-index:1}
+.wmd-eyebrow,.wmd-overline{display:block;font-size:10px;letter-spacing:.14em;font-weight:850;color:#c18e00;text-transform:uppercase}
+.wmd-eyebrow{color:#ffc400}
+.wmd-hero h1{font-size:clamp(27px,3vw,40px);line-height:1.12;letter-spacing:-.04em;font-weight:850;margin:13px 0 11px;color:#fff}
+.wmd-hero p{font-size:13px;color:#d7e3f4;line-height:1.65;margin:0;max-width:610px}
+.wmd-hero-buttons{display:flex;align-items:center;gap:11px;flex-wrap:wrap;margin-top:22px}
+.wmd-hero-buttons a{min-height:42px;display:inline-flex;align-items:center;justify-content:center;gap:20px;padding:10px 16px;border-radius:8px;font-size:12px;font-weight:800;text-decoration:none}
+.wmd-primary{background:#ffc400;color:#01122f}
+.wmd-primary:hover{background:#ffdb61}
+.wmd-outline{color:#fff;border:1px solid #8297b6}
+.wmd-outline:hover{background:#19375c}
+.wmd-hero-mark{position:absolute;right:70px;top:18px;opacity:.13;transform:skew(-9deg);font-size:200px;font-weight:900;line-height:1;color:#ffd34a;pointer-events:none}
+.wmd-section-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.wmd-section-head h2,.wmd-sidebar-panel h2{font-size:20px;letter-spacing:-.025em;line-height:1.25;margin:6px 0 0;color:#01122f;font-weight:800}
+.wmd-refresh{padding:10px 13px;border:1px solid #cad8e8;border-radius:8px;background:#fff;color:#183452;font-size:12px;font-weight:750;cursor:pointer}
+.wmd-refresh:disabled{opacity:.6;cursor:wait}
+.wmd-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.wmd-metric{min-width:0;padding:19px 19px 17px;background:#fff;border:1px solid #dbe5ee;border-radius:12px;text-decoration:none;display:flex;flex-direction:column;gap:9px;box-shadow:0 3px 15px rgba(0,29,67,.025);transition:border-color .16s,transform .16s}
+.wmd-metric:hover,.wmd-action:hover{border-color:#ecb500;transform:translateY(-2px)}
+.wmd-metric span{font-size:11px;font-weight:700;color:#5e718a}
+.wmd-metric strong{font-size:31px;font-weight:850;line-height:1;color:#01122f;letter-spacing:-.04em}
+.wmd-metric small{font-size:11px;color:#647990;line-height:1.45}
+.wmd-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.wmd-action{display:flex;align-items:center;gap:13px;min-width:0;min-height:111px;padding:18px;background:#fff;border:1px solid #dbe5ee;border-radius:12px;text-decoration:none;color:#01122f;transition:border-color .16s,transform .16s}
+.wmd-action-symbol{width:41px;height:41px;flex-shrink:0;border-radius:10px;background:#fff6d6;color:#865e00;display:grid;place-items:center;font-size:21px;font-weight:800}
+.wmd-action-content{min-width:0;flex:1}
+.wmd-action-content strong{display:block;font-size:13px;line-height:1.4;font-weight:800;color:#01122f}
+.wmd-action-content p{margin:6px 0 0;font-size:11px;line-height:1.55;color:#677c94}
+.wmd-action-arrow{align-self:center;font-size:17px;color:#647d99}
+.wmd-bottom{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(280px,1fr);gap:16px;align-items:start}
+.wmd-portal-panel,.wmd-sidebar-panel{border-radius:13px;border:1px solid #dbe5ee;background:#fff;padding:23px}
+.wmd-portal-panel .wmd-section-head{margin-bottom:13px}
+.wmd-text-link{font-size:12px;font-weight:750;color:#16446e;text-decoration:none}
+.wmd-portal-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid #edf1f5;color:#01122f;text-decoration:none}
+.wmd-portal-row>div{display:grid;gap:3px;flex:1}
+.wmd-portal-row strong{font-size:12px;font-weight:800}
+.wmd-portal-row small{font-size:11px;color:#738397;line-height:1.45}
+.wmd-portal-row>span:last-child{color:#647c93}
+.wmd-portal-row:hover strong{color:#ac8000}
+.wmd-portal-dot{height:10px;width:10px;border-radius:3px;background:#ffcb24;flex-shrink:0}
+.wmd-sidebar-panel p{color:#667d92;font-size:12px;line-height:1.65;margin:11px 0 16px}
+.wmd-shortcuts{display:grid;gap:7px}
+.wmd-shortcuts a{display:flex;align-items:center;justify-content:space-between;min-height:42px;padding:10px 12px;font-size:12px;font-weight:750;color:#183650;text-decoration:none;background:#f6f9fc;border:1px solid #e4eaf1;border-radius:8px}
+.wmd-shortcuts a:hover{background:#fff7db;border-color:#f0c954}
+.wmd-status{font-size:11px;color:#657990;margin:0 2px}
+@media(max-width:1200px){.wmd-actions{grid-template-columns:repeat(2,minmax(0,1fr))}.wmd-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.wmd-hero-mark{right:30px;opacity:.07}}
+@media(max-width:850px){.wmd-bottom{grid-template-columns:1fr}.wmd-hero{padding:27px}.wmd-hero-mark{display:none}}
+@media(max-width:600px){body.workforce-management-mode .wmd-root{width:calc(100% - 22px);padding-top:14px!important}.wmd-hero{padding:24px 19px;min-height:0}.wmd-hero h1{font-size:29px}.wmd-metrics,.wmd-actions{grid-template-columns:1fr}.wmd-metric{padding:17px}.wmd-action{min-height:88px;padding:15px}.wmd-section-head h2{font-size:18px}.wmd-portal-panel,.wmd-sidebar-panel{padding:17px}.wmd-hero-buttons a{width:100%;justify-content:space-between}}
