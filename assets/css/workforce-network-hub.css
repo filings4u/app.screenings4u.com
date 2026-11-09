@@ -28,3 +28,6 @@ body.workforce-management-mode .wf-connected-card span{font-size:11px;color:#667
 body.workforce-management-mode .wf-connected-card .nd-btn{font-size:11px!important;flex-shrink:0;min-height:36px;white-space:nowrap}
 @media(max-width:1250px){body.workforce-management-mode .wf-connected-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:730px){body.workforce-management-mode .wf-module-content{width:calc(100% - 20px)}body.workforce-management-mode .wf-connected-network{padding:16px}body.workforce-management-mode .wf-connected-cards{grid-template-columns:1fr}body.workforce-management-mode .wf-connected-card{flex-wrap:wrap}body.workforce-management-mode .wf-connected-card .nd-btn{width:100%}}
+body.workforce-management-mode .wf-connected-card-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end}
+body.workforce-management-mode .wf-connected-card-actions .nd-btn{min-height:34px;padding:8px 10px!important;font-size:11px!important}
+@media(max-width:730px){body.workforce-management-mode .wf-connected-card-actions{width:100%}body.workforce-management-mode .wf-connected-card-actions .nd-btn{flex:1 1 90px}}
