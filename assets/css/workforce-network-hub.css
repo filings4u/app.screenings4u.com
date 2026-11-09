@@ -31,3 +31,19 @@ body.workforce-management-mode .wf-connected-card .nd-btn{font-size:11px!importa
 body.workforce-management-mode .wf-connected-card-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:flex-end}
 body.workforce-management-mode .wf-connected-card-actions .nd-btn{min-height:34px;padding:8px 10px!important;font-size:11px!important}
 @media(max-width:730px){body.workforce-management-mode .wf-connected-card-actions{width:100%}body.workforce-management-mode .wf-connected-card-actions .nd-btn{flex:1 1 90px}}
+
+/* Unified Workforce branding across ALL workforce management routes, not only the landing page. */
+body.workforce-management-mode{background:#f1f5fa!important;color:#01122f}
+body.workforce-management-mode .wf-side{background:#01122f!important;color:#fff!important;border-right:0!important}
+body.workforce-management-mode .wf-brand{background:#01122f!important;border-color:rgba(255,255,255,.14)!important;padding:20px 17px!important}
+body.workforce-management-mode .wf-brand img{width:190px!important;max-width:100%!important;max-height:58px!important;height:auto!important;background:transparent!important;padding:0!important;border-radius:0!important;object-fit:contain}
+body.workforce-management-mode .wf-nav-section h2{color:#8aa7c8!important}
+body.workforce-management-mode .wf-nav-link{color:#e4ecf8!important;min-height:40px}
+body.workforce-management-mode .wf-nav-link strong{color:inherit!important}
+body.workforce-management-mode .wf-nav-link span{color:#ffd04d!important}
+body.workforce-management-mode .wf-nav-link:hover{background:#142e51!important;color:#fff!important}
+body.workforce-management-mode .wf-nav-link.active,body.workforce-management-mode .wf-nav-link[aria-current=page]{background:#ffc400!important;color:#01122f!important}
+body.workforce-management-mode .wf-nav-link.active span{color:#01122f!important}
+body.workforce-management-mode .wf-main{background:#f1f5fa!important;min-width:0}
+body.workforce-management-mode .wf-top{background:#fff;border-color:#d8e4ef}
+body.workforce-management-mode .wf-top>strong{color:#01122f}
