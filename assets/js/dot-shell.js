@@ -7,7 +7,7 @@ const sharedPages=new Set(['global-customer-360.html','task-manager.html','task-
 const requestedWorkspace=new URLSearchParams(location.search).get('workspace');
 const business=page.startsWith('workforce-')||(sharedPages.has(page)&&requestedWorkspace==='workforce')?'nondot':'dot';
 const workspaceHome=business==='nondot'?'workforce-dashboard.html':'dot-dashboard.html';
-if(business==='nondot'){document.body.classList.add('workforce-management-mode');const style=document.createElement('link');style.rel='stylesheet';style.href='assets/css/workforce-network-hub.css?v=20261109-1';style.dataset.workforceBrand='true';document.head.append(style)}
+if(business==='nondot'){document.body.classList.add('workforce-management-mode');const style=document.createElement('link');style.rel='stylesheet';style.href='assets/css/workforce-network-hub.css?v=20261109-2';style.dataset.workforceBrand='true';document.head.append(style)}
 const workspaceHref=href=>sharedPages.has(href)?href+(href.includes('?')?'&':'?')+'workspace='+(business==='nondot'?'workforce':'dot'):href;
 const groups=[
 ['Overview',[['Dashboard','/dashboard/','⌂'],['Customer 360','global-customer-360.html','◎'],['Task Manager','task-manager.html','✓'],['Task Automations','task-automations.html','◷']]],
