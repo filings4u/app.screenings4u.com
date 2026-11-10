@@ -1,0 +1,59 @@
+/* Dedicated Employer Management design; does not override other Workforce modules. */
+body.workforce-management-mode #dotPageMount.wmd-root:has(.wfe-dashboard){width:min(1450px,calc(100% - 42px));margin:0 auto;padding:22px 0 50px!important}
+.wfe-dashboard{display:grid;gap:18px!important;color:#01122f;font-size:13px}
+.wfe-dashboard *{box-sizing:border-box}
+.wfe-page-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px;padding:4px 0 20px;border-bottom:1px solid #d7e2ee}
+.wfe-heading-copy{min-width:0}
+.wfe-page-header .wmd-overline{font-size:10px!important;color:#a17a00!important;font-weight:850;letter-spacing:.11em!important}
+.wfe-page-header h1{color:#01122f;margin:6px 0 7px;font-size:clamp(25px,2.2vw,32px);font-weight:850;line-height:1.2;letter-spacing:-.035em}
+.wfe-page-header p{margin:0;color:#667d95;line-height:1.55;font-size:12px;max-width:740px}
+.wfe-page-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.wfe-btn{display:inline-flex;justify-content:center;align-items:center;min-height:41px;gap:7px;background:#fff;color:#01122f;border:1px solid #c7d7e9;border-radius:9px;padding:10px 16px;font:inherit;font-size:12px;font-weight:800;text-decoration:none;cursor:pointer;white-space:nowrap}
+.wfe-btn:hover{background:#f4f8fd}
+.wfe-btn:focus-visible,.wfe-dashboard a:focus-visible,.wfe-dashboard select:focus-visible,.wfe-dashboard input:focus-visible{outline:3px solid #f7bc00;outline-offset:2px}
+.wfe-btn-primary{background:#fdc102!important;border-color:#fdc102!important;color:#01122f!important}
+.wfe-btn-primary:hover{background:#f2b700!important}
+.wfe-metrics{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:12px!important}
+.wfe-metrics article{display:flex;flex-direction:row;align-items:center;gap:15px;min-width:0;padding:17px 18px;min-height:115px;border:1px solid #d9e4f0;border-radius:13px;background:#fff;box-shadow:0 5px 17px rgba(0,28,67,.035)}
+.wfe-metric-icon{display:flex;align-items:center;justify-content:center;flex:0 0 44px;width:44px;height:44px;border-radius:12px;background:#eaf2ff;color:#1356a0;font-size:22px;font-weight:750}
+.wfe-metrics article:nth-child(2) .wfe-metric-icon{background:#e7f8ed;color:#16834a}
+.wfe-metrics article:nth-child(3) .wfe-metric-icon{background:#fff4d5;color:#a67600}
+.wfe-metrics article:nth-child(4) .wfe-metric-icon{background:#eef0fc;color:#6556a2}
+.wfe-metrics article>div{display:flex;flex-direction:column;gap:3px;min-width:0}
+.wfe-metrics article>div>span{font-size:11px;color:#5e728b;font-weight:800}
+.wfe-metrics article strong{font-size:27px;letter-spacing:-.04em;line-height:1.16;color:#01122f}
+.wfe-metrics article small{font-size:10px;color:#7b8ba1;line-height:1.4}
+.wfe-directory{border:1px solid #d8e3ef;border-radius:14px;background:#fff;overflow:hidden;box-shadow:0 7px 24px rgba(1,18,47,.045)}
+.wfe-directory .wmb-directory-head{padding:22px 24px;gap:15px}
+.wfe-directory .wmb-directory-head h2{font-size:19px;margin:0 0 5px;letter-spacing:-.025em}
+.wfe-directory .wmb-directory-head p{font-size:12px;color:#71849b;margin:0}
+.wfe-result-count{display:inline-flex;background:#eaf1f9;border:1px solid #dfe8f2;border-radius:999px;color:#315675;font-weight:800;font-size:11px;white-space:nowrap;padding:7px 12px}
+.wfe-toolbar{display:flex;align-items:center;gap:10px;padding:15px 23px!important;background:#f8fafd;border-top:1px solid #edf1f6;border-bottom:1px solid #e1eaf3}
+.wfe-search-wrap{position:relative;flex:1;min-width:220px;display:flex;align-items:center}
+.wfe-search-wrap>span{position:absolute;left:13px;font-size:23px;color:#6b8197;line-height:1;pointer-events:none}
+.wfe-toolbar .wfe-search-wrap input{width:100%;height:44px;min-width:0;padding:0 13px 0 41px;outline-offset:1px;background:white;border:1px solid #cbd9e9;border-radius:9px;font-size:12px}
+.wfe-toolbar select{height:44px;min-width:155px;border-radius:9px;font-size:12px;padding:0 12px}
+.wfe-toolbar .wfe-reset{font-size:11px;min-height:44px;padding:10px 12px}
+.wfe-table{min-width:780px;width:100%;border-collapse:collapse}
+.wfe-table thead th{padding:13px 20px;background:#edf3f9;color:#47617c;font-weight:850;font-size:10px;letter-spacing:.075em}
+.wfe-table tbody td{padding:16px 20px;font-size:12px;border-top:1px solid #e7edf4;vertical-align:middle}
+.wfe-table tbody tr:hover td{background:#f8fbff}
+.wfe-table td:first-child{min-width:265px}
+.wfe-table td:last-child{text-align:right}
+.wfe-employer{display:flex;align-items:center;gap:12px;min-width:0}
+.wfe-avatar{flex:0 0 38px;width:38px;height:38px;display:grid;place-items:center;background:#e9f1fb;border:1px solid #dbe8f6;border-radius:11px;color:#164f89;font-size:12px;font-weight:850}
+.wfe-employer-name{min-width:0;display:flex;flex-direction:column;gap:2px}
+.wfe-employer-name strong{font-size:12px!important;line-height:1.4;color:#01122f;overflow-wrap:anywhere}
+.wfe-employer-name small{font-size:10px;color:#71859a}
+.wfe-contact{color:#315674;overflow-wrap:anywhere}
+.wfe-type{font-size:11px;color:#4c6380}
+.wfe-table .wmb-state{background:#eef3f7;color:#465e79;font-size:10px;border-radius:999px;padding:6px 11px;text-transform:capitalize}
+.wfe-table .wmb-state.active{background:#e7f7ed;color:#137c49}
+.wfe-table .wmb-state.inactive,.wfe-table .wmb-state.suspended{background:#f8e8e8;color:#b42318}
+.wfe-table .wmb-state.onboarding{background:#fff4da;color:#946800}
+.wfe-table .wfe-manage{display:inline-flex;align-items:center;justify-content:center;gap:9px;white-space:nowrap;text-decoration:none;background:#fff;color:#164e87;border:1px solid #bcd3eb;border-radius:8px;padding:9px 13px;min-height:37px;font-size:11px;font-weight:800}
+.wfe-table .wfe-manage:hover{background:#edf5ff;border-color:#8cb2da}
+.wfe-table .wfe-manage span{font-size:15px}
+@media(max-width:1160px){.wfe-metrics{grid-template-columns:repeat(2,minmax(0,1fr))!important}.wfe-toolbar{flex-wrap:wrap}.wfe-search-wrap{flex-basis:100%}}
+@media(max-width:700px){body.workforce-management-mode #dotPageMount.wmd-root:has(.wfe-dashboard){width:calc(100% - 24px);padding:15px 0 38px!important}.wfe-page-header{align-items:stretch}.wfe-page-actions{width:100%}.wfe-page-actions .wfe-btn{flex:1}.wfe-directory .wmb-directory-head{padding:18px 16px}.wfe-toolbar{padding:13px 15px!important}.wfe-toolbar select{flex:1;min-width:130px}.wfe-toolbar .wfe-reset{flex:1}.wfe-metrics article{padding:14px;min-height:100px}.wfe-metric-icon{width:38px;height:38px;flex-basis:38px}.wfe-page-header h1{font-size:26px}}
+@media(max-width:440px){.wfe-metrics{grid-template-columns:1fr!important}.wfe-directory .wmb-directory-head{align-items:flex-start;flex-direction:column}.wfe-toolbar select{flex-basis:100%}.wfe-table{min-width:720px}}
