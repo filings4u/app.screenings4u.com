@@ -158,3 +158,24 @@ body.workforce-management-mode .wmd-root{width:min(1450px,calc(100% - 36px));pad
 @media(max-width:1150px){.wmd-hero-aside{flex-basis:220px}.wmd-bottom{grid-template-columns:1fr!important}}
 @media(max-width:850px){.wmd-hero-aside{display:none}.wmd-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.wmd-actions{grid-template-columns:repeat(2,minmax(0,1fr))}.wmb-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.wmb-detail-meta{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:610px){body.workforce-management-mode .wmd-root{width:calc(100% - 24px)!important;padding-top:13px!important}.wmd-hero{min-height:0!important;padding:25px 22px!important}.wmd-hero h1{font-size:30px!important}.wmd-actions,.wmd-metrics,.wmb-stats{grid-template-columns:1fr!important}.wmd-action{min-height:0!important}.wmd-portal-list{grid-template-columns:1fr}.wmd-portal-panel,.wmd-sidebar-panel{padding:16px!important}.wmb-intro h1{font-size:26px}.wmb-toolbar{flex-direction:column}.wmb-toolbar select{width:100%}.wmb-directory-head,.wmb-detail-head{padding:16px}.wmb-detail-meta{grid-template-columns:1fr}}
+
+/* Unified invoice workspace */
+.wmb-dashboard .wmb-stats{grid-template-columns:repeat(5,minmax(0,1fr))}
+.wmb-dashboard .wmb-intro{align-items:center}
+.wmb-dashboard #billDetail{padding:0 22px 22px;margin-top:18px}
+.wmb-dashboard #billForm label{display:grid;gap:7px;color:#294761;font-size:12px;font-weight:750}
+.wmb-dashboard #billForm input,.wmb-dashboard #billForm select,.wmb-dashboard #billForm textarea{width:100%;min-width:0;box-sizing:border-box;border:1px solid #cbd9e9;border-radius:8px;padding:11px 12px;color:#01122f;background:#fff;font:inherit;font-weight:450;font-size:13px}
+.wmb-dashboard #billForm input:focus,.wmb-dashboard #billForm select:focus,.wmb-dashboard #billForm textarea:focus{outline:2px solid #fbc402;outline-offset:1px}
+.wmb-dashboard #billForm .bill-line input{height:42px}
+.wmb-dashboard #billForm .bill-remove{border:1px solid #cedbe9;background:white;border-radius:8px;color:#8f2830;font-size:11px;font-weight:700;min-height:42px;padding:0 12px;cursor:pointer}
+.wmb-dashboard #billForm #billCalculated{color:#01122f}
+.wmb-dashboard #billForm #billFormMessage{font-size:13px;min-height:18px;color:#335879}
+.wmb-dashboard #billForm #billSave,.wmb-dashboard #billDetail .wmd-refresh{background:#fdc102;color:#01122f;border:1px solid #f0b800;border-radius:8px;padding:10px 17px;font-weight:800;cursor:pointer}
+.wmb-dashboard #billForm #billSave:disabled,.wmb-dashboard #billDetail button:disabled{opacity:.55;cursor:not-allowed}
+.wmb-dashboard #billDetail .wmb-detail-meta{grid-template-columns:repeat(5,minmax(0,1fr));padding-left:0;padding-right:0}
+.wmb-dashboard #billDetail .wmb-detail-head{padding-left:0;padding-right:0}
+.wmb-dashboard #billDetail .wmb-detail-total{padding:20px 0}
+.wmb-dashboard #billDetail{scroll-margin-top:85px}
+@media(max-width:1150px){.wmb-dashboard .wmb-stats{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:850px){.wmb-dashboard #billDetail .wmb-detail-meta{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.wmb-dashboard .wmb-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.wmb-dashboard .wmb-intro{flex-wrap:wrap}.wmb-dashboard #billDetail .wmb-detail-meta{grid-template-columns:1fr}.wmb-dashboard #billForm .bill-line{grid-template-columns:minmax(0,1fr) 68px 85px!important}.wmb-dashboard #billForm .bill-line .bill-remove{grid-column:1/-1}}
