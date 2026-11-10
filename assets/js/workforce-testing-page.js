@@ -1,0 +1,28 @@
+/* Workforce Testing Orders directory. Uses existing NON-DOT management API. */
+(()=>{'use strict';
+const $=s=>document.querySelector(s);
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let orders=[];
+const safeDate=v=>{if(!v)return '—';const d=new Date(v);return Number.isNaN(d.getTime())?String(v):d.toLocaleDateString()};
+function render(){
+ const root=$('#wtDirectory');if(!root||!root.isConnected)return;
+ const q=($('#wtSearch')?.value||'').trim().toLowerCase(),status=$('#wtStatus')?.value||'all';
+ const rows=orders.filter(o=>(status==='all'||String(o.status||'').toLowerCase()===status)&&(!q||[o.order_number,o.id,o.reason,o.status,o.employee_id,o.employer_id].some(v=>String(v??'').toLowerCase().includes(q))));
+ const set=(id,value)=>{const el=root.querySelector('#'+id);if(el)el.textContent=value};
+ set('wtCount',rows.length+' of '+orders.length+' orders');set('wtTotal',orders.length);set('wtOpen',orders.filter(o=>!['completed','cancelled'].includes(String(o.status||'').toLowerCase())).length);set('wtComplete',orders.filter(o=>String(o.status||'').toLowerCase()==='completed').length);set('wtCancelled',orders.filter(o=>String(o.status||'').toLowerCase()==='cancelled').length);
+ const tbody=root.querySelector('#wtRows');if(!tbody)return;
+ tbody.innerHTML=rows.length?rows.map(o=>{const st=String(o.status||'Unknown'),cls=st.toLowerCase().replace(/[^a-z_-]/g,'');const number=o.order_number||String(o.id||'').slice(0,12)||'Order';return '<tr><td><div class="wt-record"><span class="wt-avatar" aria-hidden="true">✚</span><div><strong>'+esc(number)+'</strong><small>'+esc(o.id||'')+'</small></div></div></td><td>'+esc(o.reason||'Not specified')+'</td><td>'+esc(safeDate(o.created_at||o.ordered_at||o.collection_deadline))+'</td><td><span class="wt-status '+esc(cls)+'">'+esc(st)+'</span></td><td><a class="wt-manage" href="workforce-testing-update.html?id='+encodeURIComponent(o.id)+'">Manage <span aria-hidden="true">→</span></a></td></tr>'}).join(''):'<tr><td colspan="5" class="wt-empty"><strong>No testing orders found</strong><span>There are no orders matching these filters.</span></td></tr>';
+}
+async function load(){
+ const msg=$('#wtMessage');if(!msg)return;msg.textContent='Loading testing orders…';
+ try{const data=await WorkforceManagementApi.read('testing');orders=Array.isArray(data.testing_orders)?data.testing_orders:[];render();if(msg.isConnected)msg.textContent='Search and manage testing orders and collection progress.'}
+ catch(err){orders=[];render();if(msg.isConnected)msg.textContent='Unable to load testing orders: '+(err.message||String(err))}
+}
+async function init(){
+ const staff=await DOTAuth.requireAuth();if(!staff)return;DOTShell.render(staff);
+ const root=$('#dotPageMount');if(!root)return;root.classList.add('wt-root');
+ root.innerHTML=`<section class="wt-page" id="wtDirectory"><header class="wt-head"><div><span class="wt-overline">WORKFORCE / TESTING & COMPLIANCE</span><h1>Testing Order Management</h1><p>Manage testing orders, collection progress, and completion status.</p></div><div class="wt-actions"><button type="button" class="wt-button" id="wtRefresh">↻ Refresh</button></div></header><div class="wt-metrics"><article><span class="wt-icon" aria-hidden="true">▦</span><div><span>Total orders</span><strong id="wtTotal">—</strong><small>All testing orders</small></div></article><article><span class="wt-icon" aria-hidden="true">◷</span><div><span>Open orders</span><strong id="wtOpen">—</strong><small>Awaiting completion</small></div></article><article><span class="wt-icon" aria-hidden="true">✓</span><div><span>Completed</span><strong id="wtComplete">—</strong><small>Finished testing orders</small></div></article><article><span class="wt-icon" aria-hidden="true">⊘</span><div><span>Cancelled</span><strong id="wtCancelled">—</strong><small>Cancelled orders</small></div></article></div><section class="wt-directory"><div class="wt-directory-head"><div><h2>Testing Order Directory</h2><p id="wtMessage" role="status" aria-live="polite">Loading testing orders…</p></div><span class="wt-count" id="wtCount">0 orders</span></div><div class="wt-toolbar"><div class="wt-search"><span aria-hidden="true">⌕</span><input id="wtSearch" type="search" aria-label="Search testing orders" placeholder="Search order numbers, reasons or IDs"></div><select id="wtStatus" aria-label="Filter by status"><option value="all">All statuses</option><option value="created">Created</option><option value="assigned">Assigned</option><option value="notified">Notified</option><option value="scheduled">Scheduled</option><option value="collected">Collected</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select><button type="button" class="wt-button" id="wtClear">Clear filters</button></div><div class="wt-table-wrap"><table class="wt-table"><thead><tr><th scope="col">Order Number</th><th scope="col">Reason</th><th scope="col">Date</th><th scope="col">Status</th><th scope="col">Management</th></tr></thead><tbody id="wtRows"></tbody></table></div></section></section>`;
+ root.querySelector('#wtSearch').addEventListener('input',render);root.querySelector('#wtStatus').addEventListener('change',render);root.querySelector('#wtRefresh').addEventListener('click',load);root.querySelector('#wtClear').addEventListener('click',()=>{root.querySelector('#wtSearch').value='';root.querySelector('#wtStatus').value='all';render()});await load();
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>init().catch(console.error),{once:true});else init().catch(console.error);
+})();
