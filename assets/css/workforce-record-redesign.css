@@ -57,3 +57,131 @@ body.workforce-management-mode .nd-customer-record{max-width:1500px;margin:0 aut
 .nd-customer-record .nd-account-section+.nd-actions{padding:5px 0 0}
 @media(max-width:1100px){.nd-customer-record .nd-field-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.nd-customer-record .nd-grid{grid-template-columns:1fr}}
 @media(max-width:700px){body.workforce-management-mode .nd-customer-record{padding:14px 12px 36px}.nd-customer-record .nd-page-head{padding:19px}.nd-customer-record .nd-account-hero{padding:0 19px 18px}.nd-customer-record .nd-section-heading{padding:16px}.nd-customer-record .nd-card-body{padding:16px}.nd-customer-record .nd-field-grid,.nd-customer-record .nd-grid .nd-field-grid,.nd-customer-record .nd-portal-access-grid,.nd-customer-record .nd-profile-flags{grid-template-columns:1fr}.nd-customer-record .nd-field-wide{grid-column:auto}.nd-customer-record .nd-page-head h1{font-size:24px}.nd-customer-record .nd-account-nav{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin}.nd-customer-record .nd-account-nav a{white-space:nowrap}.nd-customer-record .nd-grid{padding:12px}.nd-customer-record .nd-section-heading>div{grid-template-columns:29px 1fr}.nd-customer-record .nd-actions{width:100%}}
+
+/* 2026-11-10 corrective pass: eliminate legacy nested card framing.
+   The older workforce-migrated stylesheet uses #dotPageMount .nd-card,
+   which previously overrode the record section's intended single border. */
+body.workforce-management-mode #dotPageMount .nd-customer-record > #customerRecordForm > .nd-account-section,
+body.workforce-management-mode #dotPageMount .nd-customer-record .nd-account-section{
+  border:1px solid #d8e3ef!important;
+  border-radius:13px!important;
+  overflow:hidden!important;
+  background:#fff!important;
+  box-shadow:0 4px 18px rgba(1,18,47,.035)!important;
+  margin-bottom:16px!important;
+}
+body.workforce-management-mode #dotPageMount .nd-customer-record .nd-account-section > .nd-card{
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  background:#fff!important;
+  overflow:visible!important;
+}
+body.workforce-management-mode #dotPageMount .nd-customer-record .nd-account-section > .nd-card > .nd-card-body{
+  padding:20px 22px 22px!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+}
+body.workforce-management-mode #dotPageMount .nd-customer-record .nd-account-section > .nd-section-heading{
+  margin:0!important;
+  border:0!important;
+  border-bottom:1px solid #e2eaf2!important;
+  border-radius:0!important;
+  padding:16px 22px!important;
+  background:#fbfcff!important;
+}
+body.workforce-management-mode #dotPageMount .nd-customer-record .nd-account-section > .nd-section-heading > div{
+  display:grid!important;
+  grid-template-columns:34px minmax(0,1fr)!important;
+  gap:1px 10px!important;
+  align-items:center!important;
+}
+body.workforce-management-mode #dotPageMount .nd-customer-record .nd-account-section > .nd-section-heading > div > span{
+  grid-row:1 / span 2!important;
+  width:32px!important;height:32px!important;
+}
+body.workforce-management-mode #dotPageMount .nd-customer-record .nd-account-section > .nd-section-heading h2{
+  margin:0!important;
+  font-size:17px!important;
+  line-height:1.35!important;
+}
+body.workforce-management-mode #dotPageMount .nd-customer-record .nd-account-section > .nd-section-heading p{
+  grid-column:2!important;
+  margin:0!important;
+  font-size:11px!important;
+}
+body.workforce-management-mode #dotPageMount .nd-customer-record .nd-account-section .nd-field-grid{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:16px 18px!important;
+  align-items:start!important;
+}
+body.workforce-management-mode #dotPageMount .nd-customer-record .nd-account-section .nd-field{
+  display:flex!important;flex-direction:column!important;gap:5px!important;
+  min-width:0!important;
+}
+body.workforce-management-mode #dotPageMount .nd-customer-record .nd-account-section .nd-field > label{
+  margin:0!important;
+  font-size:11px!important;
+  line-height:1.45!important;
+}
+body.workforce-management-mode #dotPageMount .nd-customer-record .nd-account-section .nd-field > :is(input,select,textarea){
+  width:100%!important;min-width:0!important;
+  font-size:12px!important;min-height:40px!important;
+  padding:8px 11px!important;
+}
+body.workforce-management-mode #dotPageMount .nd-customer-record .nd-account-section .nd-field > small{
+  font-size:10px!important;line-height:1.4!important;
+}
+body.workforce-management-mode #dotPageMount .nd-customer-record .nd-account-section .nd-form-subhead{
+  margin:3px 0 14px!important;
+}
+body.workforce-management-mode #dotPageMount .nd-customer-record .nd-account-section .nd-form-subhead:not(:first-child){
+  margin-top:22px!important;
+}
+body.workforce-management-mode #dotPageMount .nd-customer-record .nd-account-section > .nd-grid{
+  padding:18px 22px!important;
+  grid-template-columns:minmax(0,2fr) minmax(260px,1fr)!important;
+}
+body.workforce-management-mode #dotPageMount .nd-customer-record .nd-account-section > .nd-grid > .nd-card{
+  grid-column:auto!important;
+  margin:0!important;
+  min-width:0!important;
+}
+body.workforce-management-mode #dotPageMount .nd-customer-record .nd-account-section > .nd-grid .nd-field-grid{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+}
+@media(min-width:1280px){
+ body.workforce-management-mode #dotPageMount .nd-customer-record #business .nd-field-grid,
+ body.workforce-management-mode #dotPageMount .nd-customer-record #contacts .nd-field-grid,
+ body.workforce-management-mode #dotPageMount .nd-customer-record #address .nd-field-grid{
+   grid-template-columns:repeat(5,minmax(0,1fr))!important;
+ }
+}
+@media(max-width:1100px){
+ body.workforce-management-mode #dotPageMount .nd-customer-record .nd-account-section .nd-field-grid{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ }
+ body.workforce-management-mode #dotPageMount .nd-customer-record .nd-account-section > .nd-grid{
+  grid-template-columns:1fr!important;
+ }
+}
+@media(max-width:650px){
+ body.workforce-management-mode #dotPageMount .nd-customer-record .nd-account-section .nd-field-grid,
+ body.workforce-management-mode #dotPageMount .nd-customer-record .nd-account-section > .nd-grid .nd-field-grid{
+  grid-template-columns:1fr!important;
+ }
+ body.workforce-management-mode #dotPageMount .nd-customer-record .nd-account-section > .nd-card > .nd-card-body{
+  padding:16px!important;
+ }
+ body.workforce-management-mode #dotPageMount .nd-customer-record .nd-account-section > .nd-section-heading{
+  padding:14px 16px!important;
+ }
+ body.workforce-management-mode #dotPageMount .nd-customer-record .nd-account-section > .nd-grid{
+  padding:14px!important;
+ }
+}
