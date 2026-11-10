@@ -2,7 +2,7 @@
  const user=await DOTAuth.requireAuth();if(!user)return;DOTShell.render(user);
  const root=document.getElementById("dotPageMount");if(!root)return;
  const esc=x=>String(x??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
- const labels={marketing:"Website Inquiry",contractor:"Independent Contractor",lab_support:"Lab Support",lab_account_order:"Lab Account Order",lab_testing_request:"Testing Request"};
+ const labels={marketing:"Website Inquiry",contractor:"Independent Contractor",lab_support:"Lab Support",lab_account_order:"Lab Account Order",lab_testing_request:"Testing Request",supply_order:"Supply Order"};
  const fmt=x=>x?new Date(x).toLocaleString():"—";
  const title='<section class="nd-page nd-management-page"><div class="nd-page-head"><div><span class="nd-eyebrow">WORKFORCE MANAGEMENT</span><h1>Customer Requests</h1><p>Website inquiries, Lab Account orders and tickets, and Independent Contractor submissions from the connected portals.</p></div><div class="nd-actions"><a class="nd-btn" href="workforce-dashboard.html">Dashboard</a><button id="refresh" class="nd-btn primary" type="button">Refresh</button></div></div><div id="inboxBody" aria-live="polite">Loading requests…</div></section>';
  root.innerHTML=title;
