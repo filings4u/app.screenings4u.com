@@ -33,20 +33,21 @@ Deno.serve(async(req)=>{
    db.from("ic_contractor_records").select("id,user_id,section,title,status,created_at").order("created_at",{ascending:false}).limit(150),
    db.from("support_tickets").select("id,ticket_number,subject,requester_email,status,created_at").eq("source","lab_account_portal").order("created_at",{ascending:false}).limit(150),
    db.from("orders").select("id,order_number,customer_email,status,fulfillment_status,created_at,metadata").eq("metadata->>purpose","lab_account").order("created_at",{ascending:false}).limit(150),
-   db.from("testing_cases").select("id,case_number,customer_email,status,created_at").eq("metadata->>source","lab_account_portal").order("created_at",{ascending:false}).limit(150)
+   db.from("testing_cases").select("id,case_number,customer_email,status,created_at").eq("metadata->>source","lab_account_portal").order("created_at",{ascending:false}).limit(150),
+   db.from("ic_portal_supply_orders").select("id,contractor_user_id,status,created_at").order("created_at",{ascending:false}).limit(150)
   ]);
-  const names=["marketing","contractor","lab_support","lab_account_order","lab_testing_request"];
+  const names=["marketing","contractor","lab_support","lab_account_order","lab_testing_request","supply_order"];
   const rows:any[]=[];
   for(let i=0;i<queries.length;i++){
    if(queries[i].error){console.error("Management inbox source",names[i],queries[i].error);continue}
    for(const x of queries[i].data||[]){
     rows.push({
      id:x.id,source:names[i],reference:x.ticket_number||x.order_number||x.case_number||String(x.id).slice(0,8),
-     subject:x.subject||x.title||x.topic||x.inquiry_type||(names[i]==="lab_account_order"?"Lab Account Purchase":"Testing Request"),
-     customer:x.email||x.requester_email||x.customer_email||[x.first_name,x.last_name].filter(Boolean).join(" ")||x.user_id||"",
+     subject:x.subject||x.title||x.topic||x.inquiry_type||(names[i]==="lab_account_order"?"Lab Account Purchase":names[i]==="supply_order"?"Supply Order":"Testing Request"),
+     customer:x.email||x.requester_email||x.customer_email||[x.first_name,x.last_name].filter(Boolean).join(" ")||x.user_id||x.contractor_user_id||"",
      status:x.fulfillment_status==="pending"&&names[i]==="lab_account_order"?"fulfillment pending":x.status||"new",
      created_at:x.created_at,
-     destination:names[i]==="lab_account_order"?"house-lab-fulfillment.html":names[i]==="lab_testing_request"?"workforce-testing.html":names[i]==="contractor"?"workforce-ic-request.html":names[i]==="lab_support"?"workforce-lab-support.html":"workforce-website.html"
+     destination:names[i]==="supply_order"?"lab-supplies.html":names[i]==="lab_account_order"?"house-lab-fulfillment.html":names[i]==="lab_testing_request"?"workforce-testing.html":names[i]==="contractor"?"workforce-ic-request.html":names[i]==="lab_support"?"workforce-lab-support.html":"workforce-website.html"
     });
    }
   }
