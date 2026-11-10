@@ -4,6 +4,7 @@ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const $=s=>document.querySelector(s);let pools=[];
 const poolName=p=>p.name||'Unnamed pool';
 function renderRows(){
+ if(!$('#wpCount')||!$('#wpRows')||!$('#wpTotal')||!$('#wpActive')||!$('#wpInactive')||!$('#wpCtpa'))return;
  const q=($('#wpSearch')?.value||'').trim().toLowerCase(),filter=$('#wpStatus')?.value||'all';
  const shown=pools.filter(p=>(filter==='all'||String(p.status||'').toLowerCase()===filter)&&[p.name,p.id,p.selection_frequency,p.employer_id,p.ctpa_id].some(v=>String(v||'').toLowerCase().includes(q)));
  $('#wpCount').textContent=shown.length+' of '+pools.length+' pools';
@@ -18,9 +19,10 @@ function renderRows(){
  }).join(''):'<tr><td class="wp-empty" colspan="5"><strong>No matching pools</strong><span>Create your first pool or clear your filters to see available records.</span></td></tr>';
 }
 async function load(){
- $('#wpMessage').textContent='Loading pool records…';
- try{const result=await WorkforceManagementApi.read('pools');pools=Array.isArray(result.pools)?result.pools:[];renderRows();$('#wpMessage').textContent='Search and manage testing pools and program membership.'}
- catch(e){pools=[];renderRows();$('#wpMessage').textContent='Unable to load pools: '+(e.message||String(e));}
+ const message=$('#wpMessage');if(!message)return;
+ message.textContent='Loading pool records…';
+ try{const result=await WorkforceManagementApi.read('pools');pools=Array.isArray(result.pools)?result.pools:[];renderRows();if(message.isConnected)message.textContent='Search and manage testing pools and program membership.'}
+ catch(e){pools=[];renderRows();if(message.isConnected)message.textContent='Unable to load pools: '+(e.message||String(e));}
 }
 async function init(){
  const staff=await DOTAuth.requireAuth();if(!staff)return;DOTShell.render(staff);
