@@ -1,1 +1,40 @@
-<!doctype html><html lang="en" class="dot-auth-pending"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><link rel="icon" type="image/png" href="https://workforce.screenings4u.com/images/fav.png"><title>Workforce selections Management | Workforce</title><link rel="stylesheet" href="assets/css/dot-portal.css"><link rel="stylesheet" href="assets/css/workforce-management.css"><link rel="stylesheet" href="assets/css/workforce-migrated.css"><link rel="stylesheet" href="assets/css/workforce-network-hub.css?v=20261109-cssonly4"><meta name="theme-color" content="#01122f"></head><body class="workforce-management-mode"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="assets/js/dot-config.js"></script><script src="assets/js/dot-auth.js"></script><script src="assets/js/dot-api.js"></script><script src="assets/js/dot-shell.js?v=20261021-sidebar-unified5"></script><script src="assets/js/dot-router.js"></script><script src="assets/js/workforce-management-api.js"></script><script src="assets/js/workforce-full-management.js"></script></body></html>
+<!doctype html><html lang="en" class="dot-auth-pending"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><link rel="icon" type="image/png" href="https://workforce.screenings4u.com/images/fav.png"><title>Workforce selections Management | Workforce</title><link rel="stylesheet" href="assets/css/management-unified-shell.css?v=20261021-single-shell"><link rel="stylesheet" href="assets/css/workforce-management-dashboard.css?v=20261110-billing-unified2"><link rel="stylesheet" href="assets/css/workforce-network-hub.css?v=20261109-cssonly4"><style id="workforce-selections-critical">/* Dedicated Workforce Random Selection Management layout */
+body.workforce-management-mode #dotPageMount.ws-root{width:min(1450px,calc(100% - 42px));max-width:none;margin:0 auto;padding:22px 0 52px!important}
+.ws-page,.ws-page *{box-sizing:border-box}
+.ws-page{display:grid;gap:18px;color:#01122f;font-size:13px}
+.ws-head{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;padding:4px 0 20px;border-bottom:1px solid #d7e2ee}
+.ws-overline{color:#a17a00;font-size:10px;font-weight:850;letter-spacing:.11em}
+.ws-head h1{font-size:clamp(25px,2.2vw,32px);font-weight:850;line-height:1.2;letter-spacing:-.035em;color:#01122f;margin:7px 0}
+.ws-head p{font-size:12px;color:#667d95;line-height:1.55;margin:0}
+.ws-actions{display:flex;gap:9px;flex-wrap:wrap}
+.ws-button{display:inline-flex;justify-content:center;align-items:center;gap:7px;min-height:41px;background:#fff;border:1px solid #c7d7e9;border-radius:9px;padding:10px 16px;color:#01122f;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+.ws-button:hover{background:#f4f8fd}.ws-export{background:#fdc102!important;border-color:#fdc102!important;color:#01122f!important}
+.ws-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.ws-metrics article{display:flex;align-items:center;gap:15px;min-width:0;min-height:115px;padding:17px 18px;background:#fff;border:1px solid #d9e4f0;border-radius:13px;box-shadow:0 5px 17px rgba(0,28,67,.035)}
+.ws-icon{display:grid;place-items:center;width:44px;height:44px;flex:0 0 44px;background:#eaf2ff;color:#1356a0;border-radius:12px;font-size:22px}
+.ws-metrics article:nth-child(2) .ws-icon{background:#fff4d5;color:#a67600}
+.ws-metrics article:nth-child(3) .ws-icon{background:#e7f8ed;color:#16834a}
+.ws-metrics article:nth-child(4) .ws-icon{background:#eef0fc;color:#6556a2}
+.ws-metrics article>div{display:flex;flex-direction:column;gap:3px;min-width:0}
+.ws-metrics article>div>span{font-size:11px;font-weight:800;color:#5e728b}.ws-metrics strong{font-size:27px;color:#01122f;line-height:1.16;letter-spacing:-.04em}.ws-metrics small{font-size:10px;color:#7b8ba1}
+.ws-directory{background:#fff;border:1px solid #d8e3ef;border-radius:14px;overflow:hidden;box-shadow:0 7px 24px rgba(1,18,47,.045)}
+.ws-directory-head{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap;padding:22px 24px}
+.ws-directory-head h2{font-size:19px;margin:0 0 5px;letter-spacing:-.025em}.ws-directory-head p{font-size:12px;color:#71849b;margin:0}
+.ws-count{display:inline-flex;align-items:center;background:#eaf1f9;border:1px solid #dfe8f2;border-radius:999px;padding:7px 12px;font-size:11px;color:#315675;font-weight:800;white-space:nowrap}
+.ws-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:15px 23px;background:#f8fafd;border-top:1px solid #edf1f6;border-bottom:1px solid #e1eaf3}
+.ws-search{position:relative;flex:1;min-width:220px}.ws-search>span{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:22px;color:#6b8197;pointer-events:none}
+.ws-search input,.ws-toolbar select{height:44px;background:#fff;border:1px solid #cbd9e9;border-radius:9px;padding:10px 13px;color:#01122f;font:inherit;font-size:12px}
+.ws-search input{width:100%;padding-left:42px}.ws-toolbar select{min-width:155px}
+.ws-table-wrap{overflow-x:auto}.ws-table{width:100%;min-width:760px;border-collapse:collapse}
+.ws-table th{background:#edf3f9;color:#47617c;font-size:10px;font-weight:850;letter-spacing:.065em;text-transform:uppercase;text-align:left;padding:13px 20px}
+.ws-table td{font-size:12px;color:#315674;border-top:1px solid #e7edf4;padding:16px 20px;vertical-align:middle}.ws-table tbody tr:hover td{background:#f8fbff}.ws-table td:last-child{text-align:right}
+.ws-record{display:flex;align-items:center;gap:12px}.ws-avatar{display:grid;place-items:center;flex:0 0 38px;height:38px;border-radius:11px;background:#e9f1fb;color:#164f89;font-size:21px}
+.ws-record>div{display:flex;flex-direction:column;gap:3px;min-width:0}.ws-record strong{color:#01122f}.ws-record small{font-size:10px;color:#71859a;overflow-wrap:anywhere}
+.ws-status{display:inline-block;padding:6px 11px;border-radius:999px;background:#eef3f7;color:#465e79;font-size:10px;font-weight:800;text-transform:capitalize}.ws-status.completed{background:#e7f7ed;color:#137c49}.ws-status.draft{background:#fff4da;color:#946800}.ws-status.cancelled{background:#f8e8e8;color:#b42318}
+.ws-manage{display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;text-decoration:none;background:#fff;border:1px solid #bcd3eb;border-radius:8px;padding:9px 13px;min-height:37px;color:#164e87;font-size:11px;font-weight:800}.ws-manage:hover{background:#edf5ff}
+.ws-empty{text-align:center!important;padding:48px 16px!important}.ws-empty strong,.ws-empty span{display:block}.ws-empty strong{color:#01122f;font-size:14px;margin-bottom:7px}.ws-empty span{color:#71859a}
+.ws-page :is(button,input,select,a):focus-visible{outline:3px solid #fdc102;outline-offset:2px}
+@media(max-width:1120px){.ws-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){body.workforce-management-mode #dotPageMount.ws-root{width:calc(100% - 24px);padding:15px 0 38px!important}.ws-actions{width:100%}.ws-actions .ws-button{flex:1}.ws-toolbar{padding:13px 15px}.ws-directory-head{padding:18px 16px}.ws-toolbar select{flex:1;min-width:130px}.ws-metrics article{min-height:100px;padding:13px}.ws-icon{width:38px;flex-basis:38px;height:38px}}
+@media(max-width:440px){.ws-metrics{grid-template-columns:1fr}.ws-toolbar select{width:100%}}
+</style><meta name="theme-color" content="#01122f"></head><body class="workforce-management-mode"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="assets/js/dot-config.js"></script><script src="assets/js/dot-auth.js"></script><script src="assets/js/dot-api.js"></script><script src="assets/js/dot-shell.js?v=20261110-white-logo2"></script><script src="assets/js/dot-router.js"></script><script src="assets/js/workforce-management-api.js"></script><script src="assets/js/workforce-selections-page.js?v=20261110-1"></script></body></html>
