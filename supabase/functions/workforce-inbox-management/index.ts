@@ -49,7 +49,7 @@ Deno.serve(async(req)=>{
       if(!Number.isFinite(tax)||!Number.isFinite(discount)||tax<0||discount<0||round(subtotal+tax-discount)<0)return J({error:"Invalid invoice totals"},400);
       const total=round(subtotal+tax-discount),now=new Date().toISOString(),id2=inv?.id||crypto.randomUUID();
       const row={customer_name:name,customer_email:email,subtotal,tax_total:round(tax),discount_total:round(discount),total,amount_due:total,due_date:v.due_date||null,terms:String(v.terms||"Due on receipt").slice(0,1500),notes:String(v.notes||"").slice(0,2500),issuer_legal_name:"Workforce",issuer_entity_code:"workforce",issuer_logo_path:"https://workforce.screenings4u.com/images/logo.png",issuer_brand_color:"#01122f",metadata:{...(inv?.metadata||{}),brand:"Workforce",channel:"workforce",created_via:"unified_billing"},updated_at:now};
-      const saved=inv?await db.from("invoices").update(row).eq("id",id2).in("status",["draft","open"]).is("sent_at",null).select("id,invoice_number,status").single():await db.from("invoices").insert({id:id2,invoice_number:"WF-INV-"+now.slice(0,10).replaceAll("-","")+"-"+crypto.randomUUID().slice(0,8).toUpperCase(),status:"draft",currency:"USD",issue_date:now.slice(0,10),amount_paid:0,created_by:id,...row}).select("id,invoice_number,status").single();
+      const saved=inv?await db.from("invoices").update(row).eq("id",id2).in("status",["draft","open"]).is("sent_at",null).select("id,invoice_number,status").single():await db.from("invoices").insert({id:id2,invoice_number:"WF-INV-"+now.slice(0,10).replaceAll("-","")+"-"+crypto.randomUUID().slice(0,8).toUpperCase(),status:"draft",currency:"USD",issue_date:now.slice(0,10),amount_paid:0,created_by:id,public_token:crypto.randomUUID().replaceAll("-","")+crypto.randomUUID().replaceAll("-",""),public_token_created_at:now,...row}).select("id,invoice_number,status").single();
       if(saved.error)throw saved.error;
       const old=await db.from("invoice_items").delete().eq("invoice_id",id2);if(old.error)throw old.error;
       const ins=await db.from("invoice_items").insert(items.map((x:any)=>({invoice_id:id2,description:x.description.slice(0,500),quantity:x.quantity,unit_price:x.unit_price,line_total:round(x.quantity*x.unit_price)})));
@@ -83,7 +83,7 @@ Deno.serve(async(req)=>{
   if(payload.action==="invoice_detail"){
     const invoiceId=String(payload.id||"");
     if(!/^[0-9a-f-]{36}$/i.test(invoiceId))return J({error:"Invalid invoice reference."},400);
-    const invoice=await db.from("invoices").select("id,invoice_number,order_id,customer_name,customer_email,status,issue_date,due_date,subtotal,tax_total,total,amount_due,currency,created_at,sent_at,terms,notes,metadata").eq("id",invoiceId).maybeSingle();
+    const invoice=await db.from("invoices").select("id,invoice_number,order_id,customer_name,customer_email,status,issue_date,due_date,subtotal,discount_total,tax_total,total,amount_due,currency,created_at,sent_at,terms,notes,metadata,public_token_created_at").eq("id",invoiceId).maybeSingle();
     if(invoice.error)throw invoice.error;
     if(!invoice.data||!(invoice.data.metadata?.purpose==="supply_kit"||invoice.data.metadata?.brand==="Workforce"||invoice.data.metadata?.channel==="workforce"))return J({error:"Workforce invoice not found."},404);
     const items=await db.from("invoice_items").select("id,description,quantity,unit_price,line_total").eq("invoice_id",invoiceId);
