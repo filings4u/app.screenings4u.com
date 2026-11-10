@@ -66,3 +66,95 @@ body.workforce-management-mode .wmd-root{width:min(1450px,calc(100% - 48px));max
 @media(max-width:1200px){.wmd-actions{grid-template-columns:repeat(2,minmax(0,1fr))}.wmd-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.wmd-hero-mark{right:30px;opacity:.07}}
 @media(max-width:850px){.wmd-bottom{grid-template-columns:1fr}.wmd-hero{padding:27px}.wmd-hero-mark{display:none}}
 @media(max-width:600px){body.workforce-management-mode .wmd-root{width:calc(100% - 22px);padding-top:14px!important}.wmd-hero{padding:24px 19px;min-height:0}.wmd-hero h1{font-size:29px}.wmd-metrics,.wmd-actions{grid-template-columns:1fr}.wmd-metric{padding:17px}.wmd-action{min-height:88px;padding:15px}.wmd-section-head h2{font-size:18px}.wmd-portal-panel,.wmd-sidebar-panel{padding:17px}.wmd-hero-buttons a{width:100%;justify-content:space-between}}
+
+
+/* Workforce Management 2026 dashboard & billing redesign: cohesive, responsive, shared brand. */
+body.workforce-management-mode .wmd-root{width:min(1450px,calc(100% - 36px));padding:22px 0 42px!important}
+.wmd-dashboard{gap:18px!important}
+.wmd-hero{
+ min-height:258px!important;padding:31px 38px!important;display:flex!important;
+ justify-content:space-between!important;align-items:center!important;gap:22px!important;
+ background:radial-gradient(circle at 88% -5%,rgba(26,90,152,.46),transparent 40%),linear-gradient(105deg,#01122f,#062752)!important;
+ border:1px solid #1c446e!important;border-radius:16px!important;box-shadow:0 14px 30px rgba(1,18,47,.12);
+}
+.wmd-hero:before{content:"";position:absolute;inset:0 auto 0 0!important;width:6px!important;height:auto!important;border:0!important;border-radius:0!important;background:#fdc102!important;transform:none!important}
+.wmd-hero:after{right:-120px!important;bottom:-280px!important;width:380px!important;height:380px!important;border:35px solid rgba(255,255,255,.04)!important;border-radius:50%!important;transform:none!important}
+.wmd-hero-content{max-width:640px!important}
+.wmd-hero h1{font-size:clamp(31px,3.15vw,44px)!important;line-height:1.08!important;margin:10px 0 11px!important;letter-spacing:-.045em!important}
+.wmd-hero p{font-size:13px!important;line-height:1.65!important;max-width:580px!important}
+.wmd-eyebrow,.wmd-overline{letter-spacing:.105em!important}
+.wmd-hero-buttons{margin-top:21px!important}
+.wmd-hero-buttons a{min-height:40px!important;gap:14px!important;padding:10px 15px!important;border-radius:9px!important;font-size:12px!important}
+.wmd-hero-aside{display:flex;flex-direction:column;justify-content:center;gap:13px;flex:0 0 275px;min-height:178px;padding:21px 24px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);backdrop-filter:blur(9px);border-radius:13px;position:relative;z-index:1}
+.wmd-hero-aside>span{font-size:10px;color:#fdc102;letter-spacing:.13em;font-weight:800}
+.wmd-hero-aside strong{font-size:25px;line-height:1.16;color:white;letter-spacing:-.025em}
+.wmd-hero-aside small{color:#c5d5e8;font-size:11px}
+.wmd-section-head{align-items:center!important;padding-top:3px;min-height:43px}
+.wmd-section-head h2{margin:3px 0 0!important;font-size:19px!important;letter-spacing:-.025em}
+.wmd-overline{font-size:10px!important;color:#9d7900!important}
+.wmd-metrics{gap:12px!important}
+.wmd-metric{position:relative;min-height:105px;padding:16px 19px!important;gap:6px!important;border-radius:12px!important;box-shadow:0 5px 18px rgba(1,18,47,.035)!important}
+.wmd-metric span:first-child{font-size:11px;color:#536d89;font-weight:800}
+.wmd-metric strong{font-size:29px!important;letter-spacing:-.045em}
+.wmd-metric small{font-size:11px}
+.wmd-metric-arrow{position:absolute;top:16px;right:17px;color:#9bb0c9;font-size:16px}
+.wmd-actions{gap:12px!important}
+.wmd-action{min-height:126px!important;padding:19px!important;border-radius:12px!important;align-items:flex-start!important;gap:13px!important;box-shadow:0 4px 14px rgba(1,18,47,.035)}
+.wmd-action-symbol{width:43px!important;height:43px!important;border-radius:12px!important;background:#fff5d5!important;color:#896500!important;font-size:20px!important}
+.wmd-action-content{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.wmd-action-tag{font-size:9px;letter-spacing:.075em;color:#aa8000;font-weight:850;line-height:1.25}
+.wmd-action-content strong{font-size:14px!important;line-height:1.3!important}
+.wmd-action-content p{font-size:11px!important;line-height:1.55!important;margin:1px 0 0!important}
+.wmd-action-arrow{font-size:18px;line-height:1.2}
+.wmd-bottom{grid-template-columns:minmax(0,1.55fr) minmax(280px,.88fr)!important;gap:14px!important}
+.wmd-portal-panel,.wmd-sidebar-panel{padding:20px!important;min-width:0}
+.wmd-portal-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.wmd-portal-row{min-width:0;padding:12px!important;border:1px solid #e2eaf3!important;border-radius:9px;gap:10px!important}
+.wmd-portal-row:hover{background:#f8fbff;border-color:#a9c4e1!important}
+.wmd-portal-row .wmd-portal-name{min-width:0;display:flex;flex-direction:column;gap:3px;flex:1}
+.wmd-portal-row .wmd-portal-name strong{font-size:12px}
+.wmd-portal-row .wmd-portal-name small{font-size:10px;line-height:1.3}
+.wmd-sidebar-panel p{font-size:11px!important;margin:9px 0 15px!important}
+.wmd-shortcuts{gap:8px!important}
+.wmd-shortcuts a{min-height:40px!important;font-size:11px!important}
+.wmd-status{margin:2px!important}
+/* Billing, built on the same shell rather than an extra sidebar or footer. */
+.wmb-intro{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;border-bottom:1px solid #dbe5ef;padding:10px 2px 19px}
+.wmb-intro h1{font-size:30px;letter-spacing:-.035em;margin:3px 0 6px;color:#01122f}
+.wmb-intro p{margin:0;color:#607993;font-size:12px;max-width:740px}
+.wmb-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.wmb-stats article{border-radius:12px;padding:19px;background:#fff;border:1px solid #d9e4f0;display:flex;flex-direction:column;gap:10px}
+.wmb-stats article span{font-size:11px;font-weight:800;color:#647c96}
+.wmb-stats article strong{font-size:26px;line-height:1.15;letter-spacing:-.03em;overflow-wrap:anywhere;color:#01122f}
+.wmb-directory{background:#fff;border:1px solid #d9e4f0;border-radius:13px;overflow:hidden}
+.wmb-directory-head,.wmb-detail-head{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:19px 22px}
+.wmb-directory-head h2,.wmb-detail-head h2{font-size:19px;letter-spacing:-.025em;color:#01122f;margin:0 0 5px}
+.wmb-directory-head p{color:#637b95;font-size:11px;margin:0}
+.wmb-directory-head>strong{color:#53708c;font-size:11px;white-space:nowrap}
+.wmb-toolbar{display:flex;gap:12px;padding:14px 22px;background:#f8fafd;border-top:1px solid #ebf0f6}
+.wmb-toolbar input,.wmb-toolbar select{height:42px;border:1px solid #cbd9e9;border-radius:8px;background:white;color:#01122f;font-size:12px;padding:0 12px}
+.wmb-toolbar input{flex:1;min-width:160px}
+.wmb-toolbar select{min-width:170px}
+.wmb-table-wrap{width:100%;overflow:auto}
+.wmb-table{width:100%;border-collapse:collapse;min-width:730px;text-align:left}
+.wmb-table th{background:#edf3f9;color:#405d79;text-transform:uppercase;letter-spacing:.055em;font-size:10px;padding:12px 16px;font-weight:850}
+.wmb-table td{font-size:12px;padding:14px 16px;border-top:1px solid #e8eef5;color:#173859;vertical-align:middle}
+.wmb-table td strong{font-size:12px;color:#01122f}
+.wmb-table td small{display:block;color:#758ba3;font-size:10px;margin-top:4px}
+.wmb-table tr:hover td{background:#fafcff}
+.wmb-state{display:inline-flex;align-items:center;justify-content:center;border-radius:99px;padding:5px 10px;background:#eaf0f6;color:#365c7e;font-size:10px;font-weight:850}
+.wmb-state.paid{background:#e4f7ee;color:#097346}
+.wmb-state.open,.wmb-state.sent{background:#fff2d8;color:#936900}
+.wmb-state.void{background:#f0f1f4;color:#536278}
+.wmb-view,.wmb-clear{background:#fff;border:1px solid #c8d8e9;color:#064887;border-radius:8px;padding:7px 13px;cursor:pointer;font-size:11px;font-weight:800}
+.wmb-view:hover,.wmb-clear:hover{background:#eff6fd}
+.wmb-empty{padding:35px!important;text-align:center;color:#71869c}
+.wmb-detail{padding-bottom:13px}
+.wmb-detail-meta{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;padding:0 22px 18px}
+.wmb-detail-meta p{margin:0;display:grid;gap:6px;font-size:12px}
+.wmb-detail-meta strong{font-size:10px;color:#6a819b}
+.wmb-detail-total{text-align:right;font-size:18px;font-weight:850;padding:15px 22px}
+.wmb-detail-note{padding:14px 22px;border-top:1px solid #e4edf6;color:#576e88;font-size:11px}
+@media(max-width:1150px){.wmd-hero-aside{flex-basis:220px}.wmd-bottom{grid-template-columns:1fr!important}}
+@media(max-width:850px){.wmd-hero-aside{display:none}.wmd-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.wmd-actions{grid-template-columns:repeat(2,minmax(0,1fr))}.wmb-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.wmb-detail-meta{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:610px){body.workforce-management-mode .wmd-root{width:calc(100% - 24px)!important;padding-top:13px!important}.wmd-hero{min-height:0!important;padding:25px 22px!important}.wmd-hero h1{font-size:30px!important}.wmd-actions,.wmd-metrics,.wmb-stats{grid-template-columns:1fr!important}.wmd-action{min-height:0!important}.wmd-portal-list{grid-template-columns:1fr}.wmd-portal-panel,.wmd-sidebar-panel{padding:16px!important}.wmb-intro h1{font-size:26px}.wmb-toolbar{flex-direction:column}.wmb-toolbar select{width:100%}.wmb-directory-head,.wmb-detail-head{padding:16px}.wmb-detail-meta{grid-template-columns:1fr}}
