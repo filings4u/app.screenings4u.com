@@ -125,9 +125,10 @@ async function detail(ledger,id){
 async function pdf(v,items,ledger){
  if(!window.jspdf?.jsPDF){msg('PDF library unavailable.',true);return}
  const doc=new window.jspdf.jsPDF({unit:'pt',format:'letter'}),left=42,right=570;let y=48;
- doc.setFillColor(1,18,47);doc.rect(0,0,612,98,'F');doc.setTextColor(255,255,255);doc.setFontSize(20);doc.setFont('helvetica','bold');doc.text('WORKFORCE',left,53);doc.setFontSize(10);doc.text('INVOICE',right,51,{align:'right'});
- doc.setFontSize(9);doc.text(String(v.invoice_number||''),right,69,{align:'right'});
- doc.setTextColor(1,18,47);y=140;
+ doc.setFillColor(255,255,255);doc.rect(0,0,612,98,'F');doc.setTextColor(1,18,47);doc.setFontSize(20);doc.setFont('helvetica','bold');
+ try{const image=new Image();image.src='images/logo.png';await image.decode();const scale=Math.min(175/image.naturalWidth,58/image.naturalHeight);doc.addImage(image,'PNG',left,18,image.naturalWidth*scale,image.naturalHeight*scale)}catch{doc.text('WORKFORCE',left,53)}
+ doc.setFontSize(18);doc.text('INVOICE',right,47,{align:'right'});doc.setFontSize(9);doc.text(String(v.invoice_number||''),right,66,{align:'right'});
+ doc.setDrawColor(253,193,2);doc.setLineWidth(3);doc.line(left,90,right,90);doc.setTextColor(1,18,47);y=140;
  const line=(label,value)=>{doc.setFont('helvetica','bold');doc.text(label,left,y);doc.setFont('helvetica','normal');doc.text(doc.splitTextToSize(String(value||'—'),340),225,y);y+=23};
  line('BILL TO',v.customer_name||v.recipient_name);line('Email',v.customer_email||v.recipient_email);line('Issue date',day(v.issue_date||v.issued_at));line('Due date',day(v.due_date||v.due_at));line('Status',String(v.status||'').toUpperCase());y+=16;
  doc.setFillColor(238,243,249);doc.rect(left,y,right-left,27,'F');doc.setFont('helvetica','bold');doc.text('DESCRIPTION',left+8,y+17);doc.text('QTY',386,y+17);doc.text('AMOUNT',right-8,y+17,{align:'right'});y+=45;
