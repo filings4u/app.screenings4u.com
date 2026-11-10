@@ -106,13 +106,13 @@ async function detail(ledger,id){
   $('#billPdf').onclick=()=>pdf(v,items,ledger);
   if($('#billEdit'))$('#billEdit').onclick=()=>wireForm({...v,invoice_items:items},ledger);
   if($('#billVoid'))$('#billVoid').onclick=async()=>{
-   const reason=prompt('Reason for voiding invoice '+v.invoice_number+'? This is irreversible.');
+   const reason=await DOTDialog.prompt('Enter the reason for voiding invoice '+v.invoice_number+'. This action cannot be undone.',{title:'Void Invoice',confirmText:'Continue',cancelText:'Cancel',danger:true});
    if(reason===null)return;if(reason.trim().length<5){$('#billDetailStatus').textContent='Enter a meaningful void reason.';return}
-   if(!confirm('Confirm void invoice '+v.invoice_number+'? The customer must not pay it after voiding.'))return;
+   if(!await DOTDialog.confirm('Void '+v.invoice_number+'? Once voided, this invoice can no longer be paid.',{title:'Confirm Invoice Void',confirmText:'Void Invoice',cancelText:'Keep Invoice',danger:true}))return;
    try{await api(ledger,ledger==='dot'?'void':'billing_void',{id,reason:reason.trim()});await reload();await detail(ledger,id);msg('Invoice voided. Payment history preserved.')}catch(e){$('#billDetailStatus').textContent=e.message}
   };
   if($('#billSend'))$('#billSend').onclick=async()=>{
-   if(!confirm('Send invoice '+v.invoice_number+' for '+money(v.amount_due)+' to '+(v.customer_email||v.recipient_email)+'?'))return;
+   if(!await DOTDialog.confirm('Send '+v.invoice_number+' for '+money(v.amount_due)+' to '+(v.customer_email||v.recipient_email)+'?',{title:'Send Workforce Invoice',confirmText:'Send Invoice',cancelText:'Cancel'}))return;
    const btn=$('#billSend');btn.disabled=true;$('#billDetailStatus').textContent='Sending invoice…';
    try{
     const result=await api(ledger,ledger==='dot'?'push':'billing_send',{id});
