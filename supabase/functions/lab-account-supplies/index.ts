@@ -1,6 +1,21 @@
 import {createClient} from "npm:@supabase/supabase-js@2";
 const H={"Access-Control-Allow-Origin":"https://lab-account.screenings4u.com","Access-Control-Allow-Headers":"authorization,apikey,content-type,x-client-info","Access-Control-Allow-Methods":"POST,OPTIONS","Content-Type":"application/json","Cache-Control":"no-store"};
 const reply=(x:unknown,s=200)=>new Response(JSON.stringify(x),{headers:H,status:s});
+const safe=(v:any)=>String(v??"").replace(/[&<>"']/g,(k:string)=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[k]||k));
+const sendRequestEmail=async(db:any,to:string,subject:string,heading:string,body:string,id:string,kind:string,admin:boolean)=>{
+ const key=Deno.env.get("RESEND_API_KEY")||"";let status="not_configured",messageId:string|null=null,reason:string|null=null;
+ if(key&&to){
+  const url=admin?"https://app.screenings4u.com/lab-supplies.html":"https://lab-account.screenings4u.com/supplies.html";
+  const html='<div style="padding:26px;background:#f2f6fb;font-family:Arial,sans-serif;color:#01122f"><div style="max-width:610px;margin:auto;border:1px solid #dce6ef;background:#fff;border-radius:12px;overflow:hidden"><div style="background:#01122f;padding:20px 25px"><img src="https://workforce.screenings4u.com/images/logo2.png" alt="Workforce by screenings4u" width="210"></div><div style="padding:25px"><h1 style="font-size:22px">'+safe(heading)+'</h1><p style="white-space:pre-wrap;line-height:1.65">'+safe(body)+'</p><a href="'+url+'" style="display:inline-block;background:#fdc102;color:#01122f;text-decoration:none;font-weight:bold;border-radius:8px;padding:12px 18px">View '+(admin?"Supply Management":"Your Supplies")+'</a></div></div></div>';
+  try{const r=await fetch("https://api.resend.com/emails",{method:"POST",headers:{Authorization:"Bearer "+key,"Content-Type":"application/json"},body:JSON.stringify({from:Deno.env.get("SCREENINGS4U_FROM_EMAIL")||"Workforce <notifications@screenings4u.com>",to:[to],subject,html})});const j=await r.json().catch(()=>({}));status=r.ok?"sent":"failed";messageId=j.id||null;reason=r.ok?null:String(j.message||"HTTP "+r.status).slice(0,300)}
+  catch(e){status="failed";reason=String(e).slice(0,300)}
+ }
+ const audit=await db.from("testing_email_events").insert({event_type:kind,related_entity_type:"supply_order",related_entity_id:id,recipient_email:to,subject,provider:"resend",provider_message_id:messageId,status,error_message:reason,sent_at:status==="sent"?new Date().toISOString():null,metadata:{source:"lab_account_supplies"}});
+ if(audit.error)console.error("Supply email audit error",audit.error);
+ if(status!=="sent")console.error("Supply notification",kind,status,reason||"");
+ return status;
+};
+
 Deno.serve(async req=>{
 if(req.method==="OPTIONS")return new Response(null,{status:204,headers:H});if(req.method!=="POST")return reply({error:"Method not allowed"},405);
 try{
@@ -72,7 +87,18 @@ const addr=b.shipping_address||{};for(const field of ["recipient","line1","city"
 if(!/^[A-Za-z]{2}$/.test(addr.state)||!/^[0-9]{5}(-[0-9]{4})?$/.test(addr.postal_code)||String(b.notes||"").length>1000)return reply({error:"Invalid address or notes"},400);
 const insert=await db.from("ic_portal_supply_orders").insert({contractor_user_id:user.id,status:"requested",shipping_address:{recipient:addr.recipient.trim(),line1:addr.line1.trim(),line2:String(addr.line2||"").slice(0,180),city:addr.city.trim(),state:addr.state.toUpperCase(),postal_code:addr.postal_code},notes:String(b.notes||"").trim()}).select("id").single();if(insert.error)throw insert.error;
 const rows=await db.from("ic_portal_supply_order_lines").insert(lines.map((l:any)=>({order_id:insert.data.id,item_id:l.item_id,quantity:l.quantity})));if(rows.error){await db.from("ic_portal_supply_orders").delete().eq("id",insert.data.id).eq("contractor_user_id",user.id);throw rows.error}
-return reply({ok:true,id:insert.data.id});
+const orderRef=String(insert.data.id).slice(0,8).toUpperCase();
+ const units=lines.reduce((sum:number,item:any)=>sum+Number(item.quantity||0),0);
+ const summary="Supply request "+orderRef+" for "+units+" item(s). Your order is received and is pending processing. No shipping date has been assigned.";
+ const customerStatus=await sendRequestEmail(db,String(user.email||""),"Workforce | Supply request received — "+orderRef,"Supply request received",summary,insert.data.id,"lab_account_supply_customer",false);
+ const staff=await db.from("staff_business_access").select("user_id").eq("business_unit_code","testing").eq("active",true).limit(30);
+ if(staff.error)console.error("Supply staff recipient lookup",staff.error);
+ const recipients:string[]=[];
+ for(const item of staff.data||[]){const u=await db.auth.admin.getUserById(item.user_id);if(u.data?.user?.email)recipients.push(u.data.user.email.toLowerCase())}
+ const setting=String(Deno.env.get("SCREENINGS4U_ADMIN_EMAIL")||Deno.env.get("SCREENINGS4U_PURCHASE_ALERT_EMAIL")||"orders@screenings4u.com").trim().toLowerCase();
+ if(setting)recipients.push(setting);
+ const statuses=await Promise.all([...new Set(recipients.filter(x=>x&&x!==String(user.email||"").toLowerCase()))].map(to=>sendRequestEmail(db,to,"New Lab Account supply request — "+orderRef,"New supply request for review","A customer submitted "+units+" supply item(s). Request: "+orderRef+". Open Lab Supply Management for item details and shipment processing.",insert.data.id,"lab_account_supply_admin",true)));
+ return reply({ok:true,id:insert.data.id,notification_status:{customer:customerStatus,admin:statuses.length?statuses:"no_admin_recipients"}});
 }
 if(action==="cancel"){
 const id=String(b.id||"");if(!/^[0-9a-f-]{36}$/i.test(id))return reply({error:"Invalid order"},400);
