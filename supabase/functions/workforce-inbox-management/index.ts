@@ -29,7 +29,7 @@ Deno.serve(async(req)=>{
   if(payload.action==="invoice_detail"){
     const invoiceId=String(payload.id||"");
     if(!/^[0-9a-f-]{36}$/i.test(invoiceId))return J({error:"Invalid invoice reference."},400);
-    const invoice=await db.from("invoices").select("id,invoice_number,order_id,customer_name,customer_email,status,issue_date,due_date,subtotal,tax,total,amount_due,currency,created_at,sent_at,terms,notes,metadata").eq("id",invoiceId).maybeSingle();
+    const invoice=await db.from("invoices").select("id,invoice_number,order_id,customer_name,customer_email,status,issue_date,due_date,subtotal,tax_total,total,amount_due,currency,created_at,sent_at,terms,notes,metadata").eq("id",invoiceId).maybeSingle();
     if(invoice.error)throw invoice.error;
     if(!invoice.data||!(invoice.data.metadata?.purpose==="supply_kit"||invoice.data.metadata?.brand==="Workforce"||invoice.data.metadata?.channel==="workforce"))return J({error:"Workforce invoice not found."},404);
     const items=await db.from("invoice_items").select("id,description,quantity,unit_price,line_total").eq("invoice_id",invoiceId);
