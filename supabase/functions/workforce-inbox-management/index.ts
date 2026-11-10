@@ -47,7 +47,7 @@ Deno.serve(async(req)=>{
      customer:x.email||x.requester_email||x.customer_email||[x.first_name,x.last_name].filter(Boolean).join(" ")||x.user_id||x.contractor_user_id||"",
      status:x.fulfillment_status==="pending"&&names[i]==="lab_account_order"?"fulfillment pending":x.status||"new",
      created_at:x.created_at,
-     destination:names[i]==="supply_order"?"lab-supplies.html":names[i]==="lab_account_order"?"house-lab-fulfillment.html":names[i]==="lab_testing_request"?"workforce-testing.html":names[i]==="contractor"?"workforce-ic-request.html":names[i]==="lab_support"?"workforce-lab-support.html":"workforce-website.html"
+     destination:names[i]==="supply_order"?"ic-supply-management.html":names[i]==="lab_account_order"?"house-lab-fulfillment.html":names[i]==="lab_testing_request"?"workforce-testing.html":names[i]==="contractor"?"workforce-ic-request.html":names[i]==="lab_support"?"workforce-lab-support.html":"workforce-website.html"
     });
    }
   }
