@@ -1,0 +1,59 @@
+/* Workforce management record: presentation only; existing forms and persistence stay intact. */
+body.workforce-management-mode .nd-customer-record{max-width:1500px;margin:0 auto;padding:24px 26px 70px;color:#01122f;font-size:13px;line-height:1.5}
+.nd-customer-record *{box-sizing:border-box}
+.nd-customer-record .nd-page-head{display:flex;align-items:center;justify-content:space-between;gap:22px;flex-wrap:wrap;background:#fff;padding:23px 26px;border-radius:14px 14px 0 0;border:1px solid #dae4f0;border-bottom:0;margin:0}
+.nd-customer-record .nd-eyebrow{color:#9b7400;font-size:10px;font-weight:800;letter-spacing:.12em}
+.nd-customer-record .nd-page-head h1{font-size:27px;line-height:1.18;letter-spacing:-.035em;color:#01122f;margin:7px 0}
+.nd-customer-record .nd-page-head p{font-size:12px;color:#5c718d;margin:0;max-width:690px;line-height:1.65}
+.nd-customer-record .nd-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.nd-customer-record .nd-btn{display:inline-flex;align-items:center;justify-content:center;min-height:39px;border:1px solid #cbd8e8;background:#fff;color:#01122f;border-radius:8px;padding:9px 15px;text-decoration:none;font-weight:750;font-size:12px;cursor:pointer}
+.nd-customer-record .nd-btn.primary{background:#fdc102!important;border-color:#fdc102!important;color:#01122f!important}
+.nd-customer-record .nd-account-hero{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff;border:1px solid #dae4f0;border-top:0;padding:0 26px 20px;margin:0}
+.nd-customer-record .nd-account-hero>div:first-child{display:flex;align-items:center;gap:12px}
+.nd-customer-record .nd-account-hero strong{font-size:16px;display:block}
+.nd-customer-record .nd-account-hero small{font-size:11px;display:block;color:#73859a;margin-top:3px}
+.nd-customer-record .nd-status-dot{width:10px;height:10px;border-radius:50%;background:#24a26b}
+.nd-customer-record .nd-badge{border-radius:30px;background:#eaf7ef;color:#11744c;padding:6px 12px;text-transform:capitalize;font-size:11px;font-weight:800}
+.nd-customer-record .nd-account-nav{display:flex;gap:4px;flex-wrap:wrap;align-items:center;padding:12px 20px;border:1px solid #dae4f0;background:#f9fbfe;border-radius:0 0 14px 14px;margin-bottom:22px}
+.nd-customer-record .nd-account-nav a{display:inline-flex;padding:9px 13px;border-radius:8px;text-decoration:none;font-size:12px;color:#38536d;font-weight:750;transition:background .15s}
+.nd-customer-record .nd-account-nav a:hover,.nd-customer-record .nd-account-nav a:focus-visible{background:#eaf0f9;color:#01122f}
+.nd-customer-record .nd-account-section{scroll-margin-top:96px;background:#fff;border:1px solid #d8e3ef;border-radius:14px;overflow:hidden;margin:0 0 17px;box-shadow:0 6px 22px rgba(1,18,47,.035)}
+.nd-customer-record .nd-section-heading{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:18px 23px;border-bottom:1px solid #e2eaf2;background:#fcfdff}
+.nd-customer-record .nd-section-heading>div{display:grid;grid-template-columns:33px 1fr;align-items:center;column-gap:10px}
+.nd-customer-record .nd-section-heading>div>span{grid-row:1/3;background:#eaf1fa;color:#164e92;border-radius:9px;display:grid;place-items:center;height:32px;font-size:11px;font-weight:800}
+.nd-customer-record .nd-section-heading h2{margin:0;font-size:18px;line-height:1.3;color:#01122f}
+.nd-customer-record .nd-section-heading p{grid-column:2;margin:2px 0 0;color:#72859c;font-size:11px;line-height:1.55}
+.nd-customer-record .nd-card{background:#fff;border:0;border-radius:0;box-shadow:none;min-width:0}
+.nd-customer-record .nd-card-body{padding:22px 23px}
+.nd-customer-record .nd-card-head{padding:16px 20px;border-bottom:1px solid #e4eaf1}
+.nd-customer-record .nd-card-head h2{font-size:15px;margin:0 0 4px}
+.nd-customer-record .nd-card-head p{font-size:11px;color:#74839b;margin:0}
+.nd-customer-record .nd-field-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:17px 18px}
+.nd-customer-record .nd-field{display:flex;flex-direction:column;min-width:0;gap:6px}
+.nd-customer-record .nd-field-wide{grid-column:1/-1}
+.nd-customer-record .nd-field>label{font-size:12px;font-weight:750;color:#2a4665}
+.nd-customer-record .nd-field input,.nd-customer-record .nd-field select,.nd-customer-record .nd-field textarea{width:100%;min-width:0;min-height:41px;background:#fff;border:1px solid #c7d6e8;border-radius:8px;color:#01122f;padding:9px 12px;font:inherit;font-size:13px}
+.nd-customer-record .nd-field textarea{min-height:100px;resize:vertical}
+.nd-customer-record .nd-field input:focus,.nd-customer-record .nd-field select:focus,.nd-customer-record .nd-field textarea:focus{outline:2px solid #fdc102;outline-offset:1px}
+.nd-customer-record .nd-field small{color:#71839a;font-size:11px;line-height:1.45}
+.nd-customer-record .nd-form-subhead{font-size:13px;font-weight:800;color:#01122f;margin:0 0 16px;padding:0 0 10px;border-bottom:1px solid #e5eaf2}
+.nd-customer-record .nd-form-subhead:not(:first-child){margin-top:24px}
+.nd-customer-record .nd-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(270px,1fr);gap:14px;padding:17px}
+.nd-customer-record .nd-grid .nd-card{border:1px solid #dbe5ef;border-radius:11px;overflow:hidden}
+.nd-customer-record .nd-grid .nd-card-body{padding:18px}
+.nd-customer-record .nd-grid .nd-field-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.nd-customer-record .nd-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.nd-customer-record .nd-detail-grid span,.nd-customer-record .nd-kpi-row span{display:block;color:#72839b;font-size:11px}
+.nd-customer-record .nd-detail-grid strong,.nd-customer-record .nd-kpi-row strong{display:block;color:#01122f;font-size:12px;overflow-wrap:anywhere}
+.nd-customer-record .nd-kpi-list{display:grid;gap:12px}
+.nd-customer-record .nd-kpi-row{display:flex;justify-content:space-between;gap:10px;align-items:center;border-bottom:1px solid #edf1f5;padding:0 0 9px}
+.nd-customer-record .nd-portal-access-grid,.nd-customer-record .nd-profile-flags{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.nd-customer-record .nd-customer-check{display:flex;align-items:flex-start;gap:10px;background:#f7f9fc;border:1px solid #e1e9f2;border-radius:9px;padding:13px;font-size:12px;min-width:0}
+.nd-customer-record .nd-customer-check input{accent-color:#fdc102;width:16px;height:16px;margin:2px 0 0;flex-shrink:0}
+.nd-customer-record .nd-customer-check strong{display:block;color:#01122f;font-size:12px}
+.nd-customer-record .nd-customer-check small{display:block;color:#6d839a;font-size:10px;overflow-wrap:anywhere;font-weight:400}
+.nd-customer-record .nd-page-message{border-radius:10px;padding:12px 15px;margin:10px 0;font-size:12px}
+.nd-customer-record .nd-page-message[hidden]{display:none}
+.nd-customer-record .nd-account-section+.nd-actions{padding:5px 0 0}
+@media(max-width:1100px){.nd-customer-record .nd-field-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.nd-customer-record .nd-grid{grid-template-columns:1fr}}
+@media(max-width:700px){body.workforce-management-mode .nd-customer-record{padding:14px 12px 36px}.nd-customer-record .nd-page-head{padding:19px}.nd-customer-record .nd-account-hero{padding:0 19px 18px}.nd-customer-record .nd-section-heading{padding:16px}.nd-customer-record .nd-card-body{padding:16px}.nd-customer-record .nd-field-grid,.nd-customer-record .nd-grid .nd-field-grid,.nd-customer-record .nd-portal-access-grid,.nd-customer-record .nd-profile-flags{grid-template-columns:1fr}.nd-customer-record .nd-field-wide{grid-column:auto}.nd-customer-record .nd-page-head h1{font-size:24px}.nd-customer-record .nd-account-nav{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin}.nd-customer-record .nd-account-nav a{white-space:nowrap}.nd-customer-record .nd-grid{padding:12px}.nd-customer-record .nd-section-heading>div{grid-template-columns:29px 1fr}.nd-customer-record .nd-actions{width:100%}}
