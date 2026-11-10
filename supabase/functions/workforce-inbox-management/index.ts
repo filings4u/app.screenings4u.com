@@ -20,6 +20,22 @@ Deno.serve(async(req)=>{
   if(staff.error||roles.error||access.error)throw staff.error||roles.error||access.error;
   if(staff.data?.employment_status!=="active"||!roles.data?.length||!access.data?.length)return J({error:"Workforce management access required"},403);
   const payload=await req.json().catch(()=>({}));
+  if(payload.action==="invoices"){
+    const q=await db.from("invoices").select("id,invoice_number,order_id,customer_name,customer_email,status,issue_date,due_date,total,amount_due,currency,created_at,sent_at,metadata").order("created_at",{ascending:false}).limit(500);
+    if(q.error)throw q.error;
+    const rows=(q.data||[]).filter((x:any)=>x.metadata?.purpose==="supply_kit"||x.metadata?.brand==="Workforce"||x.metadata?.channel==="workforce");
+    return J({ok:true,invoices:rows});
+  }
+  if(payload.action==="invoice_detail"){
+    const invoiceId=String(payload.id||"");
+    if(!/^[0-9a-f-]{36}$/i.test(invoiceId))return J({error:"Invalid invoice reference."},400);
+    const invoice=await db.from("invoices").select("id,invoice_number,order_id,customer_name,customer_email,status,issue_date,due_date,subtotal,tax,total,amount_due,currency,created_at,sent_at,terms,notes,metadata").eq("id",invoiceId).maybeSingle();
+    if(invoice.error)throw invoice.error;
+    if(!invoice.data||!(invoice.data.metadata?.purpose==="supply_kit"||invoice.data.metadata?.brand==="Workforce"||invoice.data.metadata?.channel==="workforce"))return J({error:"Workforce invoice not found."},404);
+    const items=await db.from("invoice_items").select("id,description,quantity,unit_price,line_total").eq("invoice_id",invoiceId);
+    if(items.error)throw items.error;
+    return J({ok:true,invoice:invoice.data,items:items.data||[]});
+  }
   if(payload.action==="ic_detail"){
    const rid=String(payload.id||"");if(!/^[0-9a-f-]{36}$/i.test(rid))return J({error:"Invalid request"},400);
    const q=await db.from("ic_contractor_records").select("id,user_id,section,title,details,status,created_at,updated_at").eq("id",rid).maybeSingle();
