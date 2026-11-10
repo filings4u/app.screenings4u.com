@@ -20,6 +20,60 @@ Deno.serve(async(req)=>{
   if(staff.error||roles.error||access.error)throw staff.error||roles.error||access.error;
   if(staff.data?.employment_status!=="active"||!roles.data?.length||!access.data?.length)return J({error:"Workforce management access required"},403);
   const payload=await req.json().catch(()=>({}));
+
+  if(["billing_save","billing_void","billing_send"].includes(payload.action)){
+    const permsQ=await db.from("staff_role_permissions").select("permission_key").in("role_code",(roles.data||[]).map((x:any)=>x.role_code)).eq("allowed",true);
+    if(permsQ.error)throw permsQ.error;
+    if(!(permsQ.data||[]).some((x:any)=>["dot.manage","nondot.manage","billing.manage","invoices.manage","workforce.manage"].includes(x.permission_key)))return J({error:"Billing management permission required"},403);
+    const invoiceId=String(payload.id||"");
+    if(invoiceId&&!/^[0-9a-f-]{36}$/i.test(invoiceId))return J({error:"Invalid invoice ID"},400);
+    const found=invoiceId?await db.from("invoices").select("*").eq("id",invoiceId).maybeSingle():{data:null,error:null};
+    if(found.error)throw found.error;
+    const inv=found.data;
+    if(invoiceId&&!inv)return J({error:"Invoice not found"},404);
+    if(payload.action==="billing_void"){
+      if(!inv||!["draft","open","sent","past_due"].includes(inv.status)||Number(inv.amount_paid||0)>0)return J({error:"Only unpaid invoices may be voided"},409);
+      const reason=String(payload.reason||"").trim();if(reason.length<5)return J({error:"Provide a void reason"},400);
+      const now=new Date().toISOString();
+      const r=await db.from("invoices").update({status:"void",amount_due:0,public_token_revoked_at:now,notes:[inv.notes||"","Voided: "+reason].join("\n"),updated_at:now,metadata:{...(inv.metadata||{}),void_reason:reason,voided_by:id,voided_at:now}}).eq("id",invoiceId).eq("amount_paid",0).in("status",["draft","open","sent","past_due"]).select("id,status").maybeSingle();
+      if(r.error)throw r.error;if(!r.data)return J({error:"Invoice changed; refresh"},409);return J({ok:true,invoice:r.data});
+    }
+    if(payload.action==="billing_save"){
+      if(inv&&(!["draft","open"].includes(inv.status)||inv.sent_at||Number(inv.amount_paid||0)>0||inv.stripe_payment_intent_id))return J({error:"Only unpaid unsent invoices may be edited"},409);
+      const v=payload.invoice||{},name=String(v.customer_name||"").trim().slice(0,200),email=String(v.customer_email||"").trim().toLowerCase();
+      if(!name||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return J({error:"Customer name and valid email required"},400);
+      const items=Array.isArray(v.items)?v.items.map((x:any)=>({description:String(x.description||"").trim(),quantity:Number(x.quantity),unit_price:Number(x.unit_price)})):[];
+      if(!items.length||items.length>30||items.some((x:any)=>!x.description||!Number.isFinite(x.quantity)||x.quantity<=0||!Number.isFinite(x.unit_price)||x.unit_price<0))return J({error:"Valid line items are required"},400);
+      const round=(x:number)=>Math.round((x+Number.EPSILON)*100)/100;
+      const subtotal=round(items.reduce((n:number,x:any)=>n+round(x.quantity*x.unit_price),0)),tax=Number(v.tax_total||0),discount=Number(v.discount_total||0);
+      if(!Number.isFinite(tax)||!Number.isFinite(discount)||tax<0||discount<0||round(subtotal+tax-discount)<0)return J({error:"Invalid invoice totals"},400);
+      const total=round(subtotal+tax-discount),now=new Date().toISOString(),id2=inv?.id||crypto.randomUUID();
+      const row={customer_name:name,customer_email:email,subtotal,tax_total:round(tax),discount_total:round(discount),total,amount_due:total,due_date:v.due_date||null,terms:String(v.terms||"Due on receipt").slice(0,1500),notes:String(v.notes||"").slice(0,2500),issuer_legal_name:"Workforce",issuer_entity_code:"workforce",issuer_logo_path:"https://workforce.screenings4u.com/images/logo.png",issuer_brand_color:"#01122f",metadata:{...(inv?.metadata||{}),brand:"Workforce",channel:"workforce",created_via:"unified_billing"},updated_at:now};
+      const saved=inv?await db.from("invoices").update(row).eq("id",id2).in("status",["draft","open"]).is("sent_at",null).select("id,invoice_number,status").single():await db.from("invoices").insert({id:id2,invoice_number:"WF-INV-"+now.slice(0,10).replaceAll("-","")+"-"+crypto.randomUUID().slice(0,8).toUpperCase(),status:"draft",currency:"USD",issue_date:now.slice(0,10),amount_paid:0,created_by:id,...row}).select("id,invoice_number,status").single();
+      if(saved.error)throw saved.error;
+      const old=await db.from("invoice_items").delete().eq("invoice_id",id2);if(old.error)throw old.error;
+      const ins=await db.from("invoice_items").insert(items.map((x:any)=>({invoice_id:id2,description:x.description.slice(0,500),quantity:x.quantity,unit_price:x.unit_price,line_total:round(x.quantity*x.unit_price)})));
+      if(ins.error)throw ins.error;
+      return J({ok:true,invoice:saved.data});
+    }
+    if(payload.action==="billing_send"){
+      if(!inv||!["draft","open"].includes(inv.status)||inv.sent_at||Number(inv.amount_due||0)<=0||inv.metadata?.do_not_collect)return J({error:"Invoice cannot be sent"},409);
+      if(!inv.public_token||inv.public_token_revoked_at)return J({error:"No valid secure payment link"},409);
+      const key=Deno.env.get("RESEND_API_KEY");if(!key)return J({error:"Email service not configured"},503);
+      const items=await db.from("invoice_items").select("description,quantity,line_total").eq("invoice_id",invoiceId);if(items.error)throw items.error;
+      if(!items.data?.length)return J({error:"Invoice has no line items"},409);
+      const esc=(v:any)=>String(v??"").replace(/[&<>"']/g,(k:string)=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[k]||k));
+      const money=(v:any)=>Number(v||0).toLocaleString("en-US",{style:"currency",currency:"USD"});
+      const link="https://lab-account.screenings4u.com/pay-invoice.html?id="+encodeURIComponent(invoiceId)+"&token="+encodeURIComponent(inv.public_token);
+      const lineHtml=items.data.map((x:any)=>"<tr><td style='padding:9px;border-bottom:1px solid #ddd'>"+esc(x.description)+"</td><td>"+esc(x.quantity)+"</td><td>"+money(x.line_total)+"</td></tr>").join("");
+      const html="<div style='background:#f1f5fa;padding:30px;font-family:Arial;color:#01122f'><div style='max-width:620px;margin:auto;background:#fff;padding:25px;border-radius:12px'><img src='https://workforce.screenings4u.com/images/logo.png' alt='Workforce' width='200'><h1>Workforce invoice</h1><p>Hello "+esc(inv.customer_name)+", your invoice is ready to review.</p><p><b>"+esc(inv.invoice_number)+"</b></p><table style='width:100%'>"+lineHtml+"</table><h2>Balance due: "+money(inv.amount_due)+"</h2><a style='display:inline-block;background:#fdc102;padding:15px;color:#01122f;text-decoration:none;border-radius:8px' href='"+link+"'>View and Pay Invoice</a><p>"+esc(inv.terms||"")+"</p></div></div>";
+      const email=await fetch("https://api.resend.com/emails",{method:"POST",headers:{Authorization:"Bearer "+key,"Content-Type":"application/json","Idempotency-Key":"workforce-invoice-"+invoiceId},body:JSON.stringify({from:Deno.env.get("WORKFORCE_FROM_EMAIL")||Deno.env.get("SCREENINGS4U_FROM_EMAIL")||"Workforce <notifications@screenings4u.com>",to:[inv.customer_email],subject:"Workforce Invoice "+inv.invoice_number+" — "+money(inv.amount_due),html})});
+      const result=await email.json().catch(()=>({}));if(!email.ok)return J({error:"Email not accepted: "+String(result.message||email.status)},502);
+      const now=new Date().toISOString();const updated=await db.from("invoices").update({status:"sent",sent_at:now,updated_at:now,metadata:{...(inv.metadata||{}),email_provider_id:result.id||null,sent_by:id}}).eq("id",invoiceId).is("sent_at",null);
+      if(updated.error)console.error("Invoice email sent but status update failed",updated.error);
+      return J({ok:true,sent:true,invoice_number:inv.invoice_number});
+    }
+  }
   if(payload.action==="invoices"){
     const q=await db.from("invoices").select("id,invoice_number,order_id,customer_name,customer_email,status,issue_date,due_date,total,amount_due,currency,created_at,sent_at,metadata").order("created_at",{ascending:false}).limit(500);
     if(q.error)throw q.error;
