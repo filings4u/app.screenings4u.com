@@ -4,6 +4,7 @@ window.DOTShell.render(authState);
 const mount=document.getElementById('dotPageMount');if(!mount)throw Error('Page container missing');
 const $=id=>document.getElementById(id),params=new URLSearchParams(location.search),source=params.get('source')==='dot'?'dot':'nondot';
 const backend=source==='dot'?'management-dot-mro-results':'management-nondot-mro-results';
+document.body.classList.add('workforce-management-mode');
 const base='https://elpbnytpciqnbexiaebp.supabase.co/functions/v1/';
 const call=async(name,payload)=>{
  const client=window.dotSupabase;if(!client)throw Error('Management sign-in unavailable');
@@ -11,7 +12,7 @@ const call=async(name,payload)=>{
  const session=await client.auth.getSession();if(!session.data.session)throw Error('Please sign in again');
  let result=await send(session.data.session.access_token);
  if(result.response.status===401){const refresh=await client.auth.refreshSession();if(refresh.error||!refresh.data.session)throw Error('Please sign in again');result=await send(refresh.data.session.access_token)}
- if(!result.response.ok||result.body.error)throw Error(result.body.error||'Request failed');return result.body;
+ if(!result.response.ok||result.body.error){const message=result.body.error||'Request failed';throw Error(result.response.status===404&&message==='Employer unavailable'?'This employer is not eligible for NON-DOT MRO records. Open the employer under the DOT program instead.':message)}return result.body;
 };
 const api=payload=>call(backend,payload);
 const documents=payload=>call('management-mro-documents',{...payload,source,employer_id:$('employer').value});
@@ -69,14 +70,15 @@ let publishedRecords=[];
   };
   async function loadPublished(){
     const employer_id=$('employer').value;if(!employer_id)return;
-    const [results,metadata]=await Promise.all([api({action:'published',employer_id}),documents({action:'list'})]);
+    const results=await api({action:'published',employer_id});
+    let metadata={records:[]};try{metadata=await documents({action:'list'})}catch(err){feedback('MRO results loaded, but document metadata could not be retrieved: '+(err.message||String(err)),'error')}
     recordMeta=new Map((metadata.records||[]).map(x=>[x.id,x]));publishedRecords=results.records||[];
-    $('publishedCount').textContent=publishedRecords.length+' published donor records';$('recordDetail').hidden=true;$('recordDetail').replaceChildren();renderRecords();feedback('Records loaded. Choose a donor to view or edit.','info');
+    $('publishedCount').textContent=publishedRecords.length+' published donor records';$('recordDetail').hidden=true;$('recordDetail').replaceChildren();renderRecords();if((metadata.records||[]).length||!publishedRecords.length)feedback('Records loaded. Choose a donor to view or edit.','info');
   }
   $('recordSearch').oninput=renderRecords;
 
 $('employer').onchange=()=>{const e=$('employer').value;$('backToEntry').href='/results-entry.html?source='+encodeURIComponent(source)+'&employer_id='+encodeURIComponent(e);if(e)loadPublished().catch(err=>feedback(err.message,'error'));else{$('recordDetail').hidden=true;$('publishedRows').replaceChildren();$('publishedCount').textContent='Choose an employer'}};
-try{const response=await api({action:'employers'});for(const employer of response.employers||[])$('employer').add(new Option(employer.legal_name,employer.id));
-const selected=params.get('employer_id');if(selected&&[...$('employer').options].some(x=>x.value===selected))$('employer').value=selected;
+try{const response=await api({action:'employers'});for(const employer of (response.employers||[]).filter(x=>source==='dot'||String(x.workforce_classification||'').toUpperCase()==='NON_DOT'))$('employer').add(new Option(employer.legal_name,employer.id));
+const selected=params.get('employer_id');if(selected&&[...$('employer').options].some(x=>x.value===selected))$('employer').value=selected;else if(selected){$('employer').value='';feedback('This employer is not available in the selected '+(source==='dot'?'DOT':'NON-DOT')+' program. Return to Results Management and select the correct program.','error')}
 $('employer').dispatchEvent(new Event('change'));}catch(e){feedback(e.message,'error')}
 })().catch(e=>{const m=document.getElementById('dotPageMount');if(m)m.textContent=e.message||String(e)});
