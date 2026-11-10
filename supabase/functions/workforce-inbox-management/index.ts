@@ -20,6 +20,13 @@ Deno.serve(async(req)=>{
   if(staff.error||roles.error||access.error)throw staff.error||roles.error||access.error;
   if(staff.data?.employment_status!=="active"||!roles.data?.length||!access.data?.length)return J({error:"Workforce management access required"},403);
   const payload=await req.json().catch(()=>({}));
+  if(payload.action==="ic_detail"){
+   const rid=String(payload.id||"");if(!/^[0-9a-f-]{36}$/i.test(rid))return J({error:"Invalid request"},400);
+   const q=await db.from("ic_contractor_records").select("id,user_id,section,title,details,status,created_at,updated_at").eq("id",rid).maybeSingle();
+   if(q.error)throw q.error;if(!q.data)return J({error:"Request not found"},404);
+   const profile=await db.auth.admin.getUserById(q.data.user_id);
+   return J({ok:true,record:{...q.data,customer_email:profile.data?.user?.email||""}});
+  }
   if(payload.action!=="list")return J({error:"Unsupported action"},400);
   const queries=await Promise.all([
    db.from("workforce_marketing_inquiries").select("id,created_at,first_name,last_name,email,inquiry_type,topic,status,company").order("created_at",{ascending:false}).limit(150),
