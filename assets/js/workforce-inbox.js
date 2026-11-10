@@ -10,7 +10,7 @@
  function paint(){
   const q=String(document.getElementById("inboxSearch")?.value||"").toLowerCase(),kind=document.getElementById("inboxKind")?.value||"all";
   const rows=all.filter(x=>(kind==="all"||x.source===kind)&&[x.reference,x.subject,x.customer,x.status].some(y=>String(y||"").toLowerCase().includes(q)));
-  document.getElementById("inboxList").innerHTML=rows.length?rows.map(x=>'<tr><td><strong>'+esc(labels[x.source]||x.source)+'</strong></td><td>'+esc(x.reference)+'</td><td>'+esc(x.subject)+'</td><td>'+esc(x.customer)+'</td><td>'+esc(x.status)+'</td><td>'+esc(fmt(x.created_at))+'</td><td><a class="nd-btn nd-btn-small primary" href="'+esc(x.destination)+'">Manage</a></td></tr>').join(""):'<tr><td colspan="7" style="padding:28px;text-align:center">No matching requests</td></tr>';
+  document.getElementById("inboxList").innerHTML=rows.length?rows.map(x=>'<tr><td><strong>'+esc(labels[x.source]||x.source)+'</strong></td><td>'+esc(x.reference)+'</td><td>'+esc(x.subject)+'</td><td>'+esc(x.customer)+'</td><td>'+esc(x.status)+'</td><td>'+esc(fmt(x.created_at))+'</td><td><a class="nd-btn nd-btn-small primary" href="'+esc(x.destination+(x.source==='lab_support'?'?ticket='+encodeURIComponent(x.id):''))+'">Manage</a></td></tr>').join(""):'<tr><td colspan="7" style="padding:28px;text-align:center">No matching requests</td></tr>';
   document.getElementById("inboxCount").textContent=rows.length+" records";
  }
  async function load(){
