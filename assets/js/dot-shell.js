@@ -31,24 +31,25 @@ window.DOTDialog=Object.freeze({
  open({title='Please confirm',message='',confirmText='Continue',cancelText='Cancel',danger=false,input=false}={}){
   return new Promise(resolve=>{
    const backdrop=document.createElement('div');
-   backdrop.style.cssText='position:fixed;inset:0;z-index:2147483000;background:rgba(10,28,55,.58);display:flex;align-items:center;justify-content:center;padding:20px';
+   backdrop.style.cssText='position:fixed;inset:0;z-index:2147483000;background:rgba(1,18,47,.70);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:20px';
    const panel=document.createElement('section');
    panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');
    panel.setAttribute('aria-label',title);
-   panel.style.cssText='width:min(100%,480px);background:#fff;border:1px solid #dce6f2;border-radius:16px;box-shadow:0 24px 64px rgba(9,30,62,.28);padding:28px;font:inherit;color:#17365f';
-   const stripe=document.createElement('div');stripe.style.cssText='height:5px;background:#f05a00;border-radius:8px;margin:-28px -28px 24px';
-   const heading=document.createElement('h2');heading.textContent=title;heading.style.cssText='font-size:22px;margin:0 0 12px;color:#17365f';
+   panel.style.cssText='width:min(100%,500px);max-height:90dvh;overflow-y:auto;background:#fff;border:1px solid #d6e2ee;border-radius:16px;box-shadow:0 24px 64px rgba(9,30,62,.28);padding:28px;font:inherit;color:#01122f';
+   const stripe=document.createElement('div');stripe.style.cssText='height:5px;background:#fdc102;border-radius:8px;margin:-28px -28px 24px';
+   const logo=document.createElement('img');logo.src='images/logo.png';logo.alt='Workforce';logo.style.cssText='display:block;width:165px;max-height:52px;object-fit:contain;object-position:left center;background:#01122f;border-radius:8px;padding:9px;margin-bottom:18px';
+   const heading=document.createElement('h2');heading.textContent=title;heading.style.cssText='font-size:22px;margin:0 0 12px;color:#01122f';
    const copy=document.createElement('p');copy.textContent=message;copy.style.cssText='font-size:15px;line-height:1.55;margin:0 0 22px;color:#53657c;white-space:pre-wrap';
    const field=input?document.createElement('input'):null;
    if(field){field.style.cssText='width:100%;height:43px;padding:10px;border:1px solid #bfcddd;border-radius:8px;margin-bottom:20px';}
    const actions=document.createElement('div');actions.style.cssText='display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap';
-   const createButton=(label,primary)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.style.cssText='padding:12px 20px;border-radius:9px;font-weight:700;cursor:pointer;border:1px solid '+(primary?'#e65a00':'#cdd9e7')+';background:'+(primary?(danger?'#b42318':'#f05a00'):'#fff')+';color:'+(primary?'#fff':'#17365f');return b};
+   const createButton=(label,primary)=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.style.cssText='padding:12px 20px;border-radius:9px;font-weight:700;cursor:pointer;border:1px solid '+(primary?(danger?'#b42318':'#fdc102'):'#cdd9e7')+';background:'+(primary?(danger?'#b42318':'#fdc102'):'#fff')+';color:'+(primary&&danger?'#fff':'#01122f');return b};
    const no=createButton(cancelText,false),yes=createButton(confirmText,true);
    const prior=document.activeElement;
    const close=value=>{document.removeEventListener('keydown',onKey,true);backdrop.remove();if(prior&&prior.isConnected&&prior.focus)prior.focus();resolve(value)};
    const onKey=e=>{if(e.key==='Escape'){e.preventDefault();close(input?null:false)}if(e.key==='Tab'){const focusables=field?(cancelText?[field,no,yes]:[field,yes]):(cancelText?[no,yes]:[yes]);const index=focusables.indexOf(document.activeElement);if(e.shiftKey&&index===0){e.preventDefault();yes.focus()}else if(!e.shiftKey&&index===focusables.length-1){e.preventDefault();focusables[0].focus()}}};
    no.onclick=()=>close(input?null:false);yes.onclick=()=>close(input?field.value:true);
-   if(cancelText)actions.append(no);actions.append(yes);panel.append(stripe,heading,copy);if(field)panel.append(field);panel.append(actions);backdrop.append(panel);document.body.append(backdrop);document.addEventListener('keydown',onKey,true);(field||(cancelText?no:yes)).focus();
+   if(cancelText)actions.append(no);actions.append(yes);panel.append(stripe,logo,heading,copy);if(field)panel.append(field);panel.append(actions);backdrop.append(panel);document.body.append(backdrop);document.addEventListener('keydown',onKey,true);(field||(cancelText?no:yes)).focus();
   });
  },
  confirm(message,options={}){return this.open({message,...options})},
