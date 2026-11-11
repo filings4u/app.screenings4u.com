@@ -332,11 +332,12 @@ async function agencyPage(){
  };
  const x=catalog[agency]||catalog.FMCSA;
  shell(window.DOT_AUTH_STATE,`${agency} Data & Systems`,`${x.name} — ${x.summary}`,`<a class="dot-btn" href="dot-agencies.html">Back to Agencies</a>`);
+ document.querySelector('#dotPageMount .dot-page')?.classList.add('wf-agency-page');
  $('#dotPageBody').innerHTML=`
   <div class="dot-agency-detail-hero"><div><span class="dot-eyebrow">${agency} INTEGRATION WORKSPACE</span><h2>${x.name}</h2><p>${x.reg}</p></div><span class="dot-integration-badge ${x.tone}">${x.badge}</span></div>
   <div class="dot-card"><div class="dot-card-head"><div><h2>Integration guidance</h2><p>${x.api}</p></div></div></div>
   <div class="dot-agency-resource-grid">${x.resources.map(([title,desc,url,label])=>`<div class="dot-resource-card"><div><span class="dot-resource-source">OFFICIAL FEDERAL RESOURCE</span><h3>${esc(title)}</h3><p>${esc(desc)}</p></div><a class="dot-btn" href="${url}" target="_blank" rel="noopener noreferrer">${esc(label)} ↗</a></div>`).join('')}</div>
-  <div class="dot-card"><div class="dot-card-head"><div><h2>How screenings4u should use this agency</h2><p>Recommended implementation boundaries for the DOT portal.</p></div></div><div class="dot-card-body"><div class="dot-guidance-list">${x.uses.map((u,i)=>`<div><span>${String(i+1).padStart(2,'0')}</span><p>${esc(u)}</p></div>`).join('')}</div></div></div>
+  <div class="dot-card"><div class="dot-card-head"><div><h2>How Workforce should use this agency</h2><p>Recommended implementation boundaries for the DOT portal.</p></div></div><div class="dot-card-body"><div class="dot-guidance-list">${x.uses.map((u,i)=>`<div><span>${String(i+1).padStart(2,'0')}</span><p>${esc(u)}</p></div>`).join('')}</div></div></div>
   <div class="dot-callout"><div><strong>Portal pages are managed elsewhere</strong><span>Use <a href="dot-portal-control.html">Portal Control</a> for screens, routes, and portal-page configuration. This agency workspace is now reserved for government systems, API/data connections, and regulatory resources.</span></div></div>`;
 }
 
