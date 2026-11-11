@@ -876,6 +876,7 @@ async function loadFollowUpTestingDetail(){
 
 async function loadClearinghouse(){
  renderBase({title:'FMCSA Clearinghouse',copy:'Internal readiness tracking for C/TPAs and DOT employers. Track registration, designation, query plan status, annual query dates, and account identifiers.',actions:''});
+ const clearingPage=document.querySelector('#dotPageMount .dot-page');if(clearingPage)clearingPage.classList.add('dot-clearinghouse-page');
  const d=await DOTApi.call('clearinghouse');
  const tracking=get(d,'clearinghouse_tracking','clearinghouse'),ctpas=get(d,'ctpas'),employers=get(d,'employers');
  const byOrg=new Map(tracking.map(x=>[String(x.organization_id||''),x]));
