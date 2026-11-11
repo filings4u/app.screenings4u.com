@@ -801,7 +801,7 @@ const RTD_AGENCIES={
 const rtdAgencyCode=v=>{const key=String(v||'').toUpperCase().trim();return RTD_AGENCIES[key]?key:'FMCSA'};
 const rtdAgencyNote=agency=>{const a=RTD_AGENCIES[rtdAgencyCode(agency)];return '<strong>'+esc(a.label)+'</strong><span>'+esc(a.rule)+': '+esc(a.note)+'</span><a href="'+a.url+'" target="_blank" rel="noopener noreferrer">Official agency guidance ↗</a>'};
 async function loadReturnToDuty(){
- renderBase({title:'Return-to-Duty / SAP',copy:'Manage every DOT return-to-duty workflow created by C/TPAs, direct employers, and screenings4u administrators.',actions:'<a class="dot-btn primary" href="dot-return-to-duty-new.html">New RTD Workflow</a>'});
+ renderBase({title:'Return-to-Duty / SAP',copy:'Manage every DOT return-to-duty workflow created by C/TPAs, direct employers, and Workforce administrators.',actions:'<a class="dot-btn primary" href="dot-return-to-duty-new.html">New RTD Workflow</a>'});
  document.querySelector('.dot-page')?.classList.add('rtd-admin-page');
  const d=await DOTApi.call('rtd');
  const cases=get(d,'sap_cases','rtd_cases'), compliance=get(d,'compliance_cases'), employers=get(d,'employers'), employees=get(d,'employees'), ctpas=get(d,'ctpas');
@@ -949,7 +949,7 @@ function followUpTestDone(t){return !!t?.completed_at||/complete|completed|final
 function followUpNextDate(tests){const a=tests.filter(t=>!followUpTestDone(t)&&t.scheduled_for).sort((a,b)=>String(a.scheduled_for).localeCompare(String(b.scheduled_for)));return a[0]?.scheduled_for||null}
 async function loadFollowUpTesting(){
  renderBase({title:'Follow-Up Testing',copy:'Manage SAP-prescribed DOT follow-up testing plans and observed follow-up tests created by C/TPAs, direct employers, and screenings4u administrators.',actions:'<a class="dot-btn primary" href="dot-follow-up-testing-new.html">New Follow-Up Plan</a>'});
- document.querySelector('.dot-page')?.classList.add('followup-admin-page');
+ document.querySelector('.dot-page')?.classList.add('followup-admin-page','rtd-admin-page');
  const d=await DOTApi.call('follow_up_testing');
  const plans=get(d,'follow_up_plans'),tests=get(d,'follow_up_tests'),employers=get(d,'employers'),employees=get(d,'employees'),orders=get(d,'testing_orders');
  const empMap=new Map(employers.map(x=>[String(x.id),x])),personMap=new Map(employees.map(x=>[String(x.id),x])),orderMap=new Map(orders.map(x=>[String(x.id),x]));
@@ -961,7 +961,7 @@ async function loadFollowUpTesting(){
 }
 async function loadFollowUpTestingNew(){
  renderBase({title:'Create Follow-Up Testing Plan',copy:'Enter the written SAP follow-up testing requirements for a DOT-covered employee. This is a standalone follow-up testing workflow, not a return-to-duty case.',actions:'<a class="dot-btn" href="dot-follow-up-testing.html">Back to Follow-Up Testing</a>'});
- document.querySelector('.dot-page')?.classList.add('followup-form-page');
+ document.querySelector('.dot-page')?.classList.add('followup-form-page','wf-rtd-page');
  const d=await DOTApi.call('follow_up_testing'),employers=get(d,'employers'),employees=get(d,'employees'),programs=get(d,'programs');
  const fromRtd=new URLSearchParams(location.search);
  const rtdCaseId=fromRtd.get('rtd_case_id')||'';
@@ -976,7 +976,7 @@ async function loadFollowUpTestingNew(){
 async function loadFollowUpTestingDetail(){
  const id=new URLSearchParams(location.search).get('id')||'';
  renderBase({title:'Follow-Up Testing Workflow',copy:'Administer the SAP-prescribed follow-up testing plan and create unannounced directly observed test orders.',actions:'<a class="dot-btn" href="dot-follow-up-testing.html">Back to Follow-Up Testing</a>'});
- document.querySelector('.dot-page')?.classList.add('followup-detail-page');
+ document.querySelector('.dot-page')?.classList.add('followup-detail-page','wf-rtd-page');
  if(!id){$('#dotPageBody').innerHTML='<div class="dot-card"><div class="dot-empty">Select a follow-up testing plan.</div></div>';return}
  const d=await DOTApi.call('follow_up_testing'),plans=get(d,'follow_up_plans'),tests=get(d,'follow_up_tests'),employers=get(d,'employers'),employees=get(d,'employees'),orders=get(d,'testing_orders');
  const plan=plans.find(x=>String(x.id)===String(id));if(!plan){$('#dotPageBody').innerHTML='<div class="dot-card"><div class="dot-empty">Follow-up testing plan not found.</div></div>';return}
