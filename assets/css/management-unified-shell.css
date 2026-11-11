@@ -122,3 +122,29 @@ body.s4u-sidebar-hidden #managementApp .wf-main{width:100%!important;min-width:0
 body.s4u-sidebar-hidden #managementApp #dotPageMount{width:100%!important;max-width:1450px!important;min-width:0!important;margin-inline:auto!important;box-sizing:border-box!important;padding-inline:24px!important}
 body.s4u-sidebar-hidden #managementApp #dotPageMount>*,body.s4u-sidebar-hidden #managementApp #dotPageMount :is(.wo-wrap,.ic,.pm,.nd-page,.dot-page,.wf-customer-editor,.wf-record-page,.dot-content,.dot-page-content,.page-content){width:100%!important;max-width:100%!important;min-width:0!important;margin-inline:auto!important;box-sizing:border-box!important}
 }
+
+
+/* Canonical Workforce Management shell appearance.
+   Shared navigation is rendered once by dot-shell.js; individual page styles must
+   not redefine the sidebar, brand, topbar or scroll containers. */
+#managementApp.wf-app{background:#f1f5fb;color:#01122f}
+#managementApp .wf-side{background:#01122f!important;color:#fff!important;border-right:0!important;scrollbar-width:none!important}
+#managementApp .wf-side::-webkit-scrollbar,#managementApp .wf-nav::-webkit-scrollbar{display:none!important}
+#managementApp .wf-brand{background:#01122f!important;color:#fff!important;border-bottom:1px solid rgba(255,255,255,.15)!important;padding:19px 17px!important}
+#managementApp .wf-brand img{display:block!important;max-width:100%!important;width:190px!important;max-height:58px!important;height:auto!important;object-fit:contain!important;object-position:left center!important;background:none!important;padding:0!important;border-radius:0!important}
+#managementApp .wf-nav-section h2{color:#8aa7c8!important;font-size:10px!important}
+#managementApp .wf-nav-link{color:#e4ecf8!important;min-height:40px!important;font-weight:700}
+#managementApp .wf-nav-link strong{color:inherit!important}
+#managementApp .wf-nav-link span{color:#fdc102!important}
+#managementApp .wf-nav-link:hover,#managementApp .wf-nav-link:focus-visible{background:#142e51!important;color:#fff!important}
+#managementApp .wf-nav-link.active,#managementApp .wf-nav-link[aria-current="page"]{background:#fdc102!important;color:#01122f!important}
+#managementApp .wf-nav-link.active strong,#managementApp .wf-nav-link[aria-current="page"] strong{color:#01122f!important}
+#managementApp .wf-nav-link.active span,#managementApp .wf-nav-link[aria-current="page"] span{color:#01122f!important}
+#managementApp .wf-top{background:#fff!important;border-bottom:1px solid #d8e4ef!important;color:#01122f!important}
+#managementApp .wf-top>strong{color:#01122f!important}
+#managementApp .wf-main{background:#f1f5fb!important}
+#managementApp .wf-module-content{min-width:0}
+#managementApp .wf-module-content :is(a,button,input,select,textarea):focus-visible{outline-color:#fdc102!important}
+#managementApp .wf-module-content a:is(.wf-customer-primary,.wf-primary,.nd-btn.primary){background:#fdc102!important;border-color:#fdc102!important;color:#01122f!important}
+#managementApp .wf-module-content a:is(.wf-customer-primary,.wf-primary,.nd-btn.primary):hover{background:#f0b800!important}
+@media(max-width:900px){#managementApp .wf-side{box-shadow:4px 0 18px rgba(1,18,47,.15)}}
