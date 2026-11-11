@@ -16,11 +16,11 @@ const call=async(name,payload)=>{
 };
 const api=payload=>call(backend,payload);
 const documents=payload=>call('management-mro-documents',{...payload,source,employer_id:$('employer').value});
-mount.innerHTML=`<div class="dot-page results-editor re-redesign re-records-page">
+mount.innerHTML=`<div class="re-records-page">
 <header class="re-hero"><div><span class="dot-eyebrow">WORKFORCE / RESULTS MANAGEMENT / ${source==='dot'?'DOT':'NON-DOT'}</span><h1>MRO Records</h1><p>Review published donor records, open official documents, and manage individual results.</p></div><div class="wr-mro-header-actions"><a class="wr-back-results" href="results-management.html">← All Results</a><a class="re-back" id="backToEntry" href="/results-entry.html">+ Enter new results</a></div></header>
 <div id="resultsFeedback" class="re-feedback" role="status" aria-live="polite">Loading published records…</div>
 <section class="re-panel"><div class="re-section-title"><span class="re-step">01</span><div><h2>Select employer</h2><p>Only this employer's published results will appear.</p></div></div><div class="re-fields"><label class="re-wide">Employer<select id="employer"><option value="">Choose employer</option></select></label></div></section>
-<section class="re-panel re-published" style="margin-top:20px"><div class="re-section-title"><span class="re-step">02</span><div><h2>Published MRO records</h2><p id="publishedCount">Loading…</p><p>Review, replace a donor's MRO PDF, or update their testing status. Do not create duplicate results.</p></div></div>
+<section class="re-panel re-published"><div class="re-section-title"><span class="re-step">02</span><div><h2>Published MRO records</h2><p id="publishedCount">Loading…</p><p>Review, replace a donor's MRO PDF, or update their testing status. Do not create duplicate results.</p></div></div>
 <div class="mro-record-tools"><label>Search records<input id="recordSearch" type="search" placeholder="Donor name or identification number"></label><span id="recordCount"></span></div><div id="publishedRows" class="mro-record-list"></div><section id="recordDetail" class="mro-detail" hidden aria-label="Selected MRO record"></section></section></div>`;
 const feedback=(message,kind='info')=>{const e=$('resultsFeedback');e.textContent=message;e.dataset.kind=kind;if(kind==='error')e.scrollIntoView({block:'start',behavior:'smooth'})};
 const cell=(tr,value='')=>{const td=document.createElement('td');td.textContent=value==null||value===''?'—':String(value);tr.append(td);return td};
