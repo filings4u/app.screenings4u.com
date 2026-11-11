@@ -148,3 +148,25 @@ body.s4u-sidebar-hidden #managementApp #dotPageMount>*,body.s4u-sidebar-hidden #
 #managementApp .wf-module-content a:is(.wf-customer-primary,.wf-primary,.nd-btn.primary){background:#fdc102!important;border-color:#fdc102!important;color:#01122f!important}
 #managementApp .wf-module-content a:is(.wf-customer-primary,.wf-primary,.nd-btn.primary):hover{background:#f0b800!important}
 @media(max-width:900px){#managementApp .wf-side{box-shadow:4px 0 18px rgba(1,18,47,.15)}}
+
+
+/* Sidebar scroll remains functional, without a visible track or thumb. */
+#managementApp #s4uSidebar,
+#managementApp #s4uSidebar .wf-nav,
+#managementApp .wf-side,
+#managementApp .wf-nav{
+  scrollbar-width:none!important;
+  -ms-overflow-style:none!important;
+  scrollbar-color:transparent transparent!important;
+}
+#managementApp #s4uSidebar::-webkit-scrollbar,
+#managementApp #s4uSidebar .wf-nav::-webkit-scrollbar,
+#managementApp .wf-side::-webkit-scrollbar,
+#managementApp .wf-nav::-webkit-scrollbar{
+  display:none!important;
+  width:0!important;
+  height:0!important;
+  background:transparent!important;
+}
+#managementApp #s4uSidebar::-webkit-scrollbar-thumb,
+#managementApp .wf-side::-webkit-scrollbar-thumb{display:none!important;background:transparent!important}
