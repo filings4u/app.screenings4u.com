@@ -1,1 +1,67 @@
-<!doctype html><html lang="en" class="dot-auth-pending"><head><link rel="icon" type="image/png" href="images/fav.png"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MRO Records | Workforce Management</title><meta name="robots" content="noindex"><link rel="stylesheet" href="assets/css/dot-portal.css"><link rel="stylesheet" href="assets/css/workforce-network-hub.css?v=20261109-cssonly4"><link rel="stylesheet" href="assets/css/results-entry.css?v=20261018-draftreview2"><link rel="stylesheet" href="assets/css/results-entry-enhancements.css?v=20261030-white-results"><meta name="theme-color" content="#01122f"></head><body class="workforce-management-mode"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="assets/js/dot-config.js?v=7"></script><script src="assets/js/dot-auth.js?v=20261014-enterprise-admin-login"></script><script src="assets/js/dot-api.js?v=20261006-fast1"></script><script src="assets/js/dot-shell.js?v=20261110-white-logo2"></script><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script><script src="assets/js/mro-records-page.js?v=20261110-2"></script></body></html>
+<!doctype html><html lang="en" class="dot-auth-pending"><head><link rel="icon" type="image/png" href="images/fav.png"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MRO Records | Workforce Management</title><meta name="robots" content="noindex"><link rel="stylesheet" href="assets/css/dot-portal.css"><link rel="stylesheet" href="assets/css/workforce-network-hub.css?v=20261109-cssonly4"><link rel="stylesheet" href="assets/css/results-entry.css?v=20261018-draftreview2"><link rel="stylesheet" href="assets/css/results-entry-enhancements.css?v=20261030-white-results"><style id="workforce-mro-layout">/* MRO Records: Workforce visual redesign. Scoped to this page only. */
+body.workforce-management-mode #dotPageMount:has(.re-records-page){width:min(1450px,calc(100% - 42px));max-width:none;margin:0 auto;padding:22px 0 56px!important}
+body.workforce-management-mode .results-editor.re-redesign.re-records-page{max-width:none!important;width:100%!important;margin:0!important;padding:0!important;background:transparent!important;color:#01122f}
+.re-records-page,.re-records-page *{box-sizing:border-box}
+.re-records-page .re-hero{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:20px!important;flex-wrap:wrap!important;border:0!important;border-bottom:1px solid #d7e2ee!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;padding:4px 0 20px!important;margin:0 0 18px!important;min-height:0!important}
+.re-records-page .re-hero .dot-eyebrow{color:#a17a00!important;font-size:10px!important;letter-spacing:.11em!important;font-weight:850!important}
+.re-records-page .re-hero h1{font-size:clamp(25px,2.2vw,32px)!important;line-height:1.2!important;margin:7px 0!important;font-weight:850!important;letter-spacing:-.035em!important;color:#01122f!important}
+.re-records-page .re-hero p{font-size:12px!important;line-height:1.55!important;color:#667d95!important;margin:0!important;max-width:770px!important}
+.re-records-page .wr-mro-header-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.re-records-page .wr-back-results,.re-records-page .re-hero .re-back{display:inline-flex!important;align-items:center;justify-content:center;gap:8px;text-decoration:none;min-height:41px!important;padding:10px 15px!important;background:#fff!important;border:1px solid #c7d7e9!important;border-radius:9px!important;box-shadow:none!important;color:#01122f!important;font-size:12px!important;font-weight:800!important;white-space:nowrap}
+.re-records-page .re-hero .re-back{background:#fdc102!important;border-color:#fdc102!important}
+.re-records-page .wr-back-results:hover{background:#f4f8fd!important}
+.re-records-page .re-hero .re-back:hover{background:#f2b900!important}
+.re-records-page .re-feedback{display:flex;align-items:center;min-height:44px;padding:12px 16px!important;margin:0 0 18px!important;background:#eaf2ff!important;color:#245079!important;border:1px solid #d4e3f3!important;border-radius:10px!important;font-size:12px!important;font-weight:700!important;line-height:1.5!important}
+.re-records-page .re-feedback[data-kind="error"]{background:#fff2f1!important;border-color:#f0bab5!important;color:#a32e25!important}
+.re-records-page .re-feedback[data-kind="success"]{background:#effaf2!important;border-color:#b0dfbf!important;color:#17613b!important}
+.re-records-page .re-panel{background:#fff!important;border:1px solid #d8e3ef!important;border-radius:14px!important;box-shadow:0 7px 24px rgba(1,18,47,.045)!important;padding:0!important;overflow:hidden!important}
+.re-records-page .re-panel.re-published{margin-top:18px!important}
+.re-records-page .re-section-title{display:flex!important;align-items:center!important;gap:14px!important;margin:0!important;padding:21px 24px!important;background:#f8fafd!important;border-bottom:1px solid #e6edf4!important}
+.re-records-page .re-section-title h2{font-size:19px!important;color:#01122f!important;letter-spacing:-.025em!important;margin:0 0 5px!important;font-weight:850!important}
+.re-records-page .re-section-title p{font-size:12px!important;color:#71849b!important;line-height:1.45!important;margin:0!important}
+.re-records-page .re-section-title p+p{margin-top:4px!important}
+.re-records-page .re-step{display:grid!important;place-items:center!important;width:40px!important;height:40px!important;flex:0 0 40px!important;background:#fff4d5!important;color:#946800!important;border-radius:12px!important;font-size:13px!important;font-weight:850!important}
+.re-records-page .re-fields{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:12px!important;padding:21px 24px!important}
+.re-records-page .re-fields .re-wide{grid-column:1/-1!important}
+.re-records-page label{font-size:12px!important;font-weight:800!important;color:#315674!important;gap:8px!important}
+.re-records-page :is(select,input){color:#01122f!important;border:1px solid #cbd9e9!important;border-radius:9px!important;background:#fff!important;min-height:44px!important;font:inherit!important;font-size:12px!important;padding:10px 13px!important}
+.re-records-page #employer{width:100%!important}
+.re-records-page .mro-record-tools{display:flex!important;align-items:flex-end!important;justify-content:space-between!important;gap:12px!important;flex-wrap:wrap!important;padding:16px 24px!important;margin:0!important;background:#fff!important;border-bottom:1px solid #e6edf4}
+.re-records-page .mro-record-tools label{flex:1 1 360px!important;max-width:550px!important}
+.re-records-page .mro-record-tools input{width:100%!important;max-width:100%!important}
+.re-records-page #recordCount{display:inline-flex!important;align-items:center;justify-content:center;border:1px solid #dfe8f2!important;background:#eaf1f9!important;border-radius:999px!important;padding:7px 12px!important;color:#315675!important;font-size:11px!important;font-weight:800!important;white-space:nowrap!important}
+.re-records-page .mro-record-list{display:grid!important;gap:0!important;min-width:0!important;background:#fff!important}
+.re-records-page .mro-record-item{display:grid!important;grid-template-columns:minmax(190px,1.2fr) minmax(120px,.5fr) minmax(180px,.9fr) auto!important;align-items:center!important;gap:15px!important;padding:18px 23px!important;border:0!important;border-bottom:1px solid #e6edf4!important;border-radius:0!important;box-shadow:none!important;background:#fff!important}
+.re-records-page .mro-record-item:last-child{border-bottom:0!important}
+.re-records-page .mro-record-item:hover{background:#f8fbff!important}
+.re-records-page .mro-record-main h3{color:#01122f!important;font-size:14px!important;line-height:1.4!important;font-weight:850!important;margin:0 0 5px!important}
+.re-records-page .mro-record-main p{color:#71859a!important;font-size:11px!important;line-height:1.45!important;margin:0!important}
+.re-records-page .mro-record-status span{background:#eaf2ff!important;color:#164e87!important;font-size:10px!important;font-weight:850!important;padding:6px 11px!important;border-radius:999px!important}
+.re-records-page .mro-record-status small{font-size:10px!important;color:#71849b!important}
+.re-records-page .mro-record-document{min-width:0!important;display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:5px!important}
+.re-records-page .mro-record-document strong{font-size:11px!important;color:#315674!important}
+.re-records-page .mro-record-document span{color:#71849b!important;font-size:11px!important;line-height:1.5!important;overflow-wrap:anywhere!important}
+.re-records-page button{display:inline-flex;align-items:center;justify-content:center;min-height:38px!important;padding:9px 14px!important;border:1px solid #c7d7e9!important;border-radius:8px!important;background:#fff!important;color:#164e87!important;font:inherit!important;font-size:11px!important;font-weight:800!important;white-space:nowrap}
+.re-records-page button:hover{background:#edf5ff!important}
+.re-records-page .mro-record-actions button,.re-records-page .mro-detail-actions button:not(.mro-danger){background:#fdc102!important;color:#01122f!important;border-color:#fdc102!important}
+.re-records-page .mro-record-actions button:hover,.re-records-page .mro-detail-actions button:not(.mro-danger):hover{background:#f2b900!important}
+.re-records-page .mro-danger{background:#fff1f0!important;color:#ae2525!important;border-color:#e8b6b6!important}
+.re-records-page .mro-detail{margin:22px 24px!important;padding:22px!important;background:#f8fafd!important;border:1px solid #d8e3ef!important;border-radius:12px!important}
+.re-records-page .mro-detail-header{display:flex!important;align-items:flex-start!important;justify-content:space-between!important;gap:15px!important}
+.re-records-page .mro-detail-header h3{color:#01122f!important;font-size:18px!important;font-weight:850!important}
+.re-records-page .mro-detail-header p{color:#71849b!important;font-size:12px!important}
+.re-records-page .mro-data-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important;margin:20px 0!important}
+.re-records-page .mro-data-field{background:#fff!important;border:1px solid #e0e8f1!important;border-radius:9px!important;padding:14px!important}
+.re-records-page .mro-data-field small{font-size:11px!important;color:#71849b!important}
+.re-records-page .mro-data-field strong{color:#01122f!important;font-size:12px!important}
+.re-records-page .mro-detail-edit{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:14px!important;margin-bottom:18px!important}
+.re-records-page .mro-document-row{background:#fff!important;border:1px solid #dbe5ef!important;border-radius:10px!important;padding:17px!important}
+.re-records-page .mro-document-row strong{color:#01122f!important}
+.re-records-page .mro-detail-actions{display:flex;gap:10px!important;justify-content:flex-end;margin-top:18px!important}
+.re-records-page .mro-empty{padding:45px 20px!important;color:#71849b!important;text-align:center!important;font-size:12px!important}
+.re-records-page :is(a,button,select,input):focus-visible{outline:3px solid #fdc102!important;outline-offset:2px!important}
+.re-records-page button:disabled{opacity:.55!important;cursor:wait!important}
+@media(max-width:1150px){.re-records-page .mro-record-item{grid-template-columns:minmax(0,1fr) minmax(120px,.5fr)!important;align-items:start!important}.re-records-page .mro-record-document{grid-column:1!important}.re-records-page .mro-record-actions{grid-column:2!important;grid-row:2!important}}
+@media(max-width:700px){body.workforce-management-mode #dotPageMount:has(.re-records-page){width:calc(100% - 24px);padding:15px 0 38px!important}.re-records-page .re-hero{align-items:stretch!important}.re-records-page .wr-mro-header-actions{width:100%}.re-records-page .wr-mro-header-actions a{flex:1}.re-records-page .re-section-title{padding:17px 16px!important}.re-records-page .re-fields,.re-records-page .mro-record-tools{padding:16px!important}.re-records-page .mro-record-item{grid-template-columns:1fr!important;gap:12px!important;padding:17px 16px!important}.re-records-page .mro-record-document,.re-records-page .mro-record-actions{grid-column:auto!important;grid-row:auto!important}.re-records-page .mro-record-actions button{width:100%}.re-records-page .mro-detail{margin:15px!important;padding:16px!important}.re-records-page .mro-data-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.re-records-page .mro-detail-edit{grid-template-columns:1fr!important}}
+@media(max-width:440px){.re-records-page .mro-data-grid{grid-template-columns:1fr!important}.re-records-page .mro-detail-actions button{width:100%!important}}
+</style><meta name="theme-color" content="#01122f"></head><body class="workforce-management-mode"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="assets/js/dot-config.js?v=7"></script><script src="assets/js/dot-auth.js?v=20261014-enterprise-admin-login"></script><script src="assets/js/dot-api.js?v=20261006-fast1"></script><script src="assets/js/dot-shell.js?v=20261110-white-logo2"></script><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script><script src="assets/js/mro-records-page.js?v=20261110-redesign3"></script></body></html>
