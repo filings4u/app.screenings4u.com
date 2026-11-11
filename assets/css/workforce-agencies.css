@@ -1,0 +1,60 @@
+/* Agency Data & Systems — Workforce management-only presentation */
+body.workforce-management-mode #dotPageMount:has(.wf-agency-page){width:min(1450px,calc(100% - 42px));max-width:none;margin:0 auto;padding:22px 0 58px!important}
+.wf-agency-page,.wf-agency-page *{box-sizing:border-box}
+.wf-agency-page{max-width:none!important;min-width:0!important;width:100%!important;margin:0!important;padding:0!important;overflow:visible!important;color:#01122f;font-size:13px}
+.wf-agency-page .dot-page-head{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;padding:4px 0 20px!important;margin:0 0 18px!important;border-bottom:1px solid #d7e2ee!important}
+.wf-agency-page .dot-page-head .dot-eyebrow{font-size:10px!important;letter-spacing:.11em!important;color:#a17a00!important;font-weight:850!important}
+.wf-agency-page .dot-page-head h1{font-size:clamp(25px,2.2vw,32px)!important;line-height:1.2!important;letter-spacing:-.035em!important;font-weight:850!important;color:#01122f!important;margin:7px 0!important}
+.wf-agency-page .dot-page-head p{color:#667d95!important;font-size:12px!important;line-height:1.55!important;margin:0!important;max-width:800px!important}
+.wf-agency-page .dot-actions{display:flex!important;align-items:center;gap:9px;flex-wrap:wrap}
+.wf-agency-page .dot-btn{display:inline-flex!important;justify-content:center;align-items:center;min-height:41px!important;padding:10px 15px!important;border:1px solid #c7d7e9!important;border-radius:9px!important;background:#fff!important;color:#01122f!important;font-size:12px!important;font-weight:800!important;text-decoration:none!important;white-space:nowrap!important;box-shadow:none!important;cursor:pointer}
+.wf-agency-page .dot-btn:hover{background:#f4f8fd!important;border-color:#9db9d7!important}
+.wf-agency-page .dot-btn.primary,.wf-agency-page .wf-agency-primary{background:#fdc102!important;border-color:#fdc102!important;color:#01122f!important}
+.wf-agency-page .dot-btn.primary:hover,.wf-agency-page .wf-agency-primary:hover{background:#efb900!important}
+.wf-agency-page .dot-callout,.wf-agency-page .dot-agency-callout{border:1px solid #d6e3f1!important;border-radius:12px!important;background:#f6fafe!important;color:#315674!important;padding:17px 19px!important;margin:0 0 18px!important;box-shadow:none!important}
+.wf-agency-page .dot-callout strong,.wf-agency-page .dot-agency-callout strong{display:block;color:#01122f!important;font-size:13px!important;font-weight:850!important;margin:0 0 6px!important}
+.wf-agency-page .dot-callout span,.wf-agency-page .dot-agency-callout span{display:block;color:#5c738d!important;font-size:12px!important;line-height:1.55!important}
+.wf-agency-page .dot-agency-metrics{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:12px!important;margin:0 0 18px!important}
+.wf-agency-page .dot-agency-metrics .dot-metric{display:flex!important;flex-direction:column!important;gap:4px!important;min-height:115px!important;min-width:0!important;background:#fff!important;border:1px solid #d9e4f0!important;border-radius:13px!important;padding:19px!important;box-shadow:0 5px 17px rgba(1,18,47,.035)!important}
+.wf-agency-page .dot-metric>span{font-size:10px!important;font-weight:850!important;letter-spacing:.07em!important;color:#5e728b!important}
+.wf-agency-page .dot-metric>strong{font-size:27px!important;color:#01122f!important;line-height:1.16!important;letter-spacing:-.04em!important}
+.wf-agency-page .dot-metric>small{font-size:10px!important;color:#7b8ba1!important;line-height:1.4!important}
+.wf-agency-page .dot-agency-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:14px!important;margin:0 0 18px!important;min-width:0!important}
+.wf-agency-page .dot-agency-card{display:flex!important;flex-direction:column!important;min-width:0!important;min-height:300px!important;padding:20px!important;background:#fff!important;color:#01122f!important;border:1px solid #d8e3ef!important;border-radius:14px!important;text-decoration:none!important;box-shadow:0 5px 17px rgba(1,18,47,.035)!important;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease}
+.wf-agency-page .dot-agency-card:hover{transform:translateY(-2px);border-color:#a2bfda!important;box-shadow:0 9px 25px rgba(1,18,47,.075)!important}
+.wf-agency-page .dot-agency-card-top{display:flex!important;align-items:center;justify-content:space-between;gap:12px!important;margin:0 0 17px!important}
+.wf-agency-page .dot-agency-code{font-size:12px!important;letter-spacing:.08em!important;color:#946800!important;font-weight:900!important}
+.wf-agency-page .dot-integration-badge{display:inline-flex;align-items:center;justify-content:center;white-space:normal;text-align:center;max-width:190px;padding:6px 10px!important;background:#edf3f9!important;border-radius:999px!important;color:#315674!important;font-size:10px!important;font-weight:850!important;line-height:1.3!important}
+.wf-agency-page .dot-integration-badge.green{background:#e9f7ee!important;color:#187647!important}
+.wf-agency-page .dot-integration-badge.gray{background:#f0f3f6!important;color:#51677e!important}
+.wf-agency-page .dot-agency-card h2{color:#01122f!important;font-size:18px!important;font-weight:850!important;letter-spacing:-.025em!important;line-height:1.3!important;margin:0 0 8px!important}
+.wf-agency-page .dot-agency-card p{font-size:12px!important;color:#667d95!important;line-height:1.5!important;margin:0 0 15px!important}
+.wf-agency-page .dot-agency-reg{font-size:11px!important;font-weight:850!important;color:#315674!important;margin:0 0 5px!important}
+.wf-agency-page .dot-agency-mode{font-size:11px!important;color:#71849b!important;margin:0 0 14px!important}
+.wf-agency-page .dot-agency-tools{display:flex!important;flex-wrap:wrap!important;align-content:flex-start;gap:7px!important;margin-bottom:18px!important}
+.wf-agency-page .dot-agency-tools span{padding:6px 10px!important;border-radius:999px!important;background:#f1f5fa!important;color:#456682!important;font-size:10px!important;font-weight:750!important}
+.wf-agency-page .dot-agency-open{margin-top:auto!important;display:inline-flex;align-items:center;gap:6px;color:#13568d!important;font-size:11px!important;font-weight:850!important}
+.wf-agency-page .dot-card{background:#fff!important;border:1px solid #d8e3ef!important;border-radius:14px!important;box-shadow:0 5px 17px rgba(1,18,47,.035)!important;overflow:hidden!important}
+.wf-agency-page .dot-card-head{padding:20px 22px!important;border-bottom:1px solid #e5ecf4!important}
+.wf-agency-page .dot-card-head h2{font-size:18px!important;letter-spacing:-.025em!important;color:#01122f!important;margin:0 0 5px!important}
+.wf-agency-page .dot-card-head p{font-size:12px!important;line-height:1.55!important;color:#71849b!important;margin:0!important}
+.wf-agency-page .dot-agency-detail-hero{display:flex!important;align-items:center!important;justify-content:space-between!important;flex-wrap:wrap!important;gap:18px!important;background:#fff!important;border:1px solid #d8e3ef!important;border-radius:14px!important;padding:22px 24px!important;margin:0 0 16px!important;box-shadow:0 5px 17px rgba(1,18,47,.035)!important}
+.wf-agency-page .dot-agency-detail-hero h2{font-size:23px!important;color:#01122f!important;letter-spacing:-.025em!important;font-weight:850!important;margin:7px 0!important}
+.wf-agency-page .dot-agency-detail-hero p{font-size:12px!important;color:#667d95!important;margin:0!important}
+.wf-agency-page .dot-agency-resource-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:14px!important;margin:18px 0!important}
+.wf-agency-page .dot-resource-card{display:flex!important;flex-direction:column!important;justify-content:space-between!important;gap:16px!important;min-width:0!important;min-height:190px!important;padding:20px!important;border:1px solid #d8e3ef!important;border-radius:13px!important;background:#fff!important;box-shadow:0 5px 17px rgba(1,18,47,.025)!important}
+.wf-agency-page .dot-resource-source{font-size:10px!important;letter-spacing:.08em!important;color:#967000!important;font-weight:850!important}
+.wf-agency-page .dot-resource-card h3{font-size:16px!important;font-weight:850!important;line-height:1.3!important;color:#01122f!important;margin:7px 0!important}
+.wf-agency-page .dot-resource-card p{font-size:12px!important;line-height:1.55!important;color:#667d95!important;margin:0!important}
+.wf-agency-page .dot-resource-card .dot-btn{align-self:flex-start}
+.wf-agency-page .dot-guidance-list{padding:5px 22px!important}
+.wf-agency-page .dot-guidance-list>div{display:flex!important;align-items:flex-start!important;gap:18px!important;padding:15px 0!important;border-bottom:1px solid #e7edf4!important}
+.wf-agency-page .dot-guidance-list>div:last-child{border-bottom:none!important}
+.wf-agency-page .dot-guidance-list span{flex:0 0 30px;display:grid;place-items:center;width:30px;height:30px;background:#fff4d5!important;color:#946800!important;border-radius:9px!important;font-size:11px!important;font-weight:850!important}
+.wf-agency-page .dot-guidance-list p{margin:5px 0 0!important;color:#315674!important;font-size:12px!important;line-height:1.5!important}
+.wf-agency-page .dot-callout:last-child{margin-top:18px!important}
+.wf-agency-page .dot-callout a{color:#16568e!important;font-weight:850!important}
+.wf-agency-page :is(a,button,input,select):focus-visible{outline:3px solid #fdc102!important;outline-offset:2px!important}
+@media(max-width:1150px){.wf-agency-page .dot-agency-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.wf-agency-page .dot-agency-metrics{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:700px){body.workforce-management-mode #dotPageMount:has(.wf-agency-page){width:calc(100% - 24px);padding:15px 0 38px!important}.wf-agency-page .dot-agency-grid,.wf-agency-page .dot-agency-resource-grid{grid-template-columns:1fr!important}.wf-agency-page .dot-agency-card{min-height:0!important}.wf-agency-page .dot-page-head .dot-actions{width:100%}.wf-agency-page .dot-page-head .dot-actions .dot-btn{flex:1}.wf-agency-page .dot-agency-detail-hero{padding:18px 16px!important}.wf-agency-page .dot-card-head{padding:17px 16px!important}.wf-agency-page .dot-guidance-list{padding:3px 16px!important}}
+@media(max-width:430px){.wf-agency-page .dot-agency-metrics{grid-template-columns:1fr!important}}
