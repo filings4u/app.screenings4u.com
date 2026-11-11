@@ -862,6 +862,8 @@ async function loadReturnToDutyDetail(){
   ['initial_evaluation_completed','Initial SAP evaluation documented','SAP assessment completed and signed initial report received'],
   ['education_treatment_completed','Education / treatment compliance documented','SAP-prescribed education or treatment addressed; do not record clinical details'],
   ['follow_up_evaluation_completed','Follow-up SAP evaluation documented','SAP submits follow-up evaluation and finding of successful compliance'],
+  ['sap_follow_up_plan_received','SAP Written Follow-Up Plan Received','Written SAP plan delivered to DER with prescribed type, number and frequency of tests'],
+  ['rtd_collection_verified','RTD Collection Requirements Verified','Observed drug collection / appropriate alcohol testing and verified employer-directed test documentation'],
   ['rtd_test_completed','Qualifying RTD test documented','Employer-directed RTD test after SAP approval; drug negative and/or alcohol below 0.02'],
   ['employer_authorized_return','Employer return authorization','Employer independently decides to restore safety-sensitive duties']
  ];
@@ -908,7 +910,8 @@ async function loadReturnToDutyDetail(){
  if(treatment&&!initial)return error('Initial SAP evaluation must be documented first.');
  if(follow&&(!initial||!treatment))return error('Follow-up evaluation requires an initial SAP assessment and treatment compliance documentation.');
  if(determination==='successful'&&!follow)return error('Document the SAP follow-up evaluation before confirming successful compliance.');
- if(tested&&(!follow||determination!=='successful'||!$('#rtdFollowEvalDate').value||!testDate))return error('An RTD test requires a documented successful SAP follow-up evaluation and the RTD test date.');
+ if(designated&&!$('#rtdSapName').value.trim())return error('Enter the qualified SAP name when SAP designation is documented.');
+ if(tested&&(!follow||determination!=='successful'||!checked('sap_follow_up_plan_received')||!checked('rtd_collection_verified')||!$('#rtdFollowEvalDate').value||!testDate))return error('Qualifying RTD testing requires a successful SAP reevaluation, written follow-up plan, collection verification and RTD test date.');
  if(tested&&$('#rtdFollowEvalDate').value>testDate)return error('RTD test date cannot precede the successful SAP follow-up evaluation.');
  if(authorized&&(!tested||testResult!=='negative_or_below_002'||determination!=='successful'||!returnDate))return error('Employer return authorization requires a qualifying RTD result and a return date.');
  if(returnDate&&testDate&&returnDate<testDate)return error('Employer return date cannot precede RTD testing.');
@@ -918,7 +921,7 @@ async function loadReturnToDutyDetail(){
  const planUpdate={
   dot_agency:agency,sap_name:$('#rtdSapName').value.trim(),sap_designated:designated,
   initial_evaluation_completed:initial,education_treatment_completed:treatment,follow_up_evaluation_completed:follow,
-  follow_up_evaluation_date:$('#rtdFollowEvalDate').value||null,sap_decision_recorded:!!determination,sap_compliance_confirmed:determination==='successful',
+  follow_up_evaluation_date:$('#rtdFollowEvalDate').value||null,sap_decision_recorded:!!determination,sap_compliance_confirmed:determination==='successful',sap_follow_up_plan_received:checked('sap_follow_up_plan_received'),rtd_collection_verified:checked('rtd_collection_verified'),
   rtd_test_ordered:plan.rtd_test_ordered||tested,rtd_test_completed:tested,rtd_test_date:testDate||null,rtd_result:testResult||null,
   employer_authorized_return:authorized,safety_sensitive_return_date:returnDate||null,
   first_12_month_test_count:count,total_plan_months:months,follow_up_tests_completed:done,follow_up_status:followStatus,
