@@ -97,3 +97,13 @@ body.workforce-management-mode .results-editor.re-redesign.re-records-page{max-w
 @media(max-width:1150px){.re-records-page .mro-record-item{grid-template-columns:minmax(0,1fr) minmax(120px,.5fr)!important;align-items:start!important}.re-records-page .mro-record-document{grid-column:1!important}.re-records-page .mro-record-actions{grid-column:2!important;grid-row:2!important}}
 @media(max-width:700px){body.workforce-management-mode #dotPageMount:has(.re-records-page){width:calc(100% - 24px);padding:15px 0 38px!important}.re-records-page .re-hero{align-items:stretch!important}.re-records-page .wr-mro-header-actions{width:100%}.re-records-page .wr-mro-header-actions a{flex:1}.re-records-page .re-section-title{padding:17px 16px!important}.re-records-page .re-fields,.re-records-page .mro-record-tools{padding:16px!important}.re-records-page .mro-record-item{grid-template-columns:1fr!important;gap:12px!important;padding:17px 16px!important}.re-records-page .mro-record-document,.re-records-page .mro-record-actions{grid-column:auto!important;grid-row:auto!important}.re-records-page .mro-record-actions button{width:100%}.re-records-page .mro-detail{margin:15px!important;padding:16px!important}.re-records-page .mro-data-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.re-records-page .mro-detail-edit{grid-template-columns:1fr!important}}
 @media(max-width:440px){.re-records-page .mro-data-grid{grid-template-columns:1fr!important}.re-records-page .mro-detail-actions button{width:100%!important}}
+
+/* Align MRO Records with the standalone Results Entry workspace */
+.re-records-page .re-section-title{background:#f8fafd!important;border-bottom:1px solid #e6edf4!important}
+.re-records-page .re-fields{background:#fff!important}
+.re-records-page .re-panel.re-published{margin-top:18px!important}
+.re-records-page #publishedRows{background:#fff!important}
+.re-records-page .re-hero{margin-bottom:18px!important}
+.re-records-page .re-feedback{margin-bottom:18px!important}
+.re-records-page .mro-record-tools{background:#fff!important}
+.re-records-page .mro-detail[hidden]{display:none!important}
