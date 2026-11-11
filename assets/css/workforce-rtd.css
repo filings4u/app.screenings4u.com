@@ -77,3 +77,30 @@ body.workforce-management-mode .rtd-admin-page,body.workforce-management-mode .w
 @media(max-width:900px){.rtd-admin-page .dot-metrics{grid-template-columns:repeat(2,minmax(0,1fr))!important}.wf-rtd-page .rtd-detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.wf-rtd-page .wf-rtd-checklist{grid-template-columns:1fr!important}}
 @media(max-width:700px){body.workforce-management-mode #dotPageMount:has(.wf-rtd-page),body.workforce-management-mode #dotPageMount:has(.rtd-admin-page){width:calc(100% - 24px);padding:15px 0 38px!important}.rtd-admin-page .dot-card-head,.wf-rtd-page .dot-card-head{padding:18px 16px!important}.rtd-admin-page .rtd-filters{padding:13px 15px!important}.rtd-admin-page .rtd-filters input,.rtd-admin-page .rtd-filters select{flex:1 1 100%!important;width:100%!important}.wf-rtd-page .rtd-form-grid{grid-template-columns:1fr!important}.wf-rtd-page .rtd-page-card .dot-card-body,.wf-rtd-page .rtd-progress-card .dot-card-body{padding:16px!important}.wf-rtd-page .dot-page-head .dot-actions,.rtd-admin-page .dot-page-head .dot-actions{width:100%}.wf-rtd-page .dot-page-head .dot-actions .dot-btn,.rtd-admin-page .dot-page-head .dot-actions .dot-btn{flex:1}}
 @media(max-width:440px){.rtd-admin-page .dot-metrics{grid-template-columns:1fr!important}.wf-rtd-page .rtd-detail-grid{grid-template-columns:1fr!important}.wf-rtd-page .rtd-page-actions .dot-btn{flex:1}}
+
+
+/* SAP Follow-Up pages reuse the RTD shell without carrying old shell colors. */
+.wf-rtd-page .followup-plan-form,.wf-rtd-page .followup-order-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:17px!important}
+.wf-rtd-page .followup-plan-form .dot-field,.wf-rtd-page .followup-order-grid .dot-field{display:flex;flex-direction:column;min-width:0;gap:8px}
+.wf-rtd-page .followup-plan-form .dot-field.full{grid-column:1/-1}
+.wf-rtd-page .followup-plan-form label,.wf-rtd-page .followup-order-grid label{color:#315674;font-weight:800;font-size:12px}
+.wf-rtd-page .followup-plan-form :is(input,select,textarea),.wf-rtd-page .followup-order-grid :is(input,select){width:100%;min-width:0;min-height:44px;padding:10px 13px;border:1px solid #cbd9e9;border-radius:9px;color:#01122f;background:#fff;font-size:12px}
+.wf-rtd-page .followup-plan-form textarea{min-height:110px}
+.wf-rtd-page .followup-detail-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:18px}
+.wf-rtd-page .followup-detail-head h2{font-size:24px;letter-spacing:-.025em;color:#01122f;margin:6px 0}
+.wf-rtd-page .followup-detail-head p{color:#71849b;font-size:12px;margin:0}
+.wf-rtd-page .followup-detail-metrics{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:12px;margin-bottom:18px}
+.wf-rtd-page .followup-detail-metrics>div,.wf-rtd-page .followup-summary-grid>div{background:#fff!important;border:1px solid #d9e4f0;border-radius:12px;padding:17px;min-width:0}
+.wf-rtd-page .followup-detail-metrics span,.wf-rtd-page .followup-summary-grid span{display:block;color:#71849b;font-size:10px;font-weight:800;margin-bottom:7px}
+.wf-rtd-page .followup-detail-metrics strong,.wf-rtd-page .followup-summary-grid strong{display:block;color:#01122f;font-size:13px;overflow-wrap:anywhere}
+.wf-rtd-page .followup-summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px}
+.wf-rtd-page .dot-card-body{padding:22px 24px!important}
+.wf-rtd-page .dot-help{background:#fff8e4;border:1px solid #ecd9a2;border-radius:10px;padding:14px 16px;color:#5c4c23;font-size:12px;line-height:1.6;margin:18px 0}
+.wf-rtd-page .followup-test-table{width:100%;min-width:880px;border-collapse:collapse}
+.wf-rtd-page .dot-table-wrap{overflow-x:auto}
+.wf-rtd-page .followup-test-table th{font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:850;color:#47617c;background:#edf3f9;padding:14px}
+.wf-rtd-page .followup-test-table td{padding:15px;border-top:1px solid #e7edf4;font-size:12px;color:#315674}
+.wf-rtd-page .dot-card+.dot-card{margin-top:18px}
+.wf-rtd-page .wf-rtd-followup-actions{padding:15px 0;display:flex;justify-content:flex-end}
+@media(max-width:1000px){.wf-rtd-page .followup-detail-metrics,.wf-rtd-page .followup-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:700px){.wf-rtd-page .followup-plan-form,.wf-rtd-page .followup-order-grid{grid-template-columns:1fr!important}.wf-rtd-page .followup-detail-metrics,.wf-rtd-page .followup-summary-grid{grid-template-columns:1fr!important}.wf-rtd-page .dot-card-body{padding:16px!important}}
