@@ -1,3 +1,24 @@
+/* Workforce MRO Records: dedicated page presentation + scoped shell branding.
+   The shared DOTShell JS provides the single portal navigation; this stylesheet
+   does not import legacy DOT portal or Results Entry CSS. */
+body.workforce-management-mode{background:#f1f5fb;color:#01122f}
+body.workforce-management-mode .wf-side{background:#01122f!important;color:#fff!important;border-right:0!important}
+body.workforce-management-mode .wf-brand{background:#01122f!important;border-color:rgba(255,255,255,.14)!important;padding:20px 17px!important}
+body.workforce-management-mode .wf-brand img{width:190px!important;max-width:100%!important;max-height:58px!important;height:auto!important;background:transparent!important;padding:0!important;border-radius:0!important;object-fit:contain}
+body.workforce-management-mode .wf-nav-section h2{color:#8aa7c8!important}
+body.workforce-management-mode .wf-nav-link{color:#e4ecf8!important;min-height:40px}
+body.workforce-management-mode .wf-nav-link strong{color:inherit!important}
+body.workforce-management-mode .wf-nav-link span{color:#ffd04d!important}
+body.workforce-management-mode .wf-nav-link:hover{background:#142e51!important;color:#fff!important}
+body.workforce-management-mode .wf-nav-link.active,
+body.workforce-management-mode .wf-nav-link[aria-current=page]{background:#fdc102!important;color:#01122f!important}
+body.workforce-management-mode .wf-nav-link.active span{color:#01122f!important}
+body.workforce-management-mode .wf-top{background:#fff!important;border-color:#d8e4ef!important}
+body.workforce-management-mode .wf-top>strong{color:#01122f!important}
+body.workforce-management-mode .wf-nav{scrollbar-width:none}
+body.workforce-management-mode .wf-nav::-webkit-scrollbar{display:none}
+body.workforce-management-mode #dotPageMount{min-width:0}
+
 /* MRO Records standalone page stylesheet. Does not import Results Entry CSS. */
 .re-records-page{font-family:Inter,Arial,sans-serif;font-size:13px;line-height:1.5}
 .re-records-page [hidden]{display:none!important}
@@ -33,7 +54,7 @@
 
 /* MRO Records: Workforce visual redesign. Scoped to this page only. */
 body.workforce-management-mode #dotPageMount:has(.re-records-page){width:min(1450px,calc(100% - 42px));max-width:none;margin:0 auto;padding:22px 0 56px!important}
-body.workforce-management-mode .results-editor.re-redesign.re-records-page{max-width:none!important;width:100%!important;margin:0!important;padding:0!important;background:transparent!important;color:#01122f}
+body.workforce-management-mode .re-records-page{max-width:none!important;width:100%!important;margin:0!important;padding:0!important;background:transparent!important;color:#01122f}
 .re-records-page,.re-records-page *{box-sizing:border-box}
 .re-records-page .re-hero{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:20px!important;flex-wrap:wrap!important;border:0!important;border-bottom:1px solid #d7e2ee!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;padding:4px 0 20px!important;margin:0 0 18px!important;min-height:0!important}
 .re-records-page .re-hero .dot-eyebrow{color:#a17a00!important;font-size:10px!important;letter-spacing:.11em!important;font-weight:850!important}
