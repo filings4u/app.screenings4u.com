@@ -751,6 +751,7 @@ async function loadAgencies(){
  ];
  document.body.classList.add('agency-admin-page');
  renderBase({title:'DOT Agency Data & Systems',copy:'Use official federal systems and supported government data services here. Portal page management stays in Portal Control.',actions:'<a class="dot-btn" href="dot-portal-control.html">Portal Control</a>'});
+ document.querySelector('#dotPageMount .dot-page')?.classList.add('wf-agency-page');
  const apiCount=agencies.filter(x=>x.status==='API available').length;
  const dataCount=agencies.filter(x=>x.status==='Read-only data').length;
  $('#dotPageBody').innerHTML=`
@@ -769,7 +770,7 @@ async function loadAgencies(){
    <div class="dot-agency-tools">${a.tools.map(t=>`<span>${t}</span>`).join('')}</div>
    <div class="dot-agency-open">Open agency workspace →</div>
   </a>`).join('')}</div>
- <div class="dot-card dot-agency-note"><div class="dot-card-head"><div><h2>Integration rule</h2><p>screenings4u should consume supported public/read APIs where useful, but regulated filings, registrations, queries, and submissions remain in the official federal system unless that agency explicitly provides an authorized transactional API.</p></div></div></div>`;
+ <div class="dot-card dot-agency-note"><div class="dot-card-head"><div><h2>Integration rule</h2><p>Workforce should consume supported public/read APIs where useful, but regulated filings, registrations, queries, and submissions remain in the official federal system unless that agency explicitly provides an authorized transactional API.</p></div></div></div>`;
 }
 
 
