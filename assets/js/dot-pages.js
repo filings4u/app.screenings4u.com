@@ -841,14 +841,94 @@ async function loadReturnToDutyNew(){
 
 async function loadReturnToDutyDetail(){
  const id=new URLSearchParams(location.search).get('id')||'';
- renderBase({title:'Return-to-Duty Workflow',copy:'Review and update the internal SAP / RTD workflow.',actions:'<a class="dot-btn" href="dot-return-to-duty.html">Back to RTD</a>'});
- document.querySelector('.dot-page')?.classList.add('rtd-detail-page');
+ renderBase({title:'Return-to-Duty Workflow',copy:'Track federally required SAP, RTD testing, employer clearance and follow-up milestones.',actions:'<a class="dot-btn" href="dot-return-to-duty.html">Back to RTD</a>'});
+ document.querySelector('.dot-page')?.classList.add('rtd-detail-page','wf-rtd-page');
  if(!id){message('No return-to-duty workflow was selected.','error');$('#dotPageBody').innerHTML='<div class="dot-card"><div class="dot-empty">Select a workflow from Return-to-Duty / SAP.</div></div>';return}
  const d=await DOTApi.call('rtd'),cases=get(d,'sap_cases','rtd_cases'),compliance=get(d,'compliance_cases'),employers=get(d,'employers'),employees=get(d,'employees'),ctpas=get(d,'ctpas');
  const x=cases.find(v=>String(v.id)===String(id));if(!x){message('The requested return-to-duty workflow was not found.','error');$('#dotPageBody').innerHTML='<div class="dot-card"><div class="dot-empty">Workflow not found.</div></div>';return}
- const cc=compliance.find(v=>String(v.id)===String(x.compliance_case_id))||{},emp=employers.find(v=>String(v.id)===String(cc.employer_id))||{},person=employees.find(v=>String(v.id)===String(cc.employee_id))||{},ctpaMap=new Map(ctpas.map(v=>[String(v.id),v])),plan=x.follow_up_plan||{},src=rtdSource(emp,ctpaMap,plan),stage=rtdStage(x.return_to_duty_status,plan);
- $('#dotPageBody').innerHTML=`<div class="rtd-detail-page-head"><div><span class="dot-eyebrow">RETURN-TO-DUTY WORKFLOW</span><h2>${esc(cc.case_number||'RTD Case')}</h2><p>${esc(rtdPersonName(person))} · ${esc(rtdCompanyName(emp))}</p></div>${badge(x.status||'open')}</div>${rtdSteps(stage)}<div class="rtd-detail-grid"><div><span>Source</span><strong>${esc(src.label)}${src.code==='ctpa'?' · '+esc(src.name):''}</strong></div><div><span>Trigger</span><strong>${esc(String(cc.event_type||'—').replaceAll('_',' '))}</strong></div><div><span>Violation Date</span><strong>${fmtDate(cc.violation_date)}</strong></div><div><span>Current Status</span><strong>${esc(rtdStatusLabel(x.return_to_duty_status))}</strong></div></div><div class="dot-card rtd-progress-card"><div class="dot-card-head"><div><h2>Workflow Controls</h2><p>Update internal RTD milestones as documentation is received.</p></div></div><form id="rtdUpdateForm" class="dot-card-body"><div class="rtd-check-grid"><label><input type="checkbox" id="rtdInitial" ${plan.initial_evaluation_completed?'checked':''}> Initial SAP evaluation completed</label><label><input type="checkbox" id="rtdTreatment" ${plan.education_treatment_completed?'checked':''}> Education / treatment completed</label><label><input type="checkbox" id="rtdFollowEval" ${plan.follow_up_evaluation_completed?'checked':''}> Follow-up SAP evaluation completed</label><label><input type="checkbox" id="rtdTestOrdered" ${plan.rtd_test_ordered?'checked':''}> RTD test ordered</label><label><input type="checkbox" id="rtdTestComplete" ${plan.rtd_test_completed?'checked':''}> RTD test completed</label><label><input type="checkbox" id="rtdEligible" ${/eligible|returned|complete|closed/i.test(String(x.return_to_duty_status))?'checked':''}> Eligible to return to duty</label></div><div class="dot-field-grid rtd-form-grid"><div class="dot-field"><label>SAP Evaluation Date</label><input id="rtdEvalDate" type="date" value="${esc(x.evaluation_date?String(x.evaluation_date).slice(0,10):'')}"></div><div class="dot-field"><label>Workflow Status</label><select id="rtdCaseStatus"><option value="open" ${x.status==='open'?'selected':''}>Open</option><option value="in_progress" ${x.status==='in_progress'?'selected':''}>In Progress</option><option value="completed" ${x.status==='completed'?'selected':''}>Completed</option><option value="closed" ${x.status==='closed'?'selected':''}>Closed</option></select></div><div class="dot-field full"><label>SAP Recommendations / Notes</label><textarea id="rtdRecommendations" rows="7">${esc(x.recommendations||plan.notes||'')}</textarea></div></div><div class="rtd-page-actions"><a class="dot-btn" href="dot-return-to-duty.html">Cancel</a><button class="dot-btn primary" type="submit" id="rtdUpdateSave">Save Workflow</button></div></form></div>`;
- $('#rtdUpdateForm').onsubmit=async e=>{e.preventDefault();const initial=$('#rtdInitial').checked,treatment=$('#rtdTreatment').checked,follow=$('#rtdFollowEval').checked,ordered=$('#rtdTestOrdered').checked,complete=$('#rtdTestComplete').checked,eligible=$('#rtdEligible').checked;let status='sap_evaluation_pending';if(initial)status='sap_evaluation_completed';if(treatment)status='education_treatment_completed';if(follow)status='follow_up_evaluation_completed';if(ordered)status='rtd_test_ordered';if(complete)status='rtd_test_completed';if(eligible)status='eligible_to_return';const btn=$('#rtdUpdateSave');btn.disabled=true;btn.textContent='Saving…';try{await DOTApi.call('save_rtd_workflow',{id:x.id,workflow:{evaluation_date:$('#rtdEvalDate').value||null,recommendations:$('#rtdRecommendations').value.trim(),return_to_duty_status:status,status:$('#rtdCaseStatus').value,compliance_status:eligible?'resolved':'in_progress',follow_up_plan:{...plan,initial_evaluation_completed:initial,education_treatment_completed:treatment,follow_up_evaluation_completed:follow,rtd_test_ordered:ordered,rtd_test_completed:complete}}});window.DOTRouter?.refresh()}catch(err){message(err.message||'Unable to save RTD workflow.','error');btn.disabled=false;btn.textContent='Save Workflow'}};
+ const cc=compliance.find(v=>String(v.id)===String(x.compliance_case_id))||{},emp=employers.find(v=>String(v.id)===String(cc.employer_id))||{},person=employees.find(v=>String(v.id)===String(cc.employee_id))||{},ctpaMap=new Map(ctpas.map(v=>[String(v.id),v])),plan=x.follow_up_plan||{},src=rtdSource(emp,ctpaMap,plan);
+ const agency=rtdAgencyCode(plan.dot_agency||emp.applicable_dot_agency);
+ const chk=(key)=>plan[key]===true?'checked':'';
+ const dateInput=(id,label,key)=>'<div class="dot-field"><label for="'+id+'">'+label+'</label><input id="'+id+'" type="date" value="'+esc(String(plan[key]||'').slice(0,10))+'"></div>';
+ const complete=plan.rtd_test_completed===true;
+ const passed=plan.rtd_result==='negative_or_below_002';
+ const ready=plan.sap_compliance_confirmed===true&&plan.follow_up_evaluation_completed===true&&plan.rtd_test_completed===true&&passed;
+ const employerReturned=ready&&plan.employer_authorized_return===true;
+ const milestones=[
+  ['sap_designated','Qualified SAP designated','Employer provides SAP resource list; employee selects qualified SAP'],
+  ['initial_evaluation_completed','Initial SAP evaluation documented','SAP assessment completed and signed initial report received'],
+  ['education_treatment_completed','Education / treatment compliance documented','SAP-prescribed education or treatment addressed; do not record clinical details'],
+  ['follow_up_evaluation_completed','Follow-up SAP evaluation documented','SAP submits follow-up evaluation and finding of successful compliance'],
+  ['rtd_test_completed','Qualifying RTD test documented','Employer-directed RTD test after SAP approval; drug negative and/or alcohol below 0.02'],
+  ['employer_authorized_return','Employer return authorization','Employer independently decides to restore safety-sensitive duties']
+ ];
+ const milestoneHtml=milestones.map(([key,title,desc],i)=>'<label class="wf-rtd-check"><input type="checkbox" id="rtd_'+key+'" '+chk(key)+'><span class="wf-rtd-number">'+(i+1)+'</span><span><strong>'+title+'</strong><small>'+desc+'</small></span></label>').join('');
+ const safeStatus=employerReturned?'Employer return documented':ready?'RTD test qualified; employer decision pending':'Safety-sensitive duties not cleared';
+ $('#dotPageBody').innerHTML=`<div class="wf-rtd-case-heading"><div><span class="dot-eyebrow">PART 40 / SAP WORKFLOW</span><h2>${esc(cc.case_number||'RTD Case')}</h2><p>${esc(rtdPersonName(person))} · ${esc(rtdCompanyName(emp))} · ${esc(RTD_AGENCIES[agency].label)}</p></div><div class="wf-rtd-clearance ${employerReturned?'ready':''}">${esc(safeStatus)}</div></div>
+ <section class="wf-rtd-agency-note">${rtdAgencyNote(agency)}</section>
+ <div class="rtd-detail-grid"><div><span>Workflow source</span><strong>${esc(src.label)}</strong></div><div><span>Violation</span><strong>${esc(String(cc.event_type||'—').replaceAll('_',' '))}</strong></div><div><span>Violation date</span><strong>${fmtDate(cc.violation_date)}</strong></div><div><span>Case status</span><strong>${esc(String(x.status||'open').replaceAll('_',' '))}</strong></div></div>
+ <div class="wf-rtd-notice"><strong>Restricted work until prerequisites are verified.</strong> The SAP establishes clinical compliance and the follow-up plan. The employer—not Workforce or the SAP—makes the return decision. Tracking a checkbox here does not report to a federal agency or independently verify a test result.</div>
+ <div class="dot-card rtd-progress-card"><div class="dot-card-head"><div><h2>Required RTD Milestones</h2><p>Document each step from reliable signed SAP, employer, and MRO/BAT records. Record dates and evidence references, not sensitive treatment notes.</p></div></div>
+ <form id="rtdUpdateForm" class="dot-card-body">
+ <div class="wf-rtd-checklist">${milestoneHtml}</div>
+ <div class="dot-field-grid rtd-form-grid">
+ <div class="dot-field"><label for="rtdSapName">Qualified SAP Name</label><input id="rtdSapName" maxlength="180" value="${esc(plan.sap_name||'')}" placeholder="Qualified SAP name"></div>
+ <div class="dot-field"><label for="rtdEvalDate">Initial SAP Evaluation Date</label><input id="rtdEvalDate" type="date" value="${esc(x.evaluation_date?String(x.evaluation_date).slice(0,10):'')}"></div>
+ ${dateInput('rtdFollowEvalDate','Follow-up SAP Evaluation Date','follow_up_evaluation_date')}
+ <div class="dot-field"><label for="rtdSapDecision">SAP Compliance Determination</label><select id="rtdSapDecision"><option value="">Pending / not documented</option><option value="successful" ${plan.sap_compliance_confirmed===true?'selected':''}>Successful compliance confirmed</option><option value="unsuccessful" ${plan.sap_compliance_confirmed===false&&plan.sap_decision_recorded?'selected':''}>Not successfully compliant</option></select></div>
+ ${dateInput('rtdTestDate','RTD Test Date','rtd_test_date')}
+ <div class="dot-field"><label for="rtdTestResult">Verified RTD Test Result</label><select id="rtdTestResult"><option value="">Not received / pending</option><option value="negative_or_below_002" ${plan.rtd_result==='negative_or_below_002'?'selected':''}>Qualifying: negative drug / alcohol below 0.02</option><option value="nonqualifying" ${plan.rtd_result==='nonqualifying'?'selected':''}>Nonqualifying / positive / refusal</option><option value="cancelled" ${plan.rtd_result==='cancelled'?'selected':''}>Cancelled / invalid</option></select></div>
+ ${dateInput('rtdReturnDate','Employer-authorized Safety-sensitive Return Date','safety_sensitive_return_date')}
+ <div class="dot-field"><label for="rtdCaseStatus">Administrative Case Status</label><select id="rtdCaseStatus"><option value="open" ${x.status==='open'?'selected':''}>Open</option><option value="in_progress" ${x.status==='in_progress'?'selected':''}>In progress</option><option value="completed" ${x.status==='completed'?'selected':''}>Completed</option><option value="closed" ${x.status==='closed'?'selected':''}>Closed</option></select></div>
+ <div class="dot-field"><label for="rtdFollowUpCount">SAP Follow-up Tests: First 12 Months</label><input id="rtdFollowUpCount" type="number" min="6" max="120" step="1" value="${esc(plan.first_12_month_test_count||6)}"></div>
+ <div class="dot-field"><label for="rtdFollowUpMonths">SAP Follow-up Plan Duration (Months)</label><input id="rtdFollowUpMonths" type="number" min="12" max="60" step="1" value="${esc(plan.total_plan_months||12)}"></div>
+ <div class="dot-field"><label for="rtdFollowUpProgress">Completed SAP Follow-up Tests</label><input id="rtdFollowUpProgress" type="number" min="0" step="1" value="${esc(plan.follow_up_tests_completed||0)}"></div>
+ <div class="dot-field"><label for="rtdFollowUpStatus">Follow-up Plan Status</label><select id="rtdFollowUpStatus"><option value="not_started" ${!plan.follow_up_status||plan.follow_up_status==='not_started'?'selected':''}>Not started</option><option value="in_progress" ${plan.follow_up_status==='in_progress'?'selected':''}>In progress</option><option value="completed" ${plan.follow_up_status==='completed'?'selected':''}>Completed (SAP plan verified)</option></select></div>
+ <div class="dot-field full"><label for="rtdEvidence">Evidence References / Administrative Notes</label><textarea id="rtdEvidence" rows="4" placeholder="Reference SAP reports, signed verification, test identifiers and employer authorization. No SSNs, passwords, or clinical treatment notes.">${esc(plan.evidence_references||'')}</textarea></div>
+ </div>
+ <div class="wf-rtd-regulation"><strong>Follow-up testing is separate from return clearance.</strong> The SAP determines type, number and frequency. At least six unannounced tests are required in the first 12 months of safety-sensitive duty, potentially extending to 60 months. Never disclose follow-up dates or the testing schedule to the employee. No random/preemployment tests can be substituted. <a href="https://www.transportation.gov/odapc/part40/40-307" target="_blank" rel="noopener noreferrer">49 CFR 40.307 ↗</a></div>
+ ${agency==='FMCSA'?'<div class="wf-rtd-fmcsa"><strong>FMCSA Clearinghouse</strong><p>SAP designation, initial assessment, eligibility date, negative RTD test, and follow-up completion require separate Clearinghouse entries by authorized parties. This form does not submit those entries.</p><label class="wf-rtd-inline-check"><input id="rtdClearinghouseVerified" type="checkbox" '+chk('clearinghouse_reporting_verified')+'> Required Clearinghouse entries independently checked</label></div>':''}
+ <div id="rtdGateMessage" class="wf-rtd-validation" role="alert" hidden></div>
+ <div class="rtd-page-actions"><a class="dot-btn" href="dot-return-to-duty.html">Back to Directory</a><button class="dot-btn primary" type="submit" id="rtdUpdateSave">Save Milestones</button></div>
+ </form></div>`;
+ $('#rtdUpdateForm').onsubmit=async e=>{
+ e.preventDefault();
+ const checked=k=>$('#rtd_'+k).checked;
+ const designated=checked('sap_designated'),initial=checked('initial_evaluation_completed'),treatment=checked('education_treatment_completed'),follow=checked('follow_up_evaluation_completed'),tested=checked('rtd_test_completed'),authorized=checked('employer_authorized_return');
+ const determination=$('#rtdSapDecision').value;
+ const testResult=$('#rtdTestResult').value;
+ const testDate=$('#rtdTestDate').value,returnDate=$('#rtdReturnDate').value;
+ const count=Number($('#rtdFollowUpCount').value),months=Number($('#rtdFollowUpMonths').value),done=Number($('#rtdFollowUpProgress').value),followStatus=$('#rtdFollowUpStatus').value;
+ const error=(msg)=>{const el=$('#rtdGateMessage');el.hidden=false;el.textContent=msg;el.scrollIntoView({block:'nearest'});return false};
+ $('#rtdGateMessage').hidden=true;
+ if(initial&&!designated)return error('Designate a qualified SAP before completing the initial assessment.');
+ if(treatment&&!initial)return error('Initial SAP evaluation must be documented first.');
+ if(follow&&(!initial||!treatment))return error('Follow-up evaluation requires an initial SAP assessment and treatment compliance documentation.');
+ if(determination==='successful'&&!follow)return error('Document the SAP follow-up evaluation before confirming successful compliance.');
+ if(tested&&(!follow||determination!=='successful'||!$('#rtdFollowEvalDate').value||!testDate))return error('An RTD test requires a documented successful SAP follow-up evaluation and the RTD test date.');
+ if(tested&&$('#rtdFollowEvalDate').value>testDate)return error('RTD test date cannot precede the successful SAP follow-up evaluation.');
+ if(authorized&&(!tested||testResult!=='negative_or_below_002'||determination!=='successful'||!returnDate))return error('Employer return authorization requires a qualifying RTD result and a return date.');
+ if(returnDate&&testDate&&returnDate<testDate)return error('Employer return date cannot precede RTD testing.');
+ if(!Number.isInteger(count)||count<6||count>120||!Number.isInteger(months)||months<12||months>60||!Number.isInteger(done)||done<0)return error('The SAP follow-up plan must have at least 6 first-year tests, 12–60 months, and a valid completed-test count.');
+ if(followStatus==='completed'&&(!authorized||done<count))return error('Follow-up completion requires employer return authorization and at least the required first-year tests. Confirm all additional SAP-prescribed tests are complete.');
+ if(['completed','closed'].includes($('#rtdCaseStatus').value)&&followStatus!=='completed')return error('Do not mark the entire RTD case closed until the SAP follow-up testing plan is completed. Leave the case open or in progress.');
+ const planUpdate={
+  dot_agency:agency,sap_name:$('#rtdSapName').value.trim(),sap_designated:designated,
+  initial_evaluation_completed:initial,education_treatment_completed:treatment,follow_up_evaluation_completed:follow,
+  follow_up_evaluation_date:$('#rtdFollowEvalDate').value||null,sap_decision_recorded:!!determination,sap_compliance_confirmed:determination==='successful',
+  rtd_test_ordered:plan.rtd_test_ordered||tested,rtd_test_completed:tested,rtd_test_date:testDate||null,rtd_result:testResult||null,
+  employer_authorized_return:authorized,safety_sensitive_return_date:returnDate||null,
+  first_12_month_test_count:count,total_plan_months:months,follow_up_tests_completed:done,follow_up_status:followStatus,
+  evidence_references:$('#rtdEvidence').value.trim(),...(agency==='FMCSA'?{clearinghouse_reporting_verified:$('#rtdClearinghouseVerified').checked}:{})
+ };
+ let status='sap_evaluation_pending';
+ if(initial)status='sap_evaluation_completed';if(treatment)status='education_treatment_completed';if(follow)status='follow_up_evaluation_completed';
+ if(tested)status='rtd_test_completed';if(tested&&testResult==='negative_or_below_002')status='eligible_to_return';if(authorized)status='returned_to_duty';
+ if(followStatus==='completed'&&authorized)status='follow_up_completed';
+ const button=$('#rtdUpdateSave');button.disabled=true;button.textContent='Saving…';
+ try{await DOTApi.call('save_rtd_workflow',{id:x.id,workflow:{evaluation_date:$('#rtdEvalDate').value||null,recommendations:x.recommendations||null,return_to_duty_status:status,status:$('#rtdCaseStatus').value,compliance_status:followStatus==='completed'?'resolved':'in_progress',follow_up_plan:planUpdate}});location.reload()}
+ catch(err){error(err.message||'Unable to save RTD milestones.');button.disabled=false;button.textContent='Save Milestones'}
+ };
 }
 
 async function loadIntegrations(){renderBase({title:'DOT Integrations',copy:'DOT-only external systems and data connections, isolated from the enterprise application.',actions:''});let d={};try{d=await window.DOTApi.call('integrations')}catch(e){d={integrations:[]};$('#dotPageStatus').innerHTML=`<div class="dot-banner warning"><div><strong>Integration inventory is not available yet.</strong><span>${esc(e.message)}</span></div></div>`}const rows=get(d,'integrations').map(x=>[name(x),esc(x.provider||x.integration_type||'—'),badge(x.status),fmtDate(x.updated_at)]);$('#dotPageBody').innerHTML=table(['Integration','Provider','Status','Updated'],rows)}
