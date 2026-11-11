@@ -2,7 +2,7 @@
 (()=>{
 "use strict";
 // Keep the browser title aligned with Workforce branding on every portal page.
-document.title=document.title.replace(/(?:screenings4u\\s+)?Testing Management/gi,'Workforce').replace(/Workforce\\s+Management/gi,'Workforce').replace(/\\bManagement\\b/gi,'Workforce').replace(/Workforce\\s+Workforce/gi,'Workforce');
+document.title=document.title.replace(/(?:screenings4u\s+)?Testing Management/gi,'Workforce').replace(/Workforce\s+Management/gi,'Workforce').replace(/\bManagement\b/gi,'Workforce').replace(/Workforce\s+Workforce/gi,'Workforce');
 const shellCover=document.createElement('style');shellCover.textContent='html.s4u-initializing body{visibility:hidden!important}';document.head.append(shellCover);document.documentElement.classList.add('s4u-initializing');let shellStylesLoaded=false;const shellCss=document.createElement('link');shellCss.rel='stylesheet';shellCss.href='assets/css/management-unified-shell.css?v=20261111-workforce-logo4';shellCss.dataset.unifiedShell='true';shellCss.onload=()=>{shellStylesLoaded=true;if(document.querySelector('.wf-app'))document.documentElement.classList.remove('s4u-initializing')};shellCss.onerror=()=>{document.documentElement.classList.remove('s4u-initializing');console.error('Shared management shell stylesheet failed to load')};document.head.append(shellCss);
 const page=location.pathname.split('/').pop()||'dot-dashboard.html';
 const sharedPages=new Set(['global-customer-360.html','task-manager.html','task-automations.html','results-management.html','dot-invoices.html','dot-invoice-detail.html','dot-invoice-new.html','dot-recent-subscriptions.html','subscription-management.html']);
