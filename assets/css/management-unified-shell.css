@@ -201,3 +201,24 @@ body.s4u-sidebar-hidden #managementApp #dotPageMount>*,body.s4u-sidebar-hidden #
  width:0!important;
  height:0!important;
 }
+
+
+/* Page canvas: never let management content touch the sidebar. */
+#managementApp .wf-main > #dotPageMount.wf-module-content{
+ width:100%!important;
+ max-width:none!important;
+ min-width:0!important;
+ margin:0!important;
+ padding:24px clamp(18px,2vw,32px) 56px!important;
+ box-sizing:border-box!important;
+}
+#managementApp .wf-main > #dotPageMount.wf-module-content > :first-child{
+ max-width:1450px!important;
+ width:100%!important;
+ margin-inline:auto!important;
+}
+@media(max-width:700px){
+ #managementApp .wf-main > #dotPageMount.wf-module-content{
+  padding:16px 12px 38px!important;
+ }
+}
