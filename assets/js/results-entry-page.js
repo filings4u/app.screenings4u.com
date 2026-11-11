@@ -44,8 +44,8 @@
   const documents = payload => call('management-mro-documents', {
     ...payload, source, employer_id: $('employer').value
   });
-  mount.innerHTML = `<div class="dot-page results-editor re-redesign">
-  <header class="re-hero"><div><span class="dot-eyebrow">RESULTS MANAGEMENT / ${source==='dot'?'DOT':'NON-DOT'}</span><h1>MRO Results Workspace</h1><p>Create donor-specific results, attach official reports, and review before publishing.</p></div><a class="re-back" href="/results-management.html">← All Results</a></header>
+  mount.innerHTML = `<div class="dot-page results-editor re-redesign wf-results-entry">
+  <header class="re-hero"><div><span class="dot-eyebrow">WORKFORCE / RESULTS MANAGEMENT / ${source==='dot'?'DOT':'NON-DOT'}</span><h1>MRO Results Entry</h1><p>Create donor-specific results, attach official reports, and review before publishing.</p></div><a class="re-back" href="/results-management.html">← All Results</a></header>
   <div class="re-workflow-strip" aria-label="Results processing stages"><div><b>1</b><span>Choose employer</span></div><div><b>2</b><span>Verify donor</span></div><div><b>3</b><span>Attach MRO PDF</span></div><div><b>4</b><span>Review & publish</span></div></div><div id="resultsFeedback" class="re-feedback" role="status" aria-live="polite">Loading employer records…</div>
   <section class="re-panel re-employer"><div class="re-section-title"><span class="re-step">01</span><div><h2>Select employer</h2><p>All results and documents are restricted to this employer.</p></div></div><div class="re-fields"><label class="re-wide">Employer<select id="employer"><option value="">Choose employer</option></select></label></div></section>
   <div class="re-workspace">
