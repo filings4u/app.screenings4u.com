@@ -1,26 +1,46 @@
-<!doctype html><html lang="en" class="dot-auth-pending"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Central Results Management | Workforce</title><link rel="icon" type="image/png" href="https://workforce.screenings4u.com/images/fav.png"><link rel="stylesheet" href="assets/css/dot-portal.css?v=20261006-company-docs2"><link rel="stylesheet" href="assets/css/workforce-management.css?v=20261012-1"><link rel="stylesheet" href="assets/css/workforce-record-management.css?v=20261013-2"><link rel="stylesheet" href="assets/css/results-management.css?v=20261014-1"><link rel="stylesheet" href="assets/css/workforce-network-hub.css?v=20261109-cssonly4"><style id="workforce-results-layout">body.workforce-management-mode #dotPageMount:has(.wf-results-directory){width:min(1450px,calc(100% - 42px));margin:0 auto;padding:22px 0 54px!important}
-.wf-results-directory{max-width:none!important;margin:0!important;padding:0!important;color:#01122f}
+<!doctype html><html lang="en" class="dot-auth-pending"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Central Results Management | Workforce</title><link rel="icon" type="image/png" href="https://workforce.screenings4u.com/images/fav.png"><link rel="stylesheet" href="assets/css/dot-portal.css?v=20261006-company-docs2"><link rel="stylesheet" href="assets/css/workforce-management.css?v=20261012-1"><link rel="stylesheet" href="assets/css/workforce-record-management.css?v=20261013-2"><link rel="stylesheet" href="assets/css/results-management.css?v=20261014-1"><link rel="stylesheet" href="assets/css/workforce-network-hub.css?v=20261109-cssonly4"><style id="workforce-results-layout">/* Dedicated Results Management visual layer. All selectors are page-scoped. */
+body.workforce-management-mode #dotPageMount:has(.wf-results-directory){width:min(1450px,calc(100% - 42px));max-width:none;margin:0 auto;padding:22px 0 56px!important}
+.wf-results-directory{width:100%!important;max-width:none!important;padding:0!important;margin:0!important;color:#01122f}
 .wf-results-directory *{box-sizing:border-box}
-.wf-results-directory .dot-page-head{padding:4px 0 20px!important;margin-bottom:18px!important;border-bottom:1px solid #d7e2ee;display:flex;align-items:center;justify-content:space-between;gap:12px}
-.wf-results-directory .dot-eyebrow{color:#a17a00!important;letter-spacing:.11em!important;font-size:10px!important;font-weight:850}
-.wf-results-directory h1{color:#01122f!important;font-size:clamp(25px,2.2vw,32px)!important;font-weight:850!important;letter-spacing:-.035em!important;margin:7px 0!important}
-.wf-results-directory .dot-page-head p{font-size:12px;color:#667d95;margin:0;line-height:1.55}
-.wf-results-directory .dot-card{background:#fff;border:1px solid #d8e3ef;border-radius:14px;overflow:hidden;box-shadow:0 7px 24px rgba(1,18,47,.045)}
-.wf-results-directory .dot-card-head{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:22px 24px!important;border-bottom:1px solid #e4ebf3}
-.wf-results-directory .dot-card-head h2{font-size:19px!important;margin:0 0 5px!important;color:#01122f}
-.wf-results-directory .dot-card-head p{font-size:12px;color:#71849b;margin:0}
-.wf-results-directory #mroCount{display:inline-flex;border-radius:999px;border:1px solid #dfe8f2;background:#eaf1f9;color:#315675;padding:7px 12px;font-size:11px;font-weight:800;white-space:nowrap}
-.wf-results-directory .mro-filters{display:flex;gap:12px;align-items:flex-end;background:#f8fafd!important;padding:16px 23px!important;border-bottom:1px solid #e1eaf3}
-.wf-results-directory .mro-filters label{color:#315674;font-size:11px;font-weight:800;flex:0 1 400px}
-.wf-results-directory .mro-filters input,.wf-results-directory .mro-filters select{width:100%;height:44px;background:#fff;color:#01122f;border:1px solid #cbd9e9;border-radius:9px;font-size:12px;padding:10px 13px}
+.wf-results-directory .dot-page-head{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:4px 0 20px!important;margin:0!important;border-bottom:1px solid #d7e2ee}
+.wf-results-directory .dot-page-head .dot-eyebrow{font-size:10px!important;letter-spacing:.11em!important;font-weight:850!important;color:#a17a00!important}
+.wf-results-directory .dot-page-head h1{font-size:clamp(25px,2.2vw,32px)!important;color:#01122f!important;letter-spacing:-.035em!important;line-height:1.2;margin:7px 0!important;font-weight:850!important}
+.wf-results-directory .dot-page-head p{font-size:12px!important;color:#667d95!important;line-height:1.55!important;margin:0!important}
+.wf-results-directory .wr-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:18px 0}
+.wf-results-directory .wr-summary article{display:flex;align-items:center;gap:15px;background:#fff;border:1px solid #d9e4f0;border-radius:13px;padding:17px 18px;min-height:114px;min-width:0;box-shadow:0 5px 17px rgba(1,18,47,.035)}
+.wf-results-directory .wr-summary-icon{display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px;border-radius:12px;background:#eaf2ff;color:#1356a0;font-size:21px;font-weight:850}
+.wf-results-directory .wr-summary article:nth-child(2) .wr-summary-icon{background:#e7f8ed;color:#16834a}
+.wf-results-directory .wr-summary article:nth-child(3) .wr-summary-icon{background:#fff4d5;color:#a67600}
+.wf-results-directory .wr-summary article:nth-child(4) .wr-summary-icon{background:#eef0fc;color:#6556a2}
+.wf-results-directory .wr-summary article>div{min-width:0;display:flex;flex-direction:column;gap:2px}
+.wf-results-directory .wr-summary small{font-size:11px;font-weight:800;color:#5e728b}
+.wf-results-directory .wr-summary strong{font-size:27px;line-height:1.16;letter-spacing:-.04em;color:#01122f}
+.wf-results-directory .wr-summary article>div>span{font-size:10px;line-height:1.4;color:#7b8ba1}
+.wf-results-directory .dot-card{border:1px solid #d8e3ef!important;border-radius:14px!important;background:#fff!important;overflow:hidden!important;box-shadow:0 7px 24px rgba(1,18,47,.045)}
+.wf-results-directory .dot-card-head{padding:22px 24px!important;display:flex;align-items:center;justify-content:space-between;gap:15px;border-bottom:1px solid #e8eef4}
+.wf-results-directory .dot-card-head h2{font-size:19px!important;color:#01122f!important;margin:0 0 4px!important;letter-spacing:-.025em!important}
+.wf-results-directory .dot-card-head p{font-size:12px!important;color:#71849b!important;margin:0!important}
+.wf-results-directory #mroCount{background:#eaf1f9;color:#315675;border:1px solid #dfe8f2;border-radius:999px;padding:7px 12px;font-size:11px;font-weight:800;white-space:nowrap}
+.wf-results-directory .mro-filters{display:flex;align-items:flex-end;gap:12px;padding:16px 23px!important;background:#f8fafd!important;border-bottom:1px solid #e1eaf3}
+.wf-results-directory .mro-filters label{flex:1 1 180px;display:grid;gap:8px;color:#315674;font-size:11px;font-weight:800}
+.wf-results-directory .mro-filters label:first-child{flex:2 1 380px}
+.wf-results-directory .mro-filters input,.wf-results-directory .mro-filters select{display:block;min-height:44px;height:44px;width:100%;max-width:none;padding:10px 13px;background:#fff;color:#01122f;border:1px solid #cbd9e9;border-radius:9px;font-size:12px;font-weight:500}
 .wf-results-directory .dot-table-wrap{overflow-x:auto}
-.wf-results-directory .dot-table{border-collapse:collapse;width:100%;min-width:940px}
-.wf-results-directory .dot-table th{background:#edf3f9;color:#47617c;font-size:10px;letter-spacing:.065em;text-transform:uppercase;font-weight:850;padding:13px 17px;text-align:left}
-.wf-results-directory .dot-table td{padding:15px 17px!important;color:#315674;font-size:12px;border-top:1px solid #e7edf4;vertical-align:middle}
-.wf-results-directory .dot-table tr:hover td{background:#f8fbff}
-.wf-results-directory .mro-send{background:#fdc102!important;color:#01122f!important;border:1px solid #fdc102!important;min-height:38px;border-radius:8px;font-size:11px;font-weight:800;padding:8px 12px;white-space:nowrap}
-.wf-results-directory .mro-send:hover{background:#f0b800!important}
-.wf-results-directory .mro-send+button{background:#fff!important;border:1px solid #bcd3eb!important;color:#164e87!important}
-.wf-results-directory :is(a,button,input,select):focus-visible{outline:3px solid #fdc102;outline-offset:2px}
-@media(max-width:700px){body.workforce-management-mode #dotPageMount:has(.wf-results-directory){width:calc(100% - 24px);padding:15px 0 38px!important}.wf-results-directory .dot-card-head{padding:18px 16px!important;align-items:flex-start;flex-wrap:wrap}.wf-results-directory .mro-filters{padding:13px 15px!important}.wf-results-directory .mro-filters label{flex:1 1 100%}.wf-results-directory .mro-filters input{width:100%}}
-</style><meta name="theme-color" content="#01122f"></head><body class="workforce-management-mode"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="assets/js/dot-config.js?v=7"></script><script src="assets/js/dot-auth.js?v=20261014-enterprise-admin-login"></script><script src="assets/js/dot-api.js?v=20261006-fast1"></script><script src="assets/js/dot-shell.js?v=20261110-white-logo2"></script><script src="assets/js/workforce-mro-directory.js?v=20261110-2"></script></body></html>
+.wf-results-directory .dot-table{border-collapse:collapse;width:100%;min-width:930px}
+.wf-results-directory .dot-table th{background:#edf3f9;padding:13px 18px!important;color:#47617c;font-size:10px;font-weight:850;letter-spacing:.075em;text-transform:uppercase;text-align:left}
+.wf-results-directory .dot-table td{padding:15px 18px!important;color:#315674;font-size:12px;vertical-align:middle;border-top:1px solid #e7edf4}
+.wf-results-directory .dot-table td:first-child{font-weight:750;color:#01122f;min-width:205px}
+.wf-results-directory .dot-table tbody tr:hover td{background:#f8fbff}
+.wf-results-directory .wr-program{display:inline-flex;align-items:center;padding:6px 11px;border-radius:999px;font-size:10px;font-weight:850;background:#edf4ff;color:#1c5786}
+.wf-results-directory .wr-program.nondot{background:#fff4d5;color:#926700}
+.wf-results-directory .wr-actions{display:flex;gap:8px;align-items:center;white-space:nowrap}
+.wf-results-directory .wr-actions .mro-send{min-height:38px!important;background:#fdc102!important;border:1px solid #fdc102!important;color:#01122f!important;border-radius:8px;font-size:11px;font-weight:800;padding:9px 13px;cursor:pointer}
+.wf-results-directory .wr-actions .mro-send:hover{background:#f0b800!important}
+.wf-results-directory .wr-actions .wr-secondary{background:#fff!important;border:1px solid #bcd3eb!important;color:#164e87!important}
+.wf-results-directory .wr-actions .wr-secondary:hover{background:#edf5ff!important}
+.wf-results-directory .mro-status{font-size:12px;line-height:1.5;padding:0 22px}
+.wf-results-directory :is(button,input,select,a):focus-visible{outline:3px solid #fdc102!important;outline-offset:2px}
+@media(max-width:1150px){.wf-results-directory .wr-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){body.workforce-management-mode #dotPageMount:has(.wf-results-directory){width:calc(100% - 24px);padding:15px 0 38px!important}.wf-results-directory .dot-card-head{padding:18px 16px!important;align-items:flex-start;flex-wrap:wrap}.wf-results-directory .mro-filters{padding:13px 15px!important;flex-wrap:wrap}.wf-results-directory .mro-filters label{flex-basis:100%!important}.wf-results-directory .wr-summary article{padding:14px;min-height:98px}.wf-results-directory .wr-summary-icon{flex-basis:38px;width:38px;height:38px}}
+@media(max-width:440px){.wf-results-directory .wr-summary{grid-template-columns:1fr}}
+</style><meta name="theme-color" content="#01122f"></head><body class="workforce-management-mode"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="assets/js/dot-config.js?v=7"></script><script src="assets/js/dot-auth.js?v=20261014-enterprise-admin-login"></script><script src="assets/js/dot-api.js?v=20261006-fast1"></script><script src="assets/js/dot-shell.js?v=20261110-white-logo2"></script><script src="assets/js/workforce-mro-directory.js?v=20261110-redesign3"></script></body></html>
