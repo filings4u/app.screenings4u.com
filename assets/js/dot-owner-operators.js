@@ -12,7 +12,7 @@ function shell(){
  $('#dotPageMount').innerHTML=`<section class="dot-page owner-directory-page">
    <header class="dot-page-head">
      <div>
-       <span class="dot-eyebrow">DOT MANAGEMENT</span>
+       <span class="dot-eyebrow">WORKFORCE MANAGEMENT</span>
        <h1>Owner-Operators</h1>
        <p>Manage FMCSA owner-operators as complete customer records, including their employer identity, C/TPA relationship, consortium participation, driver capacity, and DOT registration.</p>
      </div>
@@ -130,7 +130,7 @@ function render({owners,employers,ctpas,pools}){
          <td><strong>${esc(ownerDisplayName(x))}</strong><small>${esc(x.email||x.id)}</small></td>
          <td>${relation}</td>
          <td><strong>${esc(x.dot_number||'—')}</strong><small>${esc(x.mc_number?`MC ${x.mc_number}`:'')}</small></td>
-         <td>${poolName?`<strong>${esc(poolName)}</strong><small>${esc(g.Consortium.dot_agency||'FMCSA')} · ${pill(g.Consortium.status)}</small>`:pill(x.consortium_status||'not_enrolled',norm(x.consortium_status)==='active'?'ok':'warn')}</td>
+         <td>${poolName?`<strong>${esc(poolName)}</strong><small>${esc(g.pool.dot_agency||'FMCSA')} · ${pill(g.pool.status)}</small>`:pill(x.consortium_status||'not_enrolled',norm(x.consortium_status)==='active'?'ok':'warn')}</td>
          <td><strong>${x.owner_is_driver?'Owner is driver':'Company only'}</strong><small>${esc(`${x.cdl_driver_count??0} CDL driver(s) · ${x.vehicle_count??0} vehicle(s)`)}</small></td>
          <td>${g.records.length>1?`<span class="owner-duplicate">${g.records.length} linked records</span>`:'<span class="owner-single">1 record</span>'}</td>
          <td>${pill(x.status)}</td>
