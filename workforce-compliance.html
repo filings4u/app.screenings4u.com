@@ -1,1 +1,58 @@
-<!doctype html><html lang="en" class="dot-auth-pending"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Workforce Compliance | Workforce Management</title><link rel="icon" type="image/png" href="https://workforce.screenings4u.com/images/fav.png"><link rel="stylesheet" href="assets/css/dot-portal.css?v=20261006-company-docs2"><link rel="stylesheet" href="assets/css/workforce-management.css?v=20261012-1"><link rel="stylesheet" href="assets/css/workforce-record-management.css?v=20261013-2"><link rel="stylesheet" href="assets/css/workforce-network-hub.css?v=20261109-cssonly4"><meta name="theme-color" content="#01122f"></head><body class="workforce-management-mode"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="assets/js/dot-config.js?v=7"></script><script src="assets/js/dot-auth.js?v=20261006-fast1"></script><script src="assets/js/dot-api.js?v=20261006-fast1"></script><script src="assets/js/dot-shell.js?v=20261021-unified-layout4"></script><script src="assets/js/dot-router.js?v=20261006-fast1"></script><script src="assets/js/workforce-modules.js?v=20261013-2"></script></body></html>
+<!doctype html><html lang="en" class="dot-auth-pending"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Workforce Compliance | Workforce Management</title><link rel="icon" type="image/png" href="https://workforce.screenings4u.com/images/fav.png"><link rel="stylesheet" href="assets/css/management-unified-shell.css?v=20261021-single-shell"><link rel="stylesheet" href="assets/css/workforce-management-dashboard.css?v=20261110-billing-unified2"><link rel="stylesheet" href="assets/css/workforce-network-hub.css?v=20261109-cssonly4"><style id="workforce-compliance-critical">/* Compliance Management: dedicated Workforce styles */
+body.workforce-management-mode #dotPageMount.wc-root{width:min(1450px,calc(100% - 42px));max-width:none;margin:0 auto;padding:22px 0 56px!important}
+.wc-page,.wc-page *{box-sizing:border-box}
+.wc-page{display:grid;gap:18px;color:#01122f;font-size:13px}
+.wc-head{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px;padding:4px 0 20px;border-bottom:1px solid #d7e2ee}
+.wc-eyebrow{font-size:10px;color:#a17a00;letter-spacing:.11em;font-weight:850}
+.wc-head h1{font-size:clamp(25px,2.2vw,32px);font-weight:850;line-height:1.2;letter-spacing:-.035em;margin:7px 0;color:#01122f}
+.wc-head p{font-size:12px;line-height:1.55;color:#667d95;margin:0}
+.wc-header-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.wc-button{display:inline-flex;justify-content:center;align-items:center;gap:7px;text-decoration:none;white-space:nowrap;min-height:41px;padding:10px 15px;background:#fff;border:1px solid #c7d7e9;border-radius:9px;color:#01122f;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+.wc-button:hover{background:#f4f8fd}
+.wc-button-primary{background:#fdc102!important;border-color:#fdc102!important;color:#01122f!important}
+.wc-button-primary:hover{background:#f0b800!important}
+.wc-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.wc-stats article{display:flex;align-items:center;gap:15px;min-height:114px;min-width:0;background:#fff;border:1px solid #d9e4f0;border-radius:13px;padding:17px 18px;box-shadow:0 5px 17px rgba(1,18,47,.035)}
+.wc-stat-icon{display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px;border-radius:12px;background:#eaf2ff;color:#1356a0;font-size:21px;font-weight:850}
+.wc-stats article:nth-child(2) .wc-stat-icon{background:#fff4d5;color:#a67600}
+.wc-stats article:nth-child(3) .wc-stat-icon{background:#fff0ed;color:#b94b35}
+.wc-stats article:nth-child(4) .wc-stat-icon{background:#e7f8ed;color:#16834a}
+.wc-stats article>div{display:flex;flex-direction:column;gap:3px;min-width:0}
+.wc-stats article>div>span{font-size:11px;font-weight:800;color:#5e728b}
+.wc-stats strong{font-size:27px;line-height:1.16;color:#01122f;letter-spacing:-.04em}
+.wc-stats small{font-size:10px;color:#7b8ba1}
+.wc-directory{background:#fff;border:1px solid #d8e3ef;border-radius:14px;overflow:hidden;box-shadow:0 7px 24px rgba(1,18,47,.045)}
+.wc-directory-head{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap;padding:22px 24px}
+.wc-directory-head h2{font-size:19px;letter-spacing:-.025em;color:#01122f;margin:0 0 5px}
+.wc-directory-head p{font-size:12px;color:#71849b;margin:0}
+.wc-count{display:inline-flex;align-items:center;white-space:nowrap;padding:7px 12px;background:#eaf1f9;border:1px solid #dfe8f2;border-radius:999px;color:#315675;font-size:11px;font-weight:800}
+.wc-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:15px 23px;background:#f8fafd;border-top:1px solid #edf1f6;border-bottom:1px solid #e1eaf3}
+.wc-search{flex:1 1 280px;position:relative;min-width:170px}
+.wc-search>span{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:22px;color:#6b8197;pointer-events:none}
+.wc-search input,.wc-toolbar select{min-height:44px;border:1px solid #cbd9e9;border-radius:9px;background:#fff;color:#01122f;font:inherit;font-size:12px;padding:10px 13px}
+.wc-search input{width:100%;padding-left:42px}.wc-toolbar select{min-width:145px}
+.wc-table-wrap{overflow-x:auto}
+.wc-table{width:100%;min-width:980px;border-collapse:collapse}
+.wc-table th{background:#edf3f9;color:#47617c;font-size:10px;letter-spacing:.065em;font-weight:850;text-transform:uppercase;text-align:left;padding:13px 17px}
+.wc-table td{padding:16px 17px;color:#315674;font-size:12px;vertical-align:middle;border-top:1px solid #e7edf4}
+.wc-table tbody tr:hover td{background:#f8fbff}
+.wc-table td:last-child{text-align:right}
+.wc-case{display:flex;align-items:center;gap:12px;min-width:0}
+.wc-case-icon{display:grid;place-items:center;flex:0 0 38px;width:38px;height:38px;border-radius:11px;background:#eaf2ff;color:#164e87;font-size:20px}
+.wc-case>div{display:flex;flex-direction:column;gap:3px;min-width:0}
+.wc-case strong{font-size:12px;color:#01122f}
+.wc-case small{max-width:270px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#71849b;font-size:10px}
+.wc-pill{display:inline-block;padding:6px 11px;background:#eef3f7;border-radius:999px;color:#465e79;font-size:10px;font-weight:800;text-transform:capitalize}
+.wc-pill.priority-high,.wc-pill.priority-urgent,.wc-pill.priority-critical{background:#fce9e6;color:#a93a2c}
+.wc-pill.priority-medium,.wc-pill.status-pending{background:#fff4da;color:#946800}
+.wc-pill.priority-low,.wc-pill.status-resolved,.wc-pill.status-completed,.wc-pill.status-closed{background:#e7f7ed;color:#137c49}
+.wc-pill.status-open,.wc-pill.status-active,.wc-pill.status-in_progress{background:#eaf2ff;color:#164e87}
+.wc-manage{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:37px;padding:9px 13px;text-decoration:none;white-space:nowrap;border:1px solid #bcd3eb;border-radius:8px;background:#fff;color:#164e87;font-size:11px;font-weight:800}
+.wc-manage:hover{background:#edf5ff}
+.wc-empty{padding:48px 16px!important;text-align:center!important;color:#71859a!important}
+.wc-empty strong,.wc-empty span{display:block}.wc-empty strong{font-size:14px;color:#01122f;margin-bottom:7px}
+.wc-page :is(a,button,input,select):focus-visible{outline:3px solid #fdc102;outline-offset:2px}
+@media(max-width:1120px){.wc-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){body.workforce-management-mode #dotPageMount.wc-root{width:calc(100% - 24px);padding:15px 0 38px!important}.wc-header-actions{width:100%}.wc-header-actions .wc-button{flex:1}.wc-directory-head{padding:18px 16px}.wc-toolbar{padding:13px 15px}.wc-toolbar select{flex:1;min-width:130px}.wc-stats article{min-height:98px;padding:14px}.wc-stat-icon{flex-basis:38px;width:38px;height:38px}}
+@media(max-width:440px){.wc-stats{grid-template-columns:1fr}.wc-toolbar select{width:100%}}
+</style><meta name="theme-color" content="#01122f"></head><body class="workforce-management-mode"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="assets/js/dot-config.js?v=7"></script><script src="assets/js/dot-auth.js?v=20261006-fast1"></script><script src="assets/js/dot-api.js?v=20261006-fast1"></script><script src="assets/js/dot-shell.js?v=20261110-white-logo2"></script><script src="assets/js/workforce-management-api.js?v=20261013-2"></script><script src="assets/js/workforce-compliance-page.js?v=20261110-1"></script></body></html>
