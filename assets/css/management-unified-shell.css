@@ -170,3 +170,34 @@ body.s4u-sidebar-hidden #managementApp #dotPageMount>*,body.s4u-sidebar-hidden #
 }
 #managementApp #s4uSidebar::-webkit-scrollbar-thumb,
 #managementApp .wf-side::-webkit-scrollbar-thumb{display:none!important;background:transparent!important}
+
+
+/* Single scrolling region: brand stays fixed, nav scrolls with hidden scrollbar. */
+#managementApp > aside.wf-side{
+ display:flex!important;
+ flex-direction:column!important;
+ overflow:hidden!important;
+ height:100dvh!important;
+ max-height:100dvh!important;
+ min-height:0!important;
+ scrollbar-width:none!important;
+}
+#managementApp > aside.wf-side > .wf-brand{
+ flex:0 0 auto!important;
+}
+#managementApp > aside.wf-side > nav.wf-nav{
+ flex:1 1 auto!important;
+ min-height:0!important;
+ height:auto!important;
+ overflow-x:hidden!important;
+ overflow-y:auto!important;
+ overscroll-behavior-y:contain!important;
+ scrollbar-width:none!important;
+ -ms-overflow-style:none!important;
+}
+#managementApp > aside.wf-side > nav.wf-nav::-webkit-scrollbar,
+#managementApp > aside.wf-side::-webkit-scrollbar{
+ display:none!important;
+ width:0!important;
+ height:0!important;
+}
