@@ -117,3 +117,13 @@ No source repos have been deleted or redirected, and no production plan or custo
 - The NON-DOT session guard bypasses cached authorization and restricts NON-DOT-only sessions to the authorized NON-DOT workspace. Other DOT pages remain protected by the DOT subscription guard.
 - New `scripts/verify-unified-ctpa-handoff.mjs` in the C/TPA branch checks SSO surface isolation and redirect invariants without requiring customer credentials.
 - Cutover remains blocked on end-to-end authenticated staging tests for C/TPA DOT-only, NON-DOT-only, combined, multi-organization, expired, revoked, and replayed handoff tokens. Do not merge, deploy the staged central handoff, or retire the old NON-DOT portal until those tests pass.
+
+### NON-DOT write migration — employee and program creation (staged)
+- The consolidated C/TPA NON-DOT workspace now offers responsive forms to **create employees and company-policy programs** for authorized primary account managers.
+- An authenticated request to `workforce-ctpa-nondot-workspace` (v8, JWT verification active) first verifies the selected NON-DOT subscription and enabled feature; it requires explicit NON-DOT operating context, an active primary Workforce organization membership, no personal portal revocation, and an Employer record owned by the exact selected NON-DOT C/TPA.
+- Writes are allowlisted to `save_employee` and `save_program`, with accepted fields whitelisted before delegating to the original Workforce NON-DOT program service. The source service also checks employer/CTPA ownership.
+- These initial write calls only accept the **latest active subscription**, matching the existing legacy service's subscription selection. Other subscriptions must not create records until legacy action APIs support selected subscription IDs.
+- The interface hides creation forms unless the backend declares `can_manage=true`; UI state is not an authorization boundary. Non-primary users remain read-only.
+- DOT-origin C/TPA sessions remain read-only on the NON-DOT workspace during this transition. A NON-DOT-only verified handoff uses its independent membership.
+- All other NON-DOT actions—testing orders, random draws, result release, updates/deletions, supply management, document delivery—remain out of scope until individually authorized and migrated.
+- C/TPA migration-branch HTML, JS and CSS are versioned to load the new form code. `scripts/verify-nondot-write-migration.mjs` stages regression checks. UI syntax and backend authorization source checks passed. No authenticated browser submission was run; do not merge to production solely on source checks.
