@@ -6,7 +6,7 @@ const modules:Record<string,{endpoint:string,permission:string}>={
  programs:{endpoint:"nondot-workforce-ctpa-programs",permission:"programs"},
  pools:{endpoint:"nondot-workforce-ctpa-pools",permission:"consortium_pools"},
  testing:{endpoint:"nondot-workforce-ctpa-testing",permission:"testing_orders"},
- results:{endpoint:"nondot-workforce-ctpa-results",permission:"results_sensitive"}
+ results:{endpoint:"nondot-workforce-ctpa-results",permission:"results_summary"}
 };
 Deno.serve(async(req:Request)=>{
  if(req.method==="OPTIONS")return new Response(null,{status:204,headers:HEAD});
