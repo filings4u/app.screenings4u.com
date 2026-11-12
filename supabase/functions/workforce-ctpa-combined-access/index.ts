@@ -54,7 +54,7 @@ Deno.serve(async(req:Request)=>{
   ]);
   for(const x of [nonCtpa,nonMembership,nonAccess,nonUserAccess])if(x.error)throw x.error;
   const canNonDot=!!nonCtpa.data?.id&&!!nonMembership.data?.length&&!!nonAccess.data?.length&&nonUserAccess.data?.enabled!==false;
-  let nondotPlan:null|string=null,nondotCodes:string[]=[];
+  let nondotPlan:null|string=null,nondotSubscriptionId:null|string=null,nondotCodes:string[]=[];
   if(canNonDot){
    const subs=await db.from("workforce_subscriptions").select("id,plan_id,status")
     .eq("ctpa_id",nonCtpa.data!.id).in("status",ACTIVE).order("created_at",{ascending:false}).limit(20);
@@ -67,7 +67,9 @@ Deno.serve(async(req:Request)=>{
     const allowed=(plans.data||[]).filter((p:any)=>TIERS.some(t=>p.code==="workforce_ctpa_"+t));
     // Highest independently purchased tier; never synthesize a higher plan from DOT entitlements.
     allowed.sort((a:any,b:any)=>TIERS.indexOf(b.code.replace("workforce_ctpa_",""))-TIERS.indexOf(a.code.replace("workforce_ctpa_","")));
-    const chosen=allowed[0];
+    const currentSub=subs.data[0];
+    // Use the same current subscription the original NON-DOT business actions enforce.
+    const chosen=allowed.find((x:any)=>x.id===currentSub?.plan_id);
     if(chosen){
      const associatedSub=(subs.data||[]).find((x:any)=>x.plan_id===chosen.id);
      if(!associatedSub)throw Error("NON-DOT subscription association unavailable");
@@ -83,6 +85,7 @@ Deno.serve(async(req:Request)=>{
       return flags.has(x.feature_id)?flags.get(x.feature_id)===true:x.enabled===true;
      }).map((x:any)=>String(x.workforce_feature_catalog.code));
      nondotPlan=chosen.code;
+     nondotSubscriptionId=associatedSub.id;
     }
    }
   }
@@ -95,7 +98,7 @@ Deno.serve(async(req:Request)=>{
     plan:{code:String(c.plan.code),name:String(c.plan.name||"C/TPA "+tier)},
     operating_contexts:{
       dot:{available:true,plan_code:String(c.plan.code),feature_codes:[...new Set(dotCodes)].sort()},
-      nondot:{available:!!nondotPlan,ctpa_id:nondotPlan?nonCtpa.data?.id:null,plan_code:nondotPlan,feature_codes:[...new Set(nondotCodes)].sort()}
+      nondot:{available:!!nondotPlan,ctpa_id:nondotPlan?nonCtpa.data?.id:null,subscription_id:nondotSubscriptionId,plan_code:nondotPlan,feature_codes:[...new Set(nondotCodes)].sort()}
     },
     company_addons:{lab_account:!!lab.data?.length},
     // Never expose a union as an authorization claim: a NON-DOT feature must not
