@@ -127,7 +127,13 @@ Deno.serve(async(req:Request)=>{
        (typeof v.employee_number!=="string"||v.employee_number.length>40))
      return send({error:"Employee number must be at most 40 characters"},400);
     const clean=(x:unknown)=>String(x||"").trim().slice(0,120);
-    const changes=updatingEmployee?{first_name:clean(v.first_name),last_name:clean(v.last_name),employee_number:clean(v.employee_number).slice(0,40)}:{name:clean(v.name)};
+    // Optional employee numbers must not be erased when an edit only changes a name.
+    // Explicitly supplied empty strings still allow managers to clear an employee number.
+    const changes=updatingEmployee
+     ? {...{first_name:clean(v.first_name),last_name:clean(v.last_name)},
+        ...(Object.prototype.hasOwnProperty.call(v,"employee_number")
+          ? {employee_number:clean(v.employee_number).slice(0,40)} : {})}
+     : {name:clean(v.name)};
     if(updatingEmployee?(!changes.first_name||!changes.last_name):!changes.name)return send({error:"A name is required"},400);
     let update=db.from(target).update({...changes,updated_at:new Date().toISOString()}).eq("id",v.id)
       .eq("employer_id",v.employer_id).eq("business_surface","workforce").is("archived_at",null);
