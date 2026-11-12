@@ -92,7 +92,7 @@ Deno.serve(async(req:Request)=>{if(req.method==="OPTIONS")return new Response("o
   if(!ownedOrder(existing))return J({error:"NON-DOT order not found for this company."},404);
   if(!untouched(existing))return J({error:"Only unfulfilled created orders can be edited."},409);
   const raw=v.collection_deadline;
-  if(typeof raw!=="string"||!/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$/.test(raw))
+  if(typeof raw!=="string"||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/.test(raw))
    return J({error:"A valid UTC deadline is required."},400);
   const stamp=new Date(raw).getTime();
   if(!Number.isFinite(stamp)||stamp<=Date.now()||stamp>Date.now()+366*86400000)
