@@ -37,7 +37,7 @@ Deno.serve(async(req:Request)=>{
   if(!response.ok||data.error||data.ok===false)return send({error:data.error||"Unable to load NON-DOT workspace"},response.status||502);
   // Defend against a mismatched legacy-workspace resolution. Records must belong
   // to the selected Workforce organization verified above.
-  if(!data.ctpa||String(data.ctpa.organization_id)!==String(access.ownership?.organization_id))
+  if(!uuid(context.ctpa_id)||!data.ctpa||String(data.ctpa.id)!==String(context.ctpa_id)||String(data.ctpa.organization_id)!==String(access.ownership?.organization_id))
    return send({error:"The NON-DOT workspace does not belong to this organization"},403);
   const payload=section==="people"?{employers:data.employers||[],employees:data.employees||[]}:
    section==="programs"?{employers:data.employers||[],programs:data.programs||[]}:
