@@ -121,8 +121,11 @@ Deno.serve(async(req:Request)=>{
     const original=await lookup.maybeSingle();
     if(original.error)throw original.error;
     if(!original.data)return send({error:"Record is not part of this NON-DOT employer"},403);
+    if(updatingEmployee&&v.employee_number!==undefined&&
+       (typeof v.employee_number!=="string"||v.employee_number.length>40))
+     return send({error:"Employee number must be at most 40 characters"},400);
     const clean=(x:unknown)=>String(x||"").trim().slice(0,120);
-    const changes=updatingEmployee?{first_name:clean(v.first_name),last_name:clean(v.last_name)}:{name:clean(v.name)};
+    const changes=updatingEmployee?{first_name:clean(v.first_name),last_name:clean(v.last_name),employee_number:clean(v.employee_number).slice(0,40)}:{name:clean(v.name)};
     if(Object.values(changes).some(x=>!x))return send({error:"A name is required"},400);
     let update=db.from(target).update({...changes,updated_at:new Date().toISOString()}).eq("id",v.id)
       .eq("employer_id",v.employer_id).eq("business_surface","workforce").is("archived_at",null);
@@ -260,7 +263,7 @@ Deno.serve(async(req:Request)=>{
   const company=(data.employers||[]).slice(0,250).map((x:any)=>({id:x.id,legal_name:x.legal_name}));
   const payload=section==="people"?{
     employers:company,
-    employees:(data.employees||[]).slice(0,250).map((x:any)=>({id:x.id,employer_id:x.employer_id,first_name:x.first_name,last_name:x.last_name,employment_status:x.employment_status,status:x.status}))
+    employees:(data.employees||[]).slice(0,250).map((x:any)=>({id:x.id,employer_id:x.employer_id,first_name:x.first_name,last_name:x.last_name,employee_number:x.employee_number,employment_status:x.employment_status,status:x.status}))
    }:section==="programs"?{
     employers:company,
     programs:(data.programs||[]).slice(0,250).map((x:any)=>({id:x.id,employer_id:x.employer_id,name:x.name,program_name:x.program_name,status:x.status}))
