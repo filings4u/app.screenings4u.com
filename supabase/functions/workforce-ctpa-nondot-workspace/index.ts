@@ -235,9 +235,11 @@ Deno.serve(async(req:Request)=>{
      const removed=await db.from("workforce_pool_memberships").update({
       eligibility_status:"removed",removed_at:new Date().toISOString(),
       removal_reason:"Removed by C/TPA account manager",updated_at:new Date().toISOString()
-     }).eq("id",active.data.id).eq("pool_id",v.pool_id).select("id").maybeSingle();
+     }).eq("id",active.data.id).eq("pool_id",v.pool_id)
+      .eq("employee_id",v.employee_id).eq("business_surface","workforce")
+      .is("removed_at",null).select("id").maybeSingle();
      if(removed.error)throw removed.error;
-     if(!removed.data)return send({error:"Membership not found"},404);
+     if(!removed.data)return send({error:"Membership was already removed or changed"},409);
      return send({ok:true,saved:true,section,action:requestedAction});
     }
     if(active.data)return send({error:"Employee is already in this pool"},409);
