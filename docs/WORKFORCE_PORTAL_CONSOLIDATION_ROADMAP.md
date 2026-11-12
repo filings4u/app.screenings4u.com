@@ -195,3 +195,26 @@ No source repos have been deleted or redirected, and no production plan or custo
 - The existing NON-DOT Testing Orders page now renders cancel controls only for eligible unfulfilled orders, with the established `S4UDialog.confirm` Workforce-branded confirmation, explicit no-refund/no-invoice-cancellation wording, disabled buttons during requests and displayed errors. Its script URL is refreshed.
 - Source verification passed 16/16 checks; browser JavaScript syntax check passed. Added `scripts/verify-ctpa-nondot-order-lifecycle.mjs` for repeatable source checks.
 - **Deployment remains separate from GitHub commits.** Before releasing, run authenticated positive/negative company and feature tests; simulate an order changing state concurrently; validate interaction with existing paid orders, downstream testing tickets and staff processing; verify returned order status; test mobile portal and legacy route. Do not merge to production or redirect original login until those gates pass.
+
+
+## November 12 — Employer consolidation begins: independently verified DOT/NON-DOT workspaces
+
+**Approved architecture:** the final Employer portal is one customer interface under `employer.screenings4u.com`, with the existing WorkforceApps login and a single handoff. Older agency-specific and NON-DOT repositories remain available as migration sources, not new permanent portals.
+
+### Verified sources and catalog
+- Inspected `employer-non-dot.screenings4u.com` (large working NON-DOT portal), `fmcsa-employer-dot.screenings4u.com` (DOT portal), and `owner-operator.screenings4u.com` (distinct future consolidation stream).
+- The existing production database has two separate Employer record/subscription families: `employers / subscriptions / plans` for DOT, and `workforce_employers / workforce_subscriptions / workforce_plans` for NON-DOT. Memberships, portal access, purchased feature flags and overrides also differ.
+- Verified three active existing NON-DOT Employer plan codes: `workforce_employer_essential`, `workforce_employer_professional`, `workforce_employer_enterprise`; enabled feature counts at this checkpoint were **12 / 19 / 27**. `clearinghouse_tools` is disabled in all three and remains disabled. DOT has `dot_employer_essential`, `dot_employer_professional`, and `dot_employer_enterprise` plus separate legacy `dot_employer_test` and C/TPA-sponsored plan codes. Those special cases must be preserved until fully mapped, not silently recoded.
+- DOT-specific agency repositories (FAA/FRA/FTA/PHMSA/USCG) remain **unmigrated** and must be inventoried individually before redirecting them. No DOT entitlement may be inferred from a NON-DOT purchase.
+
+### Code built on existing migration branches
+- Added `supabase/functions/workforce-employer-unified-workspaces/index.ts` to the central management repository. This is an **authenticated, read-only** Employer workspace-discovery endpoint, not a login replacement or a feature-mutating service.
+- It independently checks signed-in identity, active membership, company-organization ownership, portal-level authorization, personal NON-DOT revocations, exact active purchased Employer plan and tier code, and independently enabled feature grants/overrides. It returns separate `dot` and `nondot` workspaces, with **no cross-surface feature union**.
+- Updated the existing `employer-non-dot.screenings4u.com` dashboard on its already-existing `migration-workforce-consolidation-20261111` branch to display only the independently verified Employer workspaces. It uses the existing `S4UAuth` session and existing dashboard, **without a new login, duplicate navigation, or fabricated customer records**. The dashboard keeps working if the staged endpoint has not been deployed.
+- Applied existing Workforce navy `#01122F` for the dashboard browser theme and refreshed the JavaScript version.
+- Added `scripts/verify-workforce-employer-unified-workspaces.mjs`. Static inspection passed **19/19** current-turn checks; browser source parsing succeeded. This is not an authenticated backend integration test.
+
+### Next release gates
+- Deploy the new read-only endpoint to a test environment before activating the dashboard on a production host. Confirm active/expired memberships, wrong employer, cross-org isolation, direct vs C/TPA-sponsored accounts, explicit per-user denial, DOT-only and NON-DOT-only customers, and dual-entitled customers.
+- Inventory the DOT agency-specific employer portals and complete a canonical Employer feature matrix using existing paid plans, including appropriate Lab Account features and separately authorized direct-lab operations. Do not automatically enable Clearinghouse tools.
+- Retain WorkforceApps central selection/handoff. Do not redirect agency domains or delete sources until all features, subscriptions, customer workflows and regulatory scopes have been migrated and tested.
