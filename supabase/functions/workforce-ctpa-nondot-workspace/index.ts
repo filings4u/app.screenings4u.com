@@ -40,6 +40,17 @@ Deno.serve(async(req:Request)=>{
    const db=createClient(url,Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"",{auth:{persistSession:false,autoRefreshToken:false}});
    const sub=await db.from("workforce_subscriptions").select("id,plan_id").eq("id",subscriptionId).eq("ctpa_id",ctpaId).in("status",["active","trial","trialing"]).maybeSingle();
    if(sub.error||!sub.data)return send({error:"An active NON-DOT C/TPA subscription is required"},403);
+   // Legacy NON-DOT action services use the most recent active subscription.
+   // Until their authorization is upgraded, do not let an older purchased plan
+   // authorize writes that the source workflow would execute under a newer one.
+   if(body.action&&body.action!=="workspace"){
+    const latest=await db.from("workforce_subscriptions").select("id")
+     .eq("ctpa_id",ctpaId).in("status",["active","trial","trialing"])
+     .order("created_at",{ascending:false}).limit(1).maybeSingle();
+    if(latest.error)throw latest.error;
+    if(latest.data?.id!==subscriptionId)
+     return send({error:"Select your current NON-DOT subscription to manage records"},403);
+   }
    const [flags,overrides]=await Promise.all([
     db.from("workforce_plan_features").select("feature_id,enabled,workforce_feature_catalog(code,active)").eq("plan_id",sub.data.plan_id),
     db.from("workforce_account_feature_overrides").select("feature_id,enabled").eq("ctpa_id",ctpaId).eq("subscription_id",subscriptionId)
