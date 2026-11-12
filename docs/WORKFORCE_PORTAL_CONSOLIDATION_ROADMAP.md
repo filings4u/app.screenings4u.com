@@ -100,3 +100,10 @@ Independent Contractor is an operational role, not automatically a fourth three-
 The current ctpa.screenings4u.com portal still authenticates using the DOT C/TPA workspace. A NON-DOT-only customer cannot use that login as-is. Before disabling ctpa-non-dot.screenings4u.com, create a unified C/TPA session and workspace selector in Workforce management that accepts verified DOT-only, NON-DOT-only and combined memberships, scopes data by business surface, and grants only purchased subscription features. Do not force existing NON-DOT customers to buy DOT subscriptions.
 
 No source repos have been deleted or redirected, and no production plan or customer entitlement was altered in this checkpoint.
+
+### Unified C/TPA workspace discovery staged
+- New read-only Supabase Edge Function `workforce-ctpa-unified-workspaces` v1 can discover **both** DOT-only and NON-DOT-only C/TPA subscriptions for a verified signed-in user.
+- DOT workspaces are checked against active organization memberships, enabled portal access, active `subscriptions`, active tier plans and the authoritative `ctpa_dot_session_context` RPC.
+- NON-DOT workspaces are checked against active workforce memberships, the correct `workforce_ctpas` organization, enabled portal access, explicit per-user revocation and active `workforce_subscriptions` with approved tier plans.
+- The service returns distinct per-surface workspace/subscription entries, never a merged role or blanket permission. It creates no account, subscription, payment, or data record.
+- This is the backend prerequisite for unified selector/login. **The current C/TPA UI still needs to consume this service and support NON-DOT-only sessions; do not cut over users or redirect the legacy portal yet.**
