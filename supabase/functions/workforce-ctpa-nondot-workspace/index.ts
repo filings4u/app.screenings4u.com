@@ -126,7 +126,7 @@ Deno.serve(async(req:Request)=>{
      return send({error:"Employee number must be at most 40 characters"},400);
     const clean=(x:unknown)=>String(x||"").trim().slice(0,120);
     const changes=updatingEmployee?{first_name:clean(v.first_name),last_name:clean(v.last_name),employee_number:clean(v.employee_number).slice(0,40)}:{name:clean(v.name)};
-    if(Object.values(changes).some(x=>!x))return send({error:"A name is required"},400);
+    if(updatingEmployee?(!changes.first_name||!changes.last_name):!changes.name)return send({error:"A name is required"},400);
     let update=db.from(target).update({...changes,updated_at:new Date().toISOString()}).eq("id",v.id)
       .eq("employer_id",v.employer_id).eq("business_surface","workforce").is("archived_at",null);
     if(!updatingEmployee)update=update.eq("program_type","NON_DOT");
