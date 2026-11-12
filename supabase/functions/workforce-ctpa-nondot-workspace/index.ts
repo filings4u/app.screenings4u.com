@@ -82,6 +82,7 @@ Deno.serve(async(req:Request)=>{
    create_test_order:{section:"testing",permission:"testing_orders"},
    update_employee:{section:"people",permission:"employee_management"},
    update_program:{section:"programs",permission:"programs"},
+   update_pool:{section:"pools",permission:"consortium_pools"},
    add_pool_member:{section:"pools",permission:"consortium_pools"},
    remove_pool_member:{section:"pools",permission:"consortium_pools"}
   };
@@ -129,6 +130,34 @@ Deno.serve(async(req:Request)=>{
     const saved=await update.select("id").maybeSingle();
     if(saved.error)throw saved.error;
     if(!saved.data)return send({error:"Record is not available"},404);
+    return send({ok:true,saved:true,section,action:requestedAction});
+   }
+   // A manager may rename their own draft NON-DOT employer pool, but cannot
+   // change its employer, program, selection policy, regulatory surface or status.
+   if(requestedAction==="update_pool"){
+    const v=body.pool;
+    if(!v||typeof v!=="object"||Array.isArray(v)||!uuid(v.id))return send({error:"Select an existing NON-DOT pool"},400);
+    if(typeof v.name!=="string"||!v.name.trim()||v.name.trim().length>120)
+     return send({error:"Enter a pool name of 1 to 120 characters"},400);
+    const pool=await db.from("workforce_random_pools").select("id,status,employer_id")
+     .eq("id",v.id).eq("ctpa_id",ctpaId).eq("business_surface","workforce")
+     .eq("program_type","NON_DOT").eq("pool_type","employer").is("archived_at",null).maybeSingle();
+    if(pool.error)throw pool.error;
+    if(!pool.data||pool.data.status!=="draft"||!uuid(pool.data.employer_id))
+     return send({error:"Only a draft NON-DOT employer pool can be renamed"},403);
+    const employer=await db.from("workforce_employers").select("id")
+     .eq("id",pool.data.employer_id).eq("ctpa_id",ctpaId)
+     .eq("workforce_classification","NON_DOT").is("archived_at",null).maybeSingle();
+    if(employer.error)throw employer.error;
+    if(!employer.data)return send({error:"Pool employer is outside this C/TPA"},403);
+    const updated=await db.from("workforce_random_pools")
+     .update({name:v.name.trim(),updated_at:new Date().toISOString()})
+     .eq("id",v.id).eq("ctpa_id",ctpaId).eq("employer_id",employer.data.id)
+     .eq("business_surface","workforce").eq("program_type","NON_DOT")
+     .eq("pool_type","employer").eq("status","draft").is("archived_at",null)
+     .select("id").maybeSingle();
+    if(updated.error)throw updated.error;
+    if(!updated.data)return send({error:"Draft pool was changed or is unavailable"},409);
     return send({ok:true,saved:true,section,action:requestedAction});
    }
    if(requestedAction==="add_pool_member"||requestedAction==="remove_pool_member"){
