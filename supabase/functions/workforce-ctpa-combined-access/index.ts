@@ -95,7 +95,7 @@ Deno.serve(async(req:Request)=>{
     plan:{code:String(c.plan.code),name:String(c.plan.name||"C/TPA "+tier)},
     operating_contexts:{
       dot:{available:true,plan_code:String(c.plan.code),feature_codes:[...new Set(dotCodes)].sort()},
-      nondot:{available:!!nondotPlan,plan_code:nondotPlan,feature_codes:[...new Set(nondotCodes)].sort()}
+      nondot:{available:!!nondotPlan,ctpa_id:nondotPlan?nonCtpa.data?.id:null,plan_code:nondotPlan,feature_codes:[...new Set(nondotCodes)].sort()}
     },
     company_addons:{lab_account:!!lab.data?.length},
     // Never expose a union as an authorization claim: a NON-DOT feature must not
