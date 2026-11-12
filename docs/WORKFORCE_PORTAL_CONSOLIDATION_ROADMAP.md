@@ -107,3 +107,13 @@ No source repos have been deleted or redirected, and no production plan or custo
 - NON-DOT workspaces are checked against active workforce memberships, the correct `workforce_ctpas` organization, enabled portal access, explicit per-user revocation and active `workforce_subscriptions` with approved tier plans.
 - The service returns distinct per-surface workspace/subscription entries, never a merged role or blanket permission. It creates no account, subscription, payment, or data record.
 - This is the backend prerequisite for unified selector/login. **The current C/TPA UI still needs to consume this service and support NON-DOT-only sessions; do not cut over users or redirect the legacy portal yet.**
+
+### WorkforceApps single-selector rollout preparation — November 11
+- Inspected the existing WorkforceApps selector, login and portal-session-handoff. Reuse its one-time magic-link-code exchange and centralized purchased workspace cards; do not build new login UI.
+- The staged `portal-session-handoff` function in app.screenings4u.com now maps `ctpa_workforce` to the canonical `ctpa.screenings4u.com/auth-handoff.html` and requires exact NON-DOT membership and subscription selection. The production v96 handoff is **unchanged** until cutover.
+- The staged WorkforceApps selector expects the canonical C/TPA handoff hostname for both DOT and NON-DOT.
+- The staged C/TPA receiver redeems the existing one-time code, independently checks the matched NON-DOT membership/subscription/plan and enters `nondot-workspace.html` rather than a DOT page.
+- `workspace.html` in the C/TPA migration branch now delegates directly to the existing WorkforceApps selector. An incomplete handoff returns there as well; there is no second C/TPA-specific workspace chooser for migrated users.
+- The NON-DOT session guard bypasses cached authorization and restricts NON-DOT-only sessions to the authorized NON-DOT workspace. Other DOT pages remain protected by the DOT subscription guard.
+- New `scripts/verify-unified-ctpa-handoff.mjs` in the C/TPA branch checks SSO surface isolation and redirect invariants without requiring customer credentials.
+- Cutover remains blocked on end-to-end authenticated staging tests for C/TPA DOT-only, NON-DOT-only, combined, multi-organization, expired, revoked, and replayed handoff tokens. Do not merge, deploy the staged central handoff, or retire the old NON-DOT portal until those tests pass.
