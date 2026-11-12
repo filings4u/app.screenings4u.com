@@ -88,6 +88,8 @@ Deno.serve(async(request:Request)=>{
   if(!uuid(body.grant_id))return reply({error:"Select a valid Lab Account grant"},400);
   const e=await load(body.grant_id);
   if(!e)return reply({error:"Grant not found"},404);
+  if(action==="approve"&&e.linked_customer_user_id===user.id)
+   return reply({error:"Staff may not approve their own Lab Account grant"},403);
   const check=await readiness(e);
   if(action==="review")return reply({ok:true,grant_id:e.id,status:e.status,...check});
   if(body.confirmation!=="ACTIVATE LAB ACCOUNT")
