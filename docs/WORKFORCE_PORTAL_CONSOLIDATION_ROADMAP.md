@@ -148,3 +148,11 @@ No source repos have been deleted or redirected, and no production plan or custo
 - Original `nondot-workforce-ctpa-results` still exists and can receive direct download/delivery requests. It must be hardened or disabled only after all legacy consumers are migrated, and after explicit release/recipient authorization is verified.
 - None of these changes copy customer data, alter payments or subscription entitlements, replace existing legacy functions, redirect source repos or merge the browser migration branch into production.
 - **Cutover remains blocked** until authenticated positive/negative backend tests, source endpoint direct-access audits, and order/result business workflow tests are completed.
+
+
+## November 12 — NON-DOT draft pool editing (migration branch only)
+- Implemented `update_pool` in `workforce-ctpa-nondot-workspace` source. It requires a verified NON-DOT subscription, enabled `consortium_pools` feature, and active primary C/TPA membership with portal access.
+- Only an existing employer-owned, NON-DOT, `workforce`-surface, **draft** pool for the verified C/TPA can be renamed. The employer must also be an active NON-DOT company under that C/TPA. Requests cannot change the program, employer, policy, selection schedule, pool classification or status.
+- Added draft-pool editing forms to `ctpa.screenings4u.com` with the corresponding `app.js` action allowlist and a refreshed script version.
+- GitHub source consistency checks passed for the action registration, UI handler and backend constraints; this is **not** an authenticated integration test.
+- **Not deployed or released:** Deploy the revised Edge Function in the appropriate preproduction environment, run authentication, same-company/wrong-company, read-only role, revoked and expired subscription, live/draft pool, and browser UI tests before release. Do not switch the central selector handoff or retire any repo during this checkpoint.
