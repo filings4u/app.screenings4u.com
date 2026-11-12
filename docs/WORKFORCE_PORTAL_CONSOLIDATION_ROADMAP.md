@@ -156,3 +156,12 @@ No source repos have been deleted or redirected, and no production plan or custo
 - Added draft-pool editing forms to `ctpa.screenings4u.com` with the corresponding `app.js` action allowlist and a refreshed script version.
 - GitHub source consistency checks passed for the action registration, UI handler and backend constraints; this is **not** an authenticated integration test.
 - **Not deployed or released:** Deploy the revised Edge Function in the appropriate preproduction environment, run authentication, same-company/wrong-company, read-only role, revoked and expired subscription, live/draft pool, and browser UI tests before release. Do not switch the central selector handoff or retire any repo during this checkpoint.
+
+
+## November 12 — NON-DOT employee-number edit integration
+- Continued the already-approved C/TPA consolidation on the existing migration branches. No new portal, separate login, subscription, or CSS shell was introduced.
+- The secure NON-DOT workspace now includes `employee_number` in its sanitized employee list, validates an optional number of at most 40 characters, and permits it in the narrowly scoped `update_employee` allowlist. Required first/last names remain required even when the employee number is blank.
+- The consolidated C/TPA Employees view shows the number and its existing edit form can change or clear it. The page version was refreshed to avoid stale JavaScript.
+- Verified that the original NON-DOT employee service reads this column and that the update remains restricted to an authorized current NON-DOT subscription, enabled employee feature, active primary membership, personal portal access, employer ownership and `business_surface=workforce`. These are source-level checks, not a substitute for live policy tests.
+- Added `scripts/verify-ctpa-nondot-employee-edit.mjs` for future regression checks. A separate current-turn source comparison passed 16/16 checks and browser module syntax parsing.
+- **Release gate unchanged:** Edge Function revision is staged in GitHub, not deployed by this checkpoint. Authenticated create/edit/read tests (including blank numbers, unauthorized users, revoked subscriptions, alternate companies, and production billing/order regressions) must pass before switching the WorkforceApps handoff or retiring a legacy portal.
