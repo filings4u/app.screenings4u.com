@@ -71,11 +71,24 @@ Deno.serve(async(req:Request)=>{
   // to the selected Workforce organization verified above.
   if(!uuid(context.ctpa_id)||!data.ctpa||String(data.ctpa.id)!==String(context.ctpa_id)||String(data.ctpa.organization_id)!==String(organizationId))
    return send({error:"The NON-DOT workspace does not belong to this organization"},403);
-  const payload=section==="people"?{employers:data.employers||[],employees:data.employees||[]}:
-   section==="programs"?{employers:data.employers||[],programs:data.programs||[]}:
-   section==="pools"?{pools:data.pools||[],memberships:data.pool_memberships||data.memberships||[]}:
-   section==="testing"?{orders:data.testing_orders||data.orders||[],employers:data.employers||[]}:
-   {reports:data.result_reports||data.reports||data.results||[]};
+  // Return only fields rendered by the read-only migration UI. In particular,
+  // do not expose full donor, CCF, MRO, medical or billing records to the browser.
+  const company=(data.employers||[]).slice(0,250).map((x:any)=>({id:x.id,legal_name:x.legal_name}));
+  const payload=section==="people"?{
+    employers:company,
+    employees:(data.employees||[]).slice(0,250).map((x:any)=>({id:x.id,employer_id:x.employer_id,first_name:x.first_name,last_name:x.last_name,employment_status:x.employment_status,status:x.status}))
+   }:section==="programs"?{
+    employers:company,
+    programs:(data.programs||[]).slice(0,250).map((x:any)=>({id:x.id,employer_id:x.employer_id,name:x.name,program_name:x.program_name,status:x.status}))
+   }:section==="pools"?{
+    pools:(data.pools||[]).slice(0,250).map((x:any)=>({id:x.id,name:x.name,pool_name:x.pool_name,status:x.status})),
+    memberships:(data.pool_memberships||data.memberships||[]).slice(0,500).map((x:any)=>({id:x.id,pool_id:x.pool_id}))
+   }:section==="testing"?{
+    employers:company,
+    orders:(data.testing_orders||data.orders||[]).slice(0,250).map((x:any)=>({id:x.id,order_number:x.order_number,employer_id:x.employer_id,created_at:x.created_at,status:x.status}))
+   }:{
+    reports:(data.result_reports||data.reports||data.results||[]).slice(0,250).map((x:any)=>({id:x.id,report_number:x.report_number,order_number:x.order_number,status:x.status,report_status:x.report_status,result_status:x.result_status,updated_at:x.updated_at,released_at:x.released_at}))
+   };
   return send({ok:true,section,context:"nondot",plan_code:context.plan_code,read_only:true,available_sections:Object.entries(modules).filter(([,rule])=>context.feature_codes.includes(rule.permission)).map(([id])=>id),data:payload});
  }catch(err){console.error("workforce-ctpa-nondot-workspace",err);return send({error:"Unable to access NON-DOT module"},500)}
 });
