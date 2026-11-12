@@ -19,14 +19,46 @@ Deno.serve(async(req:Request)=>{
   const body=await req.json().catch(()=>({}));
   const ctpaId=body.ctpa_id,subscriptionId=body.subscription_id,section=String(body.section||"programs");
   if(!uuid(ctpaId)||!uuid(subscriptionId)||!modules[section])return send({error:"Invalid workspace or module"},400);
-  // Verify purchased DOT workspace and separately purchased NON-DOT operating context.
-  const guard=await fetch(url+"/functions/v1/workforce-ctpa-combined-access",{
-   method:"POST",headers:{"Authorization":"Bearer "+token,"apikey":anon,"Content-Type":"application/json"},
-   body:JSON.stringify({ctpa_id:ctpaId,subscription_id:subscriptionId}),cache:"no-store"
-  });
-  const access=await guard.json().catch(()=>({}));
-  if(!guard.ok||access.authorized!==true)return send({error:"Your C/TPA subscription does not authorize this workspace"},403);
-  const context=access.operating_contexts?.nondot,rule=modules[section];
+  // DOT users use the existing independently verified dual-surface boundary.
+  // NON-DOT-only users must hold the selected NON-DOT workspace and subscription;
+  // never invent a DOT membership to enter this consolidated hostname.
+  const onlyNondot=body.operating_context==="nondot";
+  let context:any,organizationId="";
+  if(onlyNondot){
+   const check=await fetch(url+"/functions/v1/workforce-ctpa-unified-workspaces",{
+    method:"POST",headers:{"Authorization":"Bearer "+token,"apikey":anon,"Content-Type":"application/json"},
+    body:JSON.stringify({}),cache:"no-store"
+   });
+   const data=await check.json().catch(()=>({}));
+   if(!check.ok)return send({error:"Your selected C/TPA workspace is not available"},403);
+   const selected=(data.workspaces||[]).find((w:any)=>w.operating_context==="nondot"&&w.ctpa_id===ctpaId&&w.subscription_id===subscriptionId);
+   if(!selected)return send({error:"NON-DOT workspace and subscription do not belong to the signed-in user"},403);
+   organizationId=selected.organization_id;
+   // A legacy plan's enabled features and account-specific feature revocations
+   // determine access. This is independent of the account's DOT purchases.
+   const {createClient}=await import("npm:@supabase/supabase-js@2");
+   const db=createClient(url,Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"",{auth:{persistSession:false,autoRefreshToken:false}});
+   const sub=await db.from("workforce_subscriptions").select("id,plan_id").eq("id",subscriptionId).eq("ctpa_id",ctpaId).in("status",["active","trial","trialing"]).maybeSingle();
+   if(sub.error||!sub.data)return send({error:"An active NON-DOT C/TPA subscription is required"},403);
+   const [flags,overrides]=await Promise.all([
+    db.from("workforce_plan_features").select("feature_id,enabled,workforce_feature_catalog(code,active)").eq("plan_id",sub.data.plan_id),
+    db.from("workforce_account_feature_overrides").select("feature_id,enabled").eq("ctpa_id",ctpaId).eq("subscription_id",subscriptionId)
+   ]);
+   if(flags.error||overrides.error)throw flags.error||overrides.error;
+   const o=new Map((overrides.data||[]).map((r:any)=>[r.feature_id,r.enabled]));
+   const features=(flags.data||[]).filter((r:any)=>r.workforce_feature_catalog?.active!==false&&r.workforce_feature_catalog?.code&&(o.has(r.feature_id)?o.get(r.feature_id)===true:r.enabled===true)).map((r:any)=>String(r.workforce_feature_catalog.code));
+   context={available:true,ctpa_id:ctpaId,plan_code:selected.plan_code,feature_codes:features};
+  }else{
+   const guard=await fetch(url+"/functions/v1/workforce-ctpa-combined-access",{
+    method:"POST",headers:{"Authorization":"Bearer "+token,"apikey":anon,"Content-Type":"application/json"},
+    body:JSON.stringify({ctpa_id:ctpaId,subscription_id:subscriptionId}),cache:"no-store"
+   });
+   const access=await guard.json().catch(()=>({}));
+   if(!guard.ok||access.authorized!==true)return send({error:"Your C/TPA subscription does not authorize this workspace"},403);
+   context=access.operating_contexts?.nondot;
+   organizationId=access.ownership?.organization_id||"";
+  }
+  const rule=modules[section];
   if(context?.available!==true||!Array.isArray(context.feature_codes)||!context.feature_codes.includes(rule.permission))
    return send({error:"This NON-DOT feature is not included in your active subscription"},403);
   const response=await fetch(url+"/functions/v1/"+rule.endpoint,{
@@ -37,7 +69,7 @@ Deno.serve(async(req:Request)=>{
   if(!response.ok||data.error||data.ok===false)return send({error:data.error||"Unable to load NON-DOT workspace"},response.status||502);
   // Defend against a mismatched legacy-workspace resolution. Records must belong
   // to the selected Workforce organization verified above.
-  if(!uuid(context.ctpa_id)||!data.ctpa||String(data.ctpa.id)!==String(context.ctpa_id)||String(data.ctpa.organization_id)!==String(access.ownership?.organization_id))
+  if(!uuid(context.ctpa_id)||!data.ctpa||String(data.ctpa.id)!==String(context.ctpa_id)||String(data.ctpa.organization_id)!==String(organizationId))
    return send({error:"The NON-DOT workspace does not belong to this organization"},403);
   const payload=section==="people"?{employers:data.employers||[],employees:data.employees||[]}:
    section==="programs"?{employers:data.employers||[],programs:data.programs||[]}:
