@@ -6,15 +6,23 @@ Deno.serve(async(req:Request)=>{if(req.method==="OPTIONS")return new Response("o
  // not only by a new portal wrapper.
  if(!body.ctpa_id||String(body.ctpa_id)!==String(ctpa.id))
   return J({error:"Select your authorized NON-DOT C/TPA workspace."},403);
- const [personal,subscriptions]=await Promise.all([
+ const [personal,portal,subscriptions]=await Promise.all([
   db.from("workforce_portal_user_access").select("enabled").eq("user_id",user.id)
    .eq("organization_id",ctpa.organization_id).eq("portal_code","ctpa_workforce").maybeSingle(),
+  db.from("workforce_portal_access").select("enabled").eq("organization_id",ctpa.organization_id)
+   .eq("portal_code","ctpa_workforce").eq("enabled",true).limit(1),
   db.from("workforce_subscriptions").select("id,plan_id,status").eq("ctpa_id",ctpa.id)
    .in("status",["active","trial","trialing"]).order("created_at",{ascending:false}).limit(1).maybeSingle()
  ]);
- if(personal.error||subscriptions.error)throw personal.error||subscriptions.error;
+ if(personal.error||portal.error||subscriptions.error)throw personal.error||portal.error||subscriptions.error;
  if(personal.data?.enabled===false)return J({error:"Your Workforce C/TPA portal access has been revoked."},403);
+ if(!portal.data?.length)return J({error:"Workforce C/TPA portal is disabled for this company."},403);
  if(!subscriptions.data)return J({error:"Active C/TPA subscription required."},403);
+ const verifiedPlan=await db.from("workforce_plans").select("id,code,active,audience")
+  .eq("id",subscriptions.data.plan_id).eq("active",true).eq("audience","ctpa").maybeSingle();
+ if(verifiedPlan.error)throw verifiedPlan.error;
+ if(!verifiedPlan.data||!["workforce_ctpa_essential","workforce_ctpa_professional","workforce_ctpa_enterprise"].includes(verifiedPlan.data.code))
+  return J({error:"An active C/TPA subscription tier is required."},403);
  if(body.subscription_id&&String(body.subscription_id)!==String(subscriptions.data.id))
   return J({error:"The selected C/TPA subscription is not active for this workspace."},403);
  const [permissions,overrides]=await Promise.all([
