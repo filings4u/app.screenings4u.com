@@ -11,7 +11,7 @@ Status: migration-branch working plan; **no live domain, subscription, billing, 
 5. ctpa.screenings4u.com — **one** C/TPA interface with DOT and NON-DOT modes and purchased Lab Account capabilities.
 6. employer.screenings4u.com — **one** Employer interface with DOT and NON-DOT modes and optional purchased Lab Account capabilities; source repository is employer-non-dot.screenings4u.com until domain migration is verified.
 7. owner-operator.screenings4u.com — **one** Owner-Operator interface with DOT and NON-DOT features appropriate to the account.
-8. independent-contractor.screenings4u.com — contractor-specific portal retained until separately inventoried. No unsupported assumption of three subscription tiers for contractors.
+8. independent-contractor.screenings4u.com — fourth and final consolidated Workforce subscription portal. Migrate its existing contractor features into the full Enterprise build first, then apply Essential, Professional and Enterprise entitlements after the four-portal migration. Existing contractor rights remain intact until new purchases and provisioning are validated.
 9. customers.screenings4u.com — retail drug and alcohol testing customers, separate from Workforce software subscriptions.
 10. screenings4u.com — screenings4u public marketing. Former House Lab Account plan page to be replaced by navigation to Workforce only after new checkout is functional.
 
@@ -22,11 +22,14 @@ Status: migration-branch working plan; **no live domain, subscription, billing, 
 | C/TPA | Existing DOT / NON-DOT core tools, programs and orders | Advanced results and reports | Full configured C/TPA tools and integrations |
 | Employer | Own employee testing and programs | Advanced results and reporting | Full configured employer administration and integrations |
 | Owner-Operator | Basic Compliance (existing code owner_operator_essential) | Consortium + Drug Test (existing owner_operator_plus) | Complete Compliance (existing owner_operator_complete) |
+| Independent Contractor | Core authorized contractor workflows | Expanded contractor workflows | All existing contractor capabilities after migration |
 
-Independent Contractor is an operational role, not automatically a fourth three-tier subscription. Retain its current permissions until inventory confirms commercial plans.
+Independent Contractor is the fourth approved Workforce portal and will offer Essential, Professional, and Enterprise. Its existing operational access must not be revoked or reclassified before its new plan catalog and checkout provisioning are implemented and verified; current database inventory has not identified contractor plans.
 
 ## Feature policy
 
+- **Mandatory migration sequence:** Build all four consolidated portals with their complete Enterprise-capability interfaces and preserve every existing live feature/workflow first. Only after the entire migration is complete, wire three purchased subscription tiers and server-enforced permission visibility per portal, then run the consolidated end-to-end test cycle, cut over the central WorkforceApps selector and retire the source repositories after successful migration.
+- **Exactly four customer portals:** C/TPA, Employer, Owner-Operator, Independent Contractor. These are the four subscription destinations; WorkforceApps is the common login/selector, app.screenings4u.com is staff administration, and testing-portal remains staff testing operations, not additional subscription portals.
 - Build to highest plan first. A feature existing in code does not grant access.
 - Reuse existing feature_catalog, workforce_feature_catalog, plan_features and workforce_plan_features. The snapshot config/workforce-consolidation-plan-audit.json records current flags and candidate combined benefits.
 - DOT and NON-DOT remain separate regulatory business surfaces and data sets, even though the customer sees one portal and tier.
@@ -224,3 +227,16 @@ No source repos have been deleted or redirected, and no production plan or custo
 - The existing DOT Owner-Operator customer data model uses `owner_operators` (with an associated `employer_id`) and separate existing records for Clearinghouse designations and consortium agreements. Those legal/compliance records must be retained and scoped to their original owner.
 - The current DOT plan catalog has active `owner_operator_essential`, `owner_operator_plus`, `owner_operator_complete`, and `owner_operator_ctpa_sponsored` codes, **not** final Essential/Professional/Enterprise codes. Do not convert existing subscriptions or treat the old Plus/Complete names as permission to grant the new tiers automatically.
 - The Owner-Operator integration must first map existing purchased features and sponsorship cases into the approved three-tier structure, then implement exact subscription checks and verified WorkforceApps handoff. No Owner-Operator plan, price, POA, consortium record, or account designation was changed at this checkpoint.
+
+
+## Updated owner-approved execution scope — November 12, 2026
+The most recent explicit owner instruction supersedes earlier notes saying contractor subscriptions are out of scope or that separate features should be released and tested individually.
+
+1. **Migrate everything first.** Fully inventory all source repositories, move real functionality into exactly four Workforce customer portals, and build every portal's complete Enterprise-level capability. Include DOT, NON-DOT, appropriate Lab Account capabilities, regulatory workflows, account documents, and customer operations according to authorization. Do not build a lightweight read-only shell as a substitute for completed workflows.
+2. **Apply entitlement tiers after full-feature consolidation.** Each of C/TPA, Employer, Owner-Operator and Independent Contractor has Essential, Professional, Enterprise. Build one complete portal implementation per customer type, not three duplicate portal implementations; use authoritative purchases and per-feature permissions to control access. Preserve existing paid access during the migration.
+3. **Then run the complete test cycle.** Validate login/handoff, portal selector, all pages and features, billing/checkout, permissions, DOT/NON-DOT boundaries, cross-company protection, laboratory operations, and mobile UI after migration. Source checks during construction can catch coding mistakes but do not count as final user acceptance testing.
+4. **Finally cut over and remove old repos.** When all four replacement portals pass, migrate WorkforceApps destinations, redirects and subscriptions, retire source repositories/domains, and remove duplicate shared shells/files without deleting live records. Do not retire a working source while features are missing from the replacement.
+5. **Current gap:** the connected database contains three existing NON-DOT Employer plans but did not return any Independent Contractor plans in the DOT or NON-DOT plan catalogs queried. The fourth three-tier subscription set must be designed and provisioned before cutover; do not invent active entitlements for existing contractors. Owner-Operator's legacy Plus/Complete must likewise be mapped deliberately.
+6. **Current build reality:** C/TPA migration branch is substantially ahead of main, Employer NON-DOT dashboard has only an initial unified workspace discovery, Owner-Operator migration branch has no distinct changes, and Independent Contractor does not yet have a migration branch. None of these constitutes complete Enterprise feature migration yet.
+
+**Implementation rule:** prioritize the migration of complete features and their original authorized backend workflows over incremental feature tweaks or repeated test-only commits.
