@@ -79,7 +79,48 @@ Deno.serve(async(req:Request)=>{if(req.method==="OPTIONS")return new Response("o
   throw q.error;
  }
  return J({ok:true,order:q.data,testing_order:q.data,reused:false});}
- if(action==="update_order"){const id=String(body.testing_order_id||""),v=body.order||{};const existing=orders.find(o=>String(o.id)===id);if(!existing)return J({error:"Testing order not found."},404);if(!["created","assigned"].includes(String(existing.status)))return J({error:"This testing order can no longer be edited."},409);const q=await db.from("workforce_testing_orders").update({collection_deadline:v.collection_deadline||null,collection_site_id:v.collection_site_id||null,updated_at:now()}).eq("id",id).select("*").single();if(q.error)throw q.error;return J({ok:true,order:q.data});}
- if(action==="archive_order"){const id=String(body.testing_order_id||""),existing=orders.find(o=>String(o.id)===id);if(!existing)return J({error:"Testing order not found."},404);const q=await db.from("workforce_testing_orders").update({status:"cancelled",updated_at:now()}).eq("id",id).select("*").single();if(q.error)throw q.error;return J({ok:true,order:q.data});}
+
+ // Secure order changes stay within this C/TPA employer and stop once
+ // downstream fulfillment has begun. Never alter a released or paid workflow.
+ const untouched=(o:any)=>o&&o.status==="created"&&!o.assigned_at&&!o.notified_at&&
+  !o.scheduled_at&&!o.collected_at&&!o.completed_at;
+ const ownedOrder=(o:any)=>o&&o.program_type==="NON_DOT"&&o.business_surface==="workforce"&&
+  employers.some((e:any)=>e.id===o.employer_id);
+ if(action==="update_order"){
+  const id=String(body.testing_order_id||""),v=body.order||{};
+  const existing=orders.find((o:any)=>o.id===id);
+  if(!ownedOrder(existing))return J({error:"NON-DOT order not found for this company."},404);
+  if(!untouched(existing))return J({error:"Only unfulfilled created orders can be edited."},409);
+  const raw=v.collection_deadline;
+  if(typeof raw!=="string"||!/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$/.test(raw))
+   return J({error:"A valid UTC deadline is required."},400);
+  const stamp=new Date(raw).getTime();
+  if(!Number.isFinite(stamp)||stamp<=Date.now()||stamp>Date.now()+366*86400000)
+   return J({error:"Deadline must be in the next 366 days."},400);
+  const q=await db.from("workforce_testing_orders")
+   .update({collection_deadline:new Date(stamp).toISOString(),updated_at:now()})
+   .eq("id",id).eq("employer_id",existing.employer_id)
+   .eq("status","created").eq("business_surface","workforce").eq("program_type","NON_DOT")
+   .is("assigned_at",null).is("notified_at",null).is("scheduled_at",null)
+   .is("collected_at",null).is("completed_at",null).select("id,status,collection_deadline").maybeSingle();
+  if(q.error)throw q.error;
+  if(!q.data)return J({error:"Order changed before saving."},409);
+  return J({ok:true,order:q.data});
+ }
+ if(action==="archive_order"){
+  const id=String(body.testing_order_id||"");
+  const existing=orders.find((o:any)=>o.id===id);
+  if(!ownedOrder(existing))return J({error:"NON-DOT order not found for this company."},404);
+  if(!untouched(existing))return J({error:"This order has entered fulfillment. Contact support."},409);
+  const q=await db.from("workforce_testing_orders")
+   .update({status:"cancelled",updated_at:now()})
+   .eq("id",id).eq("employer_id",existing.employer_id).eq("status","created")
+   .eq("business_surface","workforce").eq("program_type","NON_DOT")
+   .is("assigned_at",null).is("notified_at",null).is("scheduled_at",null)
+   .is("collected_at",null).is("completed_at",null).select("id,status").maybeSingle();
+  if(q.error)throw q.error;
+  if(!q.data)return J({error:"Order changed before cancellation."},409);
+  return J({ok:true,order:q.data});
+ }
  return J({ok:true,ctpa,membership,employers,employees,programs,locations,sites:locations,orders:hydrate(orders),testing_orders:hydrate(orders),services,service_catalog:services,testing_requests:[],handoffs:[],can_manage:true});
 }catch(e){console.error("nondot-workforce-ctpa-testing",e);return J({error:e instanceof Error?e.message:String(e)},500)}});
