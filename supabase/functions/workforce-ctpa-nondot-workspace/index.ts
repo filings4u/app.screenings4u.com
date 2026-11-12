@@ -150,6 +150,26 @@ Deno.serve(async(req:Request)=>{
    }:{
     reports:(data.result_reports||data.reports||data.results||[]).slice(0,250).map((x:any)=>({id:x.id,report_number:x.report_number,order_number:x.order_number,status:x.status,report_status:x.report_status,result_status:x.result_status,updated_at:x.updated_at,released_at:x.released_at}))
    };
-  return send({ok:true,section,context:"nondot",plan_code:context.plan_code,read_only:body.operating_context!=="nondot",can_manage:body.operating_context==="nondot"&&Boolean(await (async()=>{const {createClient}=await import("npm:@supabase/supabase-js@2");const a=createClient(url,anon,{auth:{persistSession:false,autoRefreshToken:false}});const {data:{user}}=await a.auth.getUser(token);if(!user)return false;const db=createClient(url,Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"",{auth:{persistSession:false,autoRefreshToken:false}});const m=await db.from("workforce_memberships").select("id").eq("user_id",user.id).eq("organization_id",organizationId).eq("status","active").eq("is_primary",true).limit(1);const o=await db.from("workforce_portal_user_access").select("enabled").eq("organization_id",organizationId).eq("user_id",user.id).eq("portal_code","ctpa_workforce").maybeSingle();return !m.error&&!o.error&&!!m.data?.length&&o.data?.enabled!==false;})()),available_sections:Object.entries(modules).filter(([,rule])=>context.feature_codes.includes(rule.permission)).map(([id])=>id),data:payload});
+  let canManage=false;
+  if(body.operating_context==="nondot"&&["people","programs"].includes(section)){
+   const {createClient}=await import("npm:@supabase/supabase-js@2");
+   const auth=createClient(url,anon,{auth:{persistSession:false,autoRefreshToken:false}});
+   const {data:{user},error:authError}=await auth.auth.getUser(token);
+   if(!authError&&user){
+    const db=createClient(url,Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")||"",{auth:{persistSession:false,autoRefreshToken:false}});
+    const [member,personal]=await Promise.all([
+     db.from("workforce_memberships").select("id").eq("user_id",user.id)
+       .eq("organization_id",organizationId).eq("status","active").eq("is_primary",true).limit(1),
+     db.from("workforce_portal_user_access").select("enabled").eq("organization_id",organizationId)
+       .eq("user_id",user.id).eq("portal_code","ctpa_workforce").maybeSingle()
+    ]);
+    if(member.error||personal.error)throw member.error||personal.error;
+    canManage=!!member.data?.length&&personal.data?.enabled!==false;
+   }
+  }
+  return send({ok:true,section,context:"nondot",plan_code:context.plan_code,read_only:!canManage,
+   can_manage:canManage,available_sections:Object.entries(modules)
+    .filter(([,rule])=>context.feature_codes.includes(rule.permission)).map(([id])=>id),
+   data:payload});
  }catch(err){console.error("workforce-ctpa-nondot-workspace",err);return send({error:"Unable to access NON-DOT module"},500)}
 });
