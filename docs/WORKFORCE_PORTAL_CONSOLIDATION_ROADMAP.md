@@ -86,3 +86,17 @@ Independent Contractor is an operational role, not automatically a fourth three-
 - The C/TPA migration branch's `workforce-context.js` now verifies actual per-surface feature codes through the new function before showing included tools. Its live counterpart on `main` remains unchanged.
 - NON-DOT operations are not yet unified at the data/write API level, and a DOT-only customer does not automatically gain NON-DOT read/write access. Provisioning one approved subscription across regulatory contexts is a separate planned step.
 - No production subscriptions, payment prices, existing customer records, or source repository redirects were changed by these staging commits.
+
+## C/TPA NON-DOT workspace implementation checkpoint
+- Added a read-only NON-DOT workspace inside the C/TPA portal using its existing shell, shared CSS and navigation.
+- Implemented five modules: Employees, Programs, Random Pools, Testing Orders and restricted Results inventory, reusing original NON-DOT backend services.
+- Deployed workforce-ctpa-nondot-workspace v3: per-request independent NON-DOT subscription, feature, exact C/TPA identity and organization authorization. No cross-workspace data substitution.
+- Deployed workforce-ctpa-combined-access v4: provides the verified NON-DOT C/TPA ID and per-surface feature grants, without granting NON-DOT access solely because a DOT subscription exists.
+- New route hides unpurchased modules, never caches NON-DOT page payload in local browser page storage, and links from the DOT/NON-DOT feature selector.
+- C/TPA migration-branch HTML pages now load the consolidated shared JS and CSS assets.
+- Customer edits, testing order writes, random-selection execution, CCF downloads, result delivery, payment provisioning, and auth QA remain outstanding.
+
+### Critical cutover blocker — NON-DOT-only customers
+The current ctpa.screenings4u.com portal still authenticates using the DOT C/TPA workspace. A NON-DOT-only customer cannot use that login as-is. Before disabling ctpa-non-dot.screenings4u.com, create a unified C/TPA session and workspace selector in Workforce management that accepts verified DOT-only, NON-DOT-only and combined memberships, scopes data by business surface, and grants only purchased subscription features. Do not force existing NON-DOT customers to buy DOT subscriptions.
+
+No source repos have been deleted or redirected, and no production plan or customer entitlement was altered in this checkpoint.
