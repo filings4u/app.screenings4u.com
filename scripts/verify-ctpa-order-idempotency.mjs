@@ -7,6 +7,7 @@ const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const load=p=>readFileSync(path.join(root,p),'utf8');
 const legacy=load('supabase/functions/nondot-workforce-ctpa-testing/index.ts');
 const bridge=load('supabase/functions/workforce-ctpa-nondot-workspace/index.ts');
+const secure=load('supabase/functions/workforce-ctpa-secure-testing/index.ts');
 const checks=[
  ['legacy supports validated idempotency key',legacy.includes('client_request_id')&&legacy.includes('Invalid order request identifier')],
  ['legacy builds stable unique order number',legacy.includes('"NDT-"+requestId.toUpperCase()')],
@@ -16,7 +17,10 @@ const checks=[
  ['legacy handles concurrent unique-index races',legacy.includes('q.error.code==="23505"')],
  ['legacy refuses reused identifiers across orders',legacy.includes('already been used for a different order')],
  ['legacy preserves old clients without request ID',legacy.includes('requestId?"NDT-"+requestId.toUpperCase():')],
- ['bridge validates UUID and forwards it',bridge.includes('uuid(v.client_request_id)')&&bridge.includes('client_request_id:v.client_request_id')],
+ ['secure endpoint uses idempotent order number',secure.includes('"NDT-"+requestId.toUpperCase()')],
+ ['secure endpoint rejects cross-user retries',secure.includes('record.created_by===user.id')],
+ ['secure endpoint handles concurrent uniqueness',secure.includes('q.error.code==="23505"')],
+  ['bridge validates UUID and forwards it',bridge.includes('uuid(v.client_request_id)')&&bridge.includes('client_request_id:v.client_request_id')],
  ['bridge retains purchased-feature checks',bridge.includes('permission:"testing_orders"')&&bridge.includes('context.feature_codes.includes(rule.permission)')],
  ['bridge retains company ownership checks',bridge.includes('.eq("ctpa_id",ctpaId).eq("workforce_classification","NON_DOT")')]
 ];
