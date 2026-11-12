@@ -15,6 +15,7 @@ const required = [
   ['NON-DOT employer ownership', '.eq("workforce_classification","NON_DOT")'],
   ['NON-DOT employee surface', '.eq("business_surface","workforce")'],
   ['employee update allowlist', 'employee_number:clean(v.employee_number).slice(0,40)'],
+  ['preserve omitted employee number', 'Object.prototype.hasOwnProperty.call(v,"employee_number")'],
   ['optional employee number length', 'v.employee_number.length>40'],
   ['required employee names', '!changes.first_name||!changes.last_name'],
   ['read payload includes employee number', 'employee_number:x.employee_number'],
