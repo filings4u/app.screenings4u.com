@@ -236,7 +236,8 @@ Deno.serve(async(req:Request)=>{
     employers:company,
     programs:(data.programs||[]).slice(0,250).map((x:any)=>({id:x.id,employer_id:x.employer_id,name:x.name,program_name:x.program_name,status:x.status}))
    }:section==="pools"?{
-    pools:(data.pools||[]).slice(0,250).map((x:any)=>({id:x.id,name:x.name,pool_name:x.pool_name,status:x.status})),
+    pools:(data.pools||[]).slice(0,250).map((x:any)=>({id:x.id,employer_id:x.employer_id,pool_type:x.pool_type,name:x.name,pool_name:x.pool_name,status:x.status})),
+    employees:(data.employees||[]).slice(0,250).map((x:any)=>({id:x.id,employer_id:x.employer_id,first_name:x.first_name,last_name:x.last_name})),
     employers:company,
     programs:(data.programs||[]).slice(0,250).map((x:any)=>({id:x.id,employer_id:x.employer_id,name:x.name})),
     memberships:(data.pool_memberships||data.memberships||[]).slice(0,500).map((x:any)=>({id:x.id,pool_id:x.pool_id}))
