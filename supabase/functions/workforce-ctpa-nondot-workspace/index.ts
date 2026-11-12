@@ -2,10 +2,10 @@ const HEAD={"Access-Control-Allow-Origin":"https://ctpa.screenings4u.com","Acces
 const send=(x:unknown,status=200)=>new Response(JSON.stringify(x),{status,headers:HEAD});
 const uuid=(v:unknown)=>typeof v==="string"&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
 const modules:Record<string,{endpoint:string,permission:string}>={
- people:{endpoint:"nondot-workforce-ctpa-programs",permission:"employee_management"},
- programs:{endpoint:"nondot-workforce-ctpa-programs",permission:"programs"},
- pools:{endpoint:"nondot-workforce-ctpa-pools",permission:"consortium_pools"},
- testing:{endpoint:"nondot-workforce-ctpa-testing",permission:"testing_orders"},
+ people:{endpoint:"workforce-ctpa-secure-programs",permission:"employee_management"},
+ programs:{endpoint:"workforce-ctpa-secure-programs",permission:"programs"},
+ pools:{endpoint:"workforce-ctpa-secure-pools",permission:"consortium_pools"},
+ testing:{endpoint:"workforce-ctpa-secure-testing",permission:"testing_orders"},
  results:{endpoint:"nondot-workforce-ctpa-results",permission:"results_summary"}
 };
 Deno.serve(async(req:Request)=>{
@@ -137,10 +137,10 @@ Deno.serve(async(req:Request)=>{
     if(!clean(v.name))return send({error:"Program name is required"},400);
     value={employer_id:v.employer_id,name:clean(v.name),status:"active"};
    }
-   const saved=await fetch(url+"/functions/v1/"+(requestedAction==="save_pool"?"nondot-workforce-ctpa-pools":requestedAction==="create_test_order"?"nondot-workforce-ctpa-testing":"nondot-workforce-ctpa-programs"),{
+   const saved=await fetch(url+"/functions/v1/"+(requestedAction==="save_pool"?"workforce-ctpa-secure-pools":requestedAction==="create_test_order"?"workforce-ctpa-secure-testing":"workforce-ctpa-secure-programs"),{
     method:"POST",headers:{"Authorization":"Bearer "+token,"apikey":anon,"Content-Type":"application/json"},
     body:JSON.stringify({action:requestedAction==="create_test_order"?"create":requestedAction,
-      ctpa_id:ctpaId,[requestedAction==="save_employee"?"employee":requestedAction==="save_pool"?"pool":requestedAction==="create_test_order"?"test":"program"]:value}),cache:"no-store"
+      ctpa_id:ctpaId,subscription_id:subscriptionId,[requestedAction==="save_employee"?"employee":requestedAction==="save_pool"?"pool":requestedAction==="create_test_order"?"test":"program"]:value}),cache:"no-store"
    });
    const result=await saved.json().catch(()=>({}));
    if(!saved.ok||result.ok!==true)return send({error:result.error||"Unable to save this NON-DOT record"},saved.status||502);
@@ -148,7 +148,7 @@ Deno.serve(async(req:Request)=>{
   }
   const response=await fetch(url+"/functions/v1/"+rule.endpoint,{
    method:"POST",headers:{"Authorization":"Bearer "+token,"apikey":anon,"Content-Type":"application/json"},
-   body:JSON.stringify({action:"workspace",ctpa_id:context.ctpa_id||undefined}),cache:"no-store"
+   body:JSON.stringify({action:"workspace",ctpa_id:context.ctpa_id||undefined,subscription_id:onlyNondot?subscriptionId:undefined}),cache:"no-store"
   });
   const data=await response.json().catch(()=>({}));
   if(!response.ok||data.error||data.ok===false)return send({error:data.error||"Unable to load NON-DOT workspace"},response.status||502);
