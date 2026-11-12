@@ -192,32 +192,25 @@ Deno.serve(async(req:Request)=>{
     if(!v||typeof v!=="object"||Array.isArray(v)||!uuid(v.id))
      return send({error:"Choose an existing NON-DOT order"},400);
     if(typeof v.collection_deadline!=="string"||
-       !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/.test(v.collection_deadline))
+       !/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$/.test(v.collection_deadline))
      return send({error:"A valid UTC collection deadline is required"},400);
     const deadline=new Date(v.collection_deadline),now=Date.now();
     if(!Number.isFinite(deadline.getTime())||deadline.getTime()<=now||
        deadline.getTime()>now+366*24*60*60*1000)
      return send({error:"Collection deadline must be in the next 366 days"},400);
-    const order=await db.from("workforce_testing_orders")
-     .select("id,employer_id,status").eq("id",v.id)
-     .eq("program_type","NON_DOT").eq("business_surface","workforce")
-     .eq("status","created").maybeSingle();
-    if(order.error)throw order.error;
-    if(!order.data||!uuid(order.data.employer_id))
-     return send({error:"Only newly created NON-DOT orders may be edited"},403);
-    const employer=await db.from("workforce_employers").select("id")
-     .eq("id",order.data.employer_id).eq("ctpa_id",ctpaId)
-     .eq("workforce_classification","NON_DOT").is("archived_at",null).maybeSingle();
-    if(employer.error)throw employer.error;
-    if(!employer.data)return send({error:"Order employer is outside this C/TPA"},403);
-    const update=await db.from("workforce_testing_orders")
-     .update({collection_deadline:deadline.toISOString(),updated_at:new Date().toISOString()})
-     .eq("id",v.id).eq("employer_id",employer.data.id).eq("status","created")
-     .eq("program_type","NON_DOT").eq("business_surface","workforce")
-     .select("id").maybeSingle();
-    if(update.error)throw update.error;
-    if(!update.data)return send({error:"Order was changed or is no longer editable"},409);
-    return send({ok:true,saved:true,section,action:requestedAction});
+    // Delegate all order mutations to the secure testing source. It independently
+    // rechecks C/TPA ownership, active subscription and role; it also requires
+    // the order to remain unassigned, unscheduled, uncollected and uncompleted.
+    const call=await fetch(url+"/functions/v1/workforce-ctpa-secure-testing",{
+     method:"POST",cache:"no-store",headers:{"Authorization":"Bearer "+token,"apikey":anon,"Content-Type":"application/json"},
+     body:JSON.stringify({action:"update_order",ctpa_id:ctpaId,
+      subscription_id:subscriptionId,testing_order_id:v.id,
+      order:{collection_deadline:deadline.toISOString()}})
+    });
+    const result=await call.json().catch(()=>({}));
+    if(!call.ok||result.ok!==true||result.order?.id!==v.id)
+     return send({error:result.error||"Unable to update this NON-DOT order"},call.ok?502:call.status);
+    return send({ok:true,saved:true,section,action:requestedAction,order:result.order});
    }
    if(requestedAction==="add_pool_member"||requestedAction==="remove_pool_member"){
     const v=body.membership||{};
