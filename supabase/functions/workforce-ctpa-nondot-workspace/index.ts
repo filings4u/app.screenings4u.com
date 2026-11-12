@@ -228,7 +228,7 @@ Deno.serve(async(req:Request)=>{
     if(!emp.data)return send({error:"Employee does not belong to the pool employer"},403);
     const active=await db.from("workforce_pool_memberships").select("id")
      .eq("pool_id",v.pool_id).eq("employee_id",v.employee_id)
-     .is("removed_at",null).maybeSingle();
+     .eq("business_surface","workforce").is("removed_at",null).maybeSingle();
     if(active.error)throw active.error;
     if(requestedAction==="remove_pool_member"){
      if(!active.data)return send({error:"Active membership not found"},404);
