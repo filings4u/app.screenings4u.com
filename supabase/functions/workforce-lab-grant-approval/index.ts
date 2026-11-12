@@ -28,8 +28,13 @@ Deno.serve(async(request:Request)=>{
    (!r.starts_at||Date.parse(r.starts_at)<=now)&&(!r.ends_at||Date.parse(r.ends_at)>now)
   ).map((r:any)=>r.role_code);
   if(!assigned.length)return reply({error:"Active management role required"},403);
+  const activeRoles=await db.from("staff_roles").select("code")
+   .in("code",assigned).eq("active",true);
+  if(activeRoles.error)throw activeRoles.error;
+  const roleCodes=(activeRoles.data||[]).map((r:any)=>r.code);
+  if(!roleCodes.length)return reply({error:"Management role is inactive"},403);
   const permission=await db.from("staff_role_permissions").select("role_code")
-   .in("role_code",assigned).eq("permission_key","customers.assign").eq("allowed",true).limit(1);
+   .in("role_code",roleCodes).eq("permission_key","customers.assign").eq("allowed",true).limit(1);
   if(permission.error)throw permission.error;
   if(!permission.data?.length)return reply({error:"Company assignment approval permission required"},403);
 
