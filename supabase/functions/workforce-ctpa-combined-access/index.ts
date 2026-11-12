@@ -29,6 +29,9 @@ Deno.serve(async(req:Request)=>{
      !TIERS.includes(tier)||c.plan?.active===false||(!c.unlimited_access&&!ACTIVE.includes(String(c.subscription?.status||""))))
     return send({authorized:false,reason:"Active authorized C/TPA subscription required"},403);
   const orgId=String(c.organization.id);
+  if(String(c.ctpa?.organization_id||"")!==orgId||
+     String(c.membership?.organization_id||"")!==orgId)
+    return send({authorized:false,reason:"Workspace organization mismatch"},403);
   const [actualDot,dotOverrides]=await Promise.all([
    db.from("plan_features").select("feature_id,enabled,feature_catalog(code,active)")
     .eq("plan_id",c.plan.id),
@@ -95,7 +98,8 @@ Deno.serve(async(req:Request)=>{
       nondot:{available:!!nondotPlan,plan_code:nondotPlan,feature_codes:[...new Set(nondotCodes)].sort()}
     },
     company_addons:{lab_account:!!lab.data?.length},
-    effective_feature_codes:[...new Set([...dotCodes,...nondotCodes])].sort(),
+    // Never expose a union as an authorization claim: a NON-DOT feature must not
+    // authorize a DOT action, or vice versa. Consumers use operating_contexts[surface].
     ownership:{organization_id:orgId,ctpa_id:ctpaId},
     notices:[
      "DOT and NON-DOT remain separate record scopes; use the authorized business surface for every data operation.",
