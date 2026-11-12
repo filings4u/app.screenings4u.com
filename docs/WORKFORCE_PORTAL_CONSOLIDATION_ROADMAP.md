@@ -218,3 +218,9 @@ No source repos have been deleted or redirected, and no production plan or custo
 - Deploy the new read-only endpoint to a test environment before activating the dashboard on a production host. Confirm active/expired memberships, wrong employer, cross-org isolation, direct vs C/TPA-sponsored accounts, explicit per-user denial, DOT-only and NON-DOT-only customers, and dual-entitled customers.
 - Inventory the DOT agency-specific employer portals and complete a canonical Employer feature matrix using existing paid plans, including appropriate Lab Account features and separately authorized direct-lab operations. Do not automatically enable Clearinghouse tools.
 - Retain WorkforceApps central selection/handoff. Do not redirect agency domains or delete sources until all features, subscriptions, customer workflows and regulatory scopes have been migrated and tested.
+
+
+### Owner-Operator source verification (same checkpoint)
+- The existing DOT Owner-Operator customer data model uses `owner_operators` (with an associated `employer_id`) and separate existing records for Clearinghouse designations and consortium agreements. Those legal/compliance records must be retained and scoped to their original owner.
+- The current DOT plan catalog has active `owner_operator_essential`, `owner_operator_plus`, `owner_operator_complete`, and `owner_operator_ctpa_sponsored` codes, **not** final Essential/Professional/Enterprise codes. Do not convert existing subscriptions or treat the old Plus/Complete names as permission to grant the new tiers automatically.
+- The Owner-Operator integration must first map existing purchased features and sponsorship cases into the approved three-tier structure, then implement exact subscription checks and verified WorkforceApps handoff. No Owner-Operator plan, price, POA, consortium record, or account designation was changed at this checkpoint.
