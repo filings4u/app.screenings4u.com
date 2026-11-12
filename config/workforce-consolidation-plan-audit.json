@@ -530,5 +530,141 @@
     ],
     "not_auto_granted": true
   },
-  "important": "The combined tier feature arrays are audit candidates only; final grants require API/RLS and business approval. Do not write these arrays to plan_features automatically."
+  "important": "The combined tier feature arrays are audit candidates only; final grants require API/RLS and business approval. Do not write these arrays to plan_features automatically.",
+  "candidate_lab_feature_placement": {
+    "status": "PROPOSED_NOT_GRANTED",
+    "ctpa": {
+      "essential": [
+        {
+          "feature": "consortium_certificates",
+          "scope": "owned_consortium",
+          "condition": "customer-managed participation summary only"
+        },
+        {
+          "feature": "random_selection_calendar",
+          "scope": "owned_consortium",
+          "condition": "calendar does not execute draws"
+        },
+        {
+          "feature": "compliance_documents",
+          "scope": "ctpa_organization",
+          "condition": "authorized signed and completed documents"
+        }
+      ],
+      "professional": [
+        {
+          "feature": "analytics_reporting",
+          "scope": "ctpa_organization",
+          "condition": "advanced_reports entitlement"
+        },
+        {
+          "feature": "automatic_result_delivery",
+          "scope": "authorized_released_results",
+          "condition": "customer_portal_delivery and recipient authorization"
+        },
+        {
+          "feature": "digital_coc_archive",
+          "scope": "authorized_released_results",
+          "condition": "results_sensitive + released CCF authorization"
+        }
+      ],
+      "enterprise": [
+        {
+          "feature": "client_document_templates",
+          "scope": "ctpa_organization",
+          "condition": "branded_documents entitlement"
+        },
+        {
+          "feature": "clearinghouse_setup",
+          "scope": "ctpa_organization",
+          "condition": "clearinghouse_tools and delegated authority"
+        },
+        {
+          "feature": "audit_readiness_export",
+          "scope": "ctpa_organization",
+          "condition": "audit_history entitlement, inventory not official audit"
+        }
+      ]
+    },
+    "employer": {
+      "essential": [
+        {
+          "feature": "random_selection_calendar",
+          "scope": "own_employees",
+          "condition": "random_selections entitlement, not C/TPA client pools"
+        },
+        {
+          "feature": "compliance_documents",
+          "scope": "own_organization",
+          "condition": "documents entitlement"
+        }
+      ],
+      "professional": [
+        {
+          "feature": "analytics_reporting",
+          "scope": "own_organization",
+          "condition": "advanced_reports entitlement"
+        },
+        {
+          "feature": "digital_coc_archive",
+          "scope": "authorized_released_results",
+          "condition": "results_sensitive entitlement and release verification"
+        }
+      ],
+      "enterprise": [
+        {
+          "feature": "client_document_templates",
+          "scope": "own_organization",
+          "condition": "branded_documents if available in verified catalog"
+        },
+        {
+          "feature": "audit_readiness_export",
+          "scope": "own_organization",
+          "condition": "audit_history entitlement"
+        },
+        {
+          "feature": "clearinghouse_setup",
+          "scope": "own_organization",
+          "condition": "DO NOT ENABLE until Employer DOT clearinghouse_tools is approved; current catalog is disabled"
+        }
+      ]
+    },
+    "owner_operator": {
+      "essential": [
+        {
+          "feature": "compliance_documents",
+          "scope": "own_account",
+          "condition": "signed documents with existing documents entitlement"
+        }
+      ],
+      "professional": [
+        {
+          "feature": "digital_coc_archive",
+          "scope": "authorized_released_results",
+          "condition": "sensitive results entitlement and release verification"
+        },
+        {
+          "feature": "consortium_certificates",
+          "scope": "own_consortium_membership",
+          "condition": "customer-managed participation summary only"
+        }
+      ],
+      "enterprise": [
+        {
+          "feature": "analytics_reporting",
+          "scope": "own_account",
+          "condition": "advanced_reports entitlement"
+        },
+        {
+          "feature": "audit_readiness_export",
+          "scope": "own_account",
+          "condition": "audit_history entitlement, not regulatory certification"
+        }
+      ]
+    }
+  },
+  "decommission": {
+    "status": "NOT_STARTED",
+    "rule": "No source repo is removed until authenticated parity tests, customer entitlement migrations, data integrity audit, redirects and rollback are verified."
+  }
 }
