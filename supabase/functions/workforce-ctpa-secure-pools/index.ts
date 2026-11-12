@@ -88,8 +88,20 @@ Deno.serve(async(req:Request)=>{
   }
   if(action==="remove_membership"){
    const id=String(body.pool_membership_id||body.membership_id||"");if(!id)return J({error:"Pool membership ID is required."},400);const {pools}=await load();const pids=pools.map((p:any)=>p.id);if(!pids.length)return J({error:"Pool membership was not found."},404);
-   const existing=await db.from("workforce_pool_memberships").select("*").eq("id",id).in("pool_id",pids).maybeSingle();if(existing.error)throw existing.error;if(!existing.data)return J({error:"Pool membership was not found."},404);
-   const q=await db.from("workforce_pool_memberships").update({eligibility_status:"removed",removed_at:now(),removal_reason:String(body.removal_reason||"Removed from pool").trim(),updated_at:now()}).eq("id",id).select("*").single();if(q.error)throw q.error;return J({ok:true,membership:q.data});
+   const existing=await db.from("workforce_pool_memberships").select("*").eq("id",id)
+    .in("pool_id",pids).eq("business_surface","workforce").is("removed_at",null).maybeSingle();
+   if(existing.error)throw existing.error;
+   if(!existing.data)return J({error:"Active NON-DOT pool membership was not found."},404);
+   // A concurrent membership removal or change must not be overwritten.
+   const q=await db.from("workforce_pool_memberships").update({
+    eligibility_status:"removed",removed_at:now(),
+    removal_reason:String(body.removal_reason||"Removed from pool").trim(),updated_at:now()
+   }).eq("id",id).eq("pool_id",existing.data.pool_id)
+    .eq("employee_id",existing.data.employee_id).eq("business_surface","workforce")
+    .is("removed_at",null).select("*").maybeSingle();
+   if(q.error)throw q.error;
+   if(!q.data)return J({error:"Membership was already removed or changed."},409);
+   return J({ok:true,membership:q.data});
   }
   if(action==="archive_pool"){
    const q=await db.from("workforce_random_pools").update({status:"archived",archived_at:now(),updated_at:now()}).eq("id",body.pool_id).eq("ctpa_id",ctpa.id).eq("business_surface","workforce").select("id").maybeSingle();if(q.error)throw q.error;if(!q.data)return J({error:"Pool was not found."},404);return J({ok:true,id:q.data.id});
