@@ -240,7 +240,7 @@ Deno.serve(async(req:Request)=>{
     employees:(data.employees||[]).slice(0,250).map((x:any)=>({id:x.id,employer_id:x.employer_id,first_name:x.first_name,last_name:x.last_name})),
     employers:company,
     programs:(data.programs||[]).slice(0,250).map((x:any)=>({id:x.id,employer_id:x.employer_id,name:x.name})),
-    memberships:(data.pool_memberships||data.memberships||[]).slice(0,500).map((x:any)=>({id:x.id,pool_id:x.pool_id}))
+    memberships:(data.pool_memberships||data.memberships||[]).slice(0,500).filter((x:any)=>!x.removed_at).map((x:any)=>({id:x.id,pool_id:x.pool_id,employee_id:x.employee_id}))
    }:section==="testing"?{
     employers:company,
     employees:(data.employees||[]).slice(0,250).map((x:any)=>({id:x.id,employer_id:x.employer_id,first_name:x.first_name,last_name:x.last_name})),
