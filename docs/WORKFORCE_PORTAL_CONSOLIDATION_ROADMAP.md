@@ -77,3 +77,12 @@ Independent Contractor is an operational role, not automatically a fourth three-
 - Reconcile one unmatched legacy paid Lab Account intake and verify two pending matches before grants are activated.
 - Plan and price increased benefits without accidentally including disabled features in the live checkout.
 
+
+## November 11 implementation checkpoint
+- The source-backed `config/workforce-consolidation-plan-audit.json` records enabled DOT and NON-DOT feature codes at each current tier without creating extra subscriptions. Candidate merged counts are C/TPA 13/17/34, Employer 12/21/29, Owner-Operator 6/9/11.
+- `scripts/check-workforce-consolidated-plans.mjs` provides a tier-inheritance, duplicate-code, training-exclusion and Lab add-on separation audit.
+- New `workforce-ctpa-combined-access` Supabase function (v3) has been deployed for staged clients. It verifies the authenticated DOT workspace, subscription, organization and company membership, then independently checks existing NON-DOT portal membership, portal access, user revocation and paid subscription. Its output contains **separate** DOT and NON-DOT feature-code arrays; it is not an automatic combined grant.
+- The function honors account-specific enabled/disabled overrides for both surfaces. No aggregate union is exported as a usable permission.
+- The C/TPA migration branch's `workforce-context.js` now verifies actual per-surface feature codes through the new function before showing included tools. Its live counterpart on `main` remains unchanged.
+- NON-DOT operations are not yet unified at the data/write API level, and a DOT-only customer does not automatically gain NON-DOT read/write access. Provisioning one approved subscription across regulatory contexts is a separate planned step.
+- No production subscriptions, payment prices, existing customer records, or source repository redirects were changed by these staging commits.
