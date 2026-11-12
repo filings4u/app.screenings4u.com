@@ -81,6 +81,7 @@ Deno.serve(async(req:Request)=>{
    save_pool:{section:"pools",permission:"consortium_pools"},
    create_test_order:{section:"testing",permission:"testing_orders"},
    update_test_deadline:{section:"testing",permission:"testing_orders"},
+   cancel_test_order:{section:"testing",permission:"testing_orders"},
    update_employee:{section:"people",permission:"employee_management"},
    update_program:{section:"programs",permission:"programs"},
    update_pool:{section:"pools",permission:"consortium_pools"},
@@ -166,6 +167,20 @@ Deno.serve(async(req:Request)=>{
    }
    // Only adjust an unfulfilled NON-DOT order's collection deadline.
    // Billing, fulfillment, results and all other order fields are intentionally untouched.
+   // Cancel only a selected customer's unfulfilled NON-DOT order. The
+   // dedicated secure testing endpoint rechecks ownership and fulfillment.
+   if(requestedAction==="cancel_test_order"){
+    const id=body.test?.id;
+    if(!uuid(id))return send({error:"Choose an existing NON-DOT order"},400);
+    const call=await fetch(url+"/functions/v1/workforce-ctpa-secure-testing",{
+     method:"POST",cache:"no-store",headers:{"Authorization":"Bearer "+token,"apikey":anon,"Content-Type":"application/json"},
+     body:JSON.stringify({action:"archive_order",ctpa_id:ctpaId,subscription_id:subscriptionId,testing_order_id:id})
+    });
+    const result=await call.json().catch(()=>({}));
+    if(!call.ok||result.ok!==true||result.order?.status!=="cancelled")
+     return send({error:result.error||"Could not cancel this order"},call.ok?502:call.status);
+    return send({ok:true,saved:true,section,action:requestedAction,order:{id:result.order.id,status:"cancelled"}});
+   }
    if(requestedAction==="update_test_deadline"){
     const v=body.test;
     if(!v||typeof v!=="object"||Array.isArray(v)||!uuid(v.id))
@@ -313,7 +328,7 @@ Deno.serve(async(req:Request)=>{
     employers:company,
     employees:(data.employees||[]).slice(0,250).map((x:any)=>({id:x.id,employer_id:x.employer_id,first_name:x.first_name,last_name:x.last_name})),
     programs:(data.programs||[]).slice(0,250).map((x:any)=>({id:x.id,employer_id:x.employer_id,name:x.name})),
-    orders:(data.testing_orders||data.orders||[]).slice(0,250).map((x:any)=>({id:x.id,order_number:x.order_number,employer_id:x.employer_id,created_at:x.created_at,collection_deadline:x.collection_deadline,status:x.status}))
+    orders:(data.testing_orders||data.orders||[]).slice(0,250).map((x:any)=>({id:x.id,order_number:x.order_number,employer_id:x.employer_id,created_at:x.created_at,collection_deadline:x.collection_deadline,status:x.status,assigned_at:x.assigned_at,notified_at:x.notified_at,scheduled_at:x.scheduled_at,collected_at:x.collected_at,completed_at:x.completed_at}))
    }:{
     reports:(data.result_reports||data.reports||data.results||[]).slice(0,250).map((x:any)=>({id:x.id,report_number:x.report_number,order_number:x.order_number,status:x.status,report_status:x.report_status,result_status:x.result_status,updated_at:x.updated_at,released_at:x.released_at}))
    };
