@@ -29,10 +29,18 @@ Deno.serve(async(req:Request)=>{
      !TIERS.includes(tier)||c.plan?.active===false||(!c.unlimited_access&&!ACTIVE.includes(String(c.subscription?.status||""))))
     return send({authorized:false,reason:"Active authorized C/TPA subscription required"},403);
   const orgId=String(c.organization.id);
-  const actualDot=await db.from("plan_features").select("enabled,feature_catalog(code,active)")
-   .eq("plan_id",c.plan.id).eq("enabled",true);
-  if(actualDot.error)throw actualDot.error;
-  const dotCodes=(actualDot.data||[]).filter((x:any)=>x.feature_catalog?.active!==false&&x.feature_catalog?.code).map((x:any)=>String(x.feature_catalog.code));
+  const [actualDot,dotOverrides]=await Promise.all([
+   db.from("plan_features").select("feature_id,enabled,feature_catalog(code,active)")
+    .eq("plan_id",c.plan.id),
+   db.from("account_feature_overrides").select("feature_id,enabled")
+    .eq("ctpa_id",ctpaId).eq("subscription_id",subscriptionId)
+  ]);
+  if(actualDot.error||dotOverrides.error)throw actualDot.error||dotOverrides.error;
+  const dotFlags=new Map((dotOverrides.data||[]).map((x:any)=>[x.feature_id,x.enabled]));
+  const dotCodes=(actualDot.data||[]).filter((x:any)=>{
+   if(!x.feature_catalog?.code||x.feature_catalog.active===false)return false;
+   return dotFlags.has(x.feature_id)?dotFlags.get(x.feature_id)===true:x.enabled===true;
+  }).map((x:any)=>String(x.feature_catalog.code));
   // The NON-DOT customer data is not automatically unlocked by the DOT tier alone.
   // Membership, portal access, non-revocation and active NON-DOT subscription must all hold.
   const [nonCtpa,nonMembership,nonAccess,nonUserAccess]=await Promise.all([
@@ -58,12 +66,20 @@ Deno.serve(async(req:Request)=>{
     allowed.sort((a:any,b:any)=>TIERS.indexOf(b.code.replace("workforce_ctpa_",""))-TIERS.indexOf(a.code.replace("workforce_ctpa_","")));
     const chosen=allowed[0];
     if(chosen){
+     const associatedSub=(subs.data||[]).find((x:any)=>x.plan_id===chosen.id);
+     if(!associatedSub)throw Error("NON-DOT subscription association unavailable");
+     const [features,overrides]=await Promise.all([
+      db.from("workforce_plan_features").select("feature_id,enabled,workforce_feature_catalog(code,active)").eq("plan_id",chosen.id),
+      db.from("workforce_account_feature_overrides").select("feature_id,enabled")
+       .eq("ctpa_id",nonCtpa.data!.id).eq("subscription_id",associatedSub.id)
+     ]);
+     if(features.error||overrides.error)throw features.error||overrides.error;
+     const flags=new Map((overrides.data||[]).map((x:any)=>[x.feature_id,x.enabled]));
+     nondotCodes=(features.data||[]).filter((x:any)=>{
+      if(!x.workforce_feature_catalog?.code||x.workforce_feature_catalog.active===false)return false;
+      return flags.has(x.feature_id)?flags.get(x.feature_id)===true:x.enabled===true;
+     }).map((x:any)=>String(x.workforce_feature_catalog.code));
      nondotPlan=chosen.code;
-     const features=await db.from("workforce_plan_features").select("enabled,workforce_feature_catalog(code,active)")
-      .eq("plan_id",chosen.id).eq("enabled",true);
-     if(features.error)throw features.error;
-     nondotCodes=(features.data||[]).filter((x:any)=>x.workforce_feature_catalog?.active!==false&&x.workforce_feature_catalog?.code)
-      .map((x:any)=>String(x.workforce_feature_catalog.code));
     }
    }
   }
