@@ -79,7 +79,11 @@ Deno.serve(async(req:Request)=>{
    save_employee:{section:"people",permission:"employee_management"},
    save_program:{section:"programs",permission:"programs"},
    save_pool:{section:"pools",permission:"consortium_pools"},
-   create_test_order:{section:"testing",permission:"testing_orders"}
+   create_test_order:{section:"testing",permission:"testing_orders"},
+   update_employee:{section:"people",permission:"employee_management"},
+   update_program:{section:"programs",permission:"programs"},
+   add_pool_member:{section:"pools",permission:"consortium_pools"},
+   remove_pool_member:{section:"pools",permission:"consortium_pools"}
   };
   const mutation=mutations[requestedAction];
   if(requestedAction!=="workspace"&&!mutation)return send({error:"Operation not supported"},400);
@@ -98,6 +102,72 @@ Deno.serve(async(req:Request)=>{
    if(member.error||personal.error)throw member.error||personal.error;
    if(!member.data?.length||personal.data?.enabled===false)
     return send({error:"Only the authorized primary account manager can create these records"},403);
+
+   // Whitelisted updates only: do not reset existing DOT, demographic or medical fields.
+   if(requestedAction==="update_employee"||requestedAction==="update_program"){
+    const updatingEmployee=requestedAction==="update_employee";
+    const v=updatingEmployee?body.employee:body.program;
+    if(!v||typeof v!=="object"||Array.isArray(v)||!uuid(v.id)||!uuid(v.employer_id))
+     return send({error:"Choose an existing company record"},400);
+    const employer=await db.from("workforce_employers").select("id").eq("id",v.employer_id)
+     .eq("ctpa_id",ctpaId).eq("workforce_classification","NON_DOT").is("archived_at",null).maybeSingle();
+    if(employer.error)throw employer.error;
+    if(!employer.data)return send({error:"Employer is outside this C/TPA"},403);
+    const target=updatingEmployee?"workforce_employees":"workforce_programs";
+    let lookup=db.from(target).select("id").eq("id",v.id).eq("employer_id",v.employer_id)
+     .eq("business_surface","workforce").is("archived_at",null);
+    if(!updatingEmployee)lookup=lookup.eq("program_type","NON_DOT");
+    const original=await lookup.maybeSingle();
+    if(original.error)throw original.error;
+    if(!original.data)return send({error:"Record is not part of this NON-DOT employer"},403);
+    const clean=(x:unknown)=>String(x||"").trim().slice(0,120);
+    const changes=updatingEmployee?{first_name:clean(v.first_name),last_name:clean(v.last_name)}:{name:clean(v.name)};
+    if(Object.values(changes).some(x=>!x))return send({error:"A name is required"},400);
+    let update=db.from(target).update({...changes,updated_at:new Date().toISOString()}).eq("id",v.id)
+      .eq("employer_id",v.employer_id).eq("business_surface","workforce").is("archived_at",null);
+    if(!updatingEmployee)update=update.eq("program_type","NON_DOT");
+    const saved=await update.select("id").maybeSingle();
+    if(saved.error)throw saved.error;
+    if(!saved.data)return send({error:"Record is not available"},404);
+    return send({ok:true,saved:true,section,action:requestedAction});
+   }
+   if(requestedAction==="add_pool_member"||requestedAction==="remove_pool_member"){
+    const v=body.membership||{};
+    if(!uuid(v.pool_id)||!uuid(v.employee_id))return send({error:"Select a valid pool and employee"},400);
+    const pool=await db.from("workforce_random_pools").select("id,employer_id,tenant_id,status")
+     .eq("id",v.pool_id).eq("ctpa_id",ctpaId).eq("business_surface","workforce")
+     .eq("program_type","NON_DOT").eq("pool_type","employer").is("archived_at",null).maybeSingle();
+    if(pool.error)throw pool.error;
+    if(!pool.data||!pool.data.employer_id||pool.data.status==="archived")
+     return send({error:"An employer NON-DOT pool is required"},403);
+    const emp=await db.from("workforce_employees").select("id").eq("id",v.employee_id)
+     .eq("employer_id",pool.data.employer_id).eq("business_surface","workforce")
+     .is("archived_at",null).maybeSingle();
+    if(emp.error)throw emp.error;
+    if(!emp.data)return send({error:"Employee does not belong to the pool employer"},403);
+    const active=await db.from("workforce_pool_memberships").select("id")
+     .eq("pool_id",v.pool_id).eq("employee_id",v.employee_id)
+     .is("removed_at",null).maybeSingle();
+    if(active.error)throw active.error;
+    if(requestedAction==="remove_pool_member"){
+     if(!active.data)return send({error:"Active membership not found"},404);
+     const removed=await db.from("workforce_pool_memberships").update({
+      eligibility_status:"removed",removed_at:new Date().toISOString(),
+      removal_reason:"Removed by C/TPA account manager",updated_at:new Date().toISOString()
+     }).eq("id",active.data.id).eq("pool_id",v.pool_id).select("id").maybeSingle();
+     if(removed.error)throw removed.error;
+     if(!removed.data)return send({error:"Membership not found"},404);
+     return send({ok:true,saved:true,section,action:requestedAction});
+    }
+    if(active.data)return send({error:"Employee is already in this pool"},409);
+    const created=await db.from("workforce_pool_memberships").insert({
+     tenant_id:pool.data.tenant_id,pool_id:v.pool_id,employee_id:v.employee_id,
+     eligibility_status:"eligible",business_surface:"workforce",
+     effective_date:new Date().toISOString().slice(0,10),updated_at:new Date().toISOString()
+    }).select("id").single();
+    if(created.error)throw created.error;
+    return send({ok:true,saved:true,section,action:requestedAction});
+   }
    const v=requestedAction==="save_employee"?body.employee:requestedAction==="save_pool"?body.pool:requestedAction==="create_test_order"?body.test:body.program;
    if(!v||typeof v!=="object"||Array.isArray(v)||Object.keys(v).length>12)
     return send({error:"Invalid record"},400);
