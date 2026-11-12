@@ -171,7 +171,7 @@ Deno.serve(async(req:Request)=>{
     if(!v||typeof v!=="object"||Array.isArray(v)||!uuid(v.id))
      return send({error:"Choose an existing NON-DOT order"},400);
     if(typeof v.collection_deadline!=="string"||
-       !/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$/.test(v.collection_deadline))
+       !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/.test(v.collection_deadline))
      return send({error:"A valid UTC collection deadline is required"},400);
     const deadline=new Date(v.collection_deadline),now=Date.now();
     if(!Number.isFinite(deadline.getTime())||deadline.getTime()<=now||
