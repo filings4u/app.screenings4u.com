@@ -5,6 +5,7 @@ import path from 'node:path';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const source=readFileSync(path.join(root,'supabase/functions/workforce-ctpa-nondot-workspace/index.ts'),'utf8');
+const secure=readFileSync(path.join(root,'supabase/functions/workforce-ctpa-secure-pools/index.ts'),'utf8');
 const start=source.indexOf('if(requestedAction==="add_pool_member"||requestedAction==="remove_pool_member"){');
 const end=source.indexOf('const v=requestedAction==="save_employee"',start);
 assert.ok(start>=0&&end>start,'membership actions exist');
@@ -22,7 +23,10 @@ const checks=[
  ['duplicate memberships rejected',action.includes('Employee is already in this pool"},409')],
  ['no selection draw execution',!action.includes('execute_random_selection')],
  ['feature permission for pool mutations',source.includes('add_pool_member:{section:"pools",permission:"consortium_pools"}')&&source.includes('remove_pool_member:{section:"pools",permission:"consortium_pools"}')],
- ['primary Workforce manager authorization',source.includes('.eq("is_primary",true)')&&source.includes('personal.data?.enabled===false')]
+ ['primary Workforce manager authorization',source.includes('.eq("is_primary",true)')&&source.includes('personal.data?.enabled===false')],
+ ['secure endpoint enforces active membership',secure.includes('.in("pool_id",pids).eq("business_surface","workforce").is("removed_at",null)')],
+ ['secure removal rechecks exact pool and employee',secure.includes('.eq("pool_id",existing.data.pool_id)')&&secure.includes('.eq("employee_id",existing.data.employee_id).eq("business_surface","workforce")')],
+ ['secure removal rejects concurrent changes',secure.includes('Membership was already removed or changed."},409')]
 ];
 for(const [label,pass] of checks){console.log(`${pass?'PASS':'FAIL'} ${label}`);assert.ok(pass,label)}
 console.log(`${checks.length}/${checks.length} NON-DOT pool membership guards verified (source checks only)`);
