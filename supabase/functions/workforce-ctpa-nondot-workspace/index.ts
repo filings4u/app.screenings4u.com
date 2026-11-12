@@ -44,6 +44,6 @@ Deno.serve(async(req:Request)=>{
    section==="pools"?{pools:data.pools||[],memberships:data.pool_memberships||data.memberships||[]}:
    section==="testing"?{orders:data.testing_orders||data.orders||[],employers:data.employers||[]}:
    {reports:data.result_reports||data.reports||data.results||[]};
-  return send({ok:true,section,context:"nondot",plan_code:context.plan_code,read_only:true,data:payload});
+  return send({ok:true,section,context:"nondot",plan_code:context.plan_code,read_only:true,available_sections:Object.entries(modules).filter(([,rule])=>context.feature_codes.includes(rule.permission)).map(([id])=>id),data:payload});
  }catch(err){console.error("workforce-ctpa-nondot-workspace",err);return send({error:"Unable to access NON-DOT module"},500)}
 });
