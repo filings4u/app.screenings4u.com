@@ -77,7 +77,8 @@ Deno.serve(async(req:Request)=>{
   // company-policy program creation. DOT-origin visits are strictly read-only.
   const mutations:Record<string,{section:string,permission:string}>={
    save_employee:{section:"people",permission:"employee_management"},
-   save_program:{section:"programs",permission:"programs"}
+   save_program:{section:"programs",permission:"programs"},
+   save_pool:{section:"pools",permission:"consortium_pools"}
   };
   const mutation=mutations[requestedAction];
   if(requestedAction!=="workspace"&&!mutation)return send({error:"Operation not supported"},400);
@@ -96,7 +97,7 @@ Deno.serve(async(req:Request)=>{
    if(member.error||personal.error)throw member.error||personal.error;
    if(!member.data?.length||personal.data?.enabled===false)
     return send({error:"Only the authorized primary account manager can create these records"},403);
-   const v=requestedAction==="save_employee"?body.employee:body.program;
+   const v=requestedAction==="save_employee"?body.employee:requestedAction==="save_pool"?body.pool:body.program;
    if(!v||typeof v!=="object"||Array.isArray(v)||Object.keys(v).length>12)
     return send({error:"Invalid record"},400);
    if(!uuid(v.employer_id))return send({error:"Choose a valid employer"},400);
@@ -110,13 +111,20 @@ Deno.serve(async(req:Request)=>{
     if(!clean(v.first_name)||!clean(v.last_name))return send({error:"First and last name are required"},400);
     value={employer_id:v.employer_id,first_name:clean(v.first_name),last_name:clean(v.last_name),
      employee_number:clean(v.employee_number,40),workforce_worker_type:"employee",employment_status:"active"};
+   }else if(requestedAction==="save_pool"){
+    if(!uuid(v.program_id)||!clean(v.name))return send({error:"A valid NON-DOT program and pool name are required"},400);
+    const program=await db.from("workforce_programs").select("id,employer_id").eq("id",v.program_id)
+     .eq("employer_id",v.employer_id).eq("program_type","NON_DOT").eq("business_surface","workforce").is("archived_at",null).maybeSingle();
+    if(program.error)throw program.error;
+    if(!program.data)return send({error:"NON-DOT program must belong to the selected employer"},403);
+    value={employer_id:v.employer_id,program_id:v.program_id,name:clean(v.name),pool_type:"employer",status:"draft",selection_schedule:"quarterly"};
    }else{
     if(!clean(v.name))return send({error:"Program name is required"},400);
     value={employer_id:v.employer_id,name:clean(v.name),status:"active"};
    }
-   const saved=await fetch(url+"/functions/v1/nondot-workforce-ctpa-programs",{
+   const saved=await fetch(url+"/functions/v1/"+(requestedAction==="save_pool"?"nondot-workforce-ctpa-pools":"nondot-workforce-ctpa-programs"),{
     method:"POST",headers:{"Authorization":"Bearer "+token,"apikey":anon,"Content-Type":"application/json"},
-    body:JSON.stringify({action:requestedAction,ctpa_id:ctpaId,[requestedAction==="save_employee"?"employee":"program"]:value}),cache:"no-store"
+    body:JSON.stringify({action:requestedAction,ctpa_id:ctpaId,[requestedAction==="save_employee"?"employee":requestedAction==="save_pool"?"pool":"program"]:value}),cache:"no-store"
    });
    const result=await saved.json().catch(()=>({}));
    if(!saved.ok||result.ok!==true)return send({error:result.error||"Unable to save this NON-DOT record"},saved.status||502);
@@ -143,6 +151,8 @@ Deno.serve(async(req:Request)=>{
     programs:(data.programs||[]).slice(0,250).map((x:any)=>({id:x.id,employer_id:x.employer_id,name:x.name,program_name:x.program_name,status:x.status}))
    }:section==="pools"?{
     pools:(data.pools||[]).slice(0,250).map((x:any)=>({id:x.id,name:x.name,pool_name:x.pool_name,status:x.status})),
+    employers:company,
+    programs:(data.programs||[]).slice(0,250).map((x:any)=>({id:x.id,employer_id:x.employer_id,name:x.name})),
     memberships:(data.pool_memberships||data.memberships||[]).slice(0,500).map((x:any)=>({id:x.id,pool_id:x.pool_id}))
    }:section==="testing"?{
     employers:company,
@@ -151,7 +161,7 @@ Deno.serve(async(req:Request)=>{
     reports:(data.result_reports||data.reports||data.results||[]).slice(0,250).map((x:any)=>({id:x.id,report_number:x.report_number,order_number:x.order_number,status:x.status,report_status:x.report_status,result_status:x.result_status,updated_at:x.updated_at,released_at:x.released_at}))
    };
   let canManage=false;
-  if(body.operating_context==="nondot"&&["people","programs"].includes(section)){
+  if(body.operating_context==="nondot"&&["people","programs","pools"].includes(section)){
    const {createClient}=await import("npm:@supabase/supabase-js@2");
    const auth=createClient(url,anon,{auth:{persistSession:false,autoRefreshToken:false}});
    const {data:{user},error:authError}=await auth.auth.getUser(token);
