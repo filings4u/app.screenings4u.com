@@ -148,7 +148,7 @@ Deno.serve(async(req:Request)=>{
   }
   const response=await fetch(url+"/functions/v1/"+rule.endpoint,{
    method:"POST",headers:{"Authorization":"Bearer "+token,"apikey":anon,"Content-Type":"application/json"},
-   body:JSON.stringify({action:"workspace",ctpa_id:context.ctpa_id||undefined,subscription_id:onlyNondot?subscriptionId:undefined}),cache:"no-store"
+   body:JSON.stringify({action:"workspace",ctpa_id:context.ctpa_id||undefined,subscription_id:onlyNondot?subscriptionId:context.subscription_id}),cache:"no-store"
   });
   const data=await response.json().catch(()=>({}));
   if(!response.ok||data.error||data.ok===false)return send({error:data.error||"Unable to load NON-DOT workspace"},response.status||502);
