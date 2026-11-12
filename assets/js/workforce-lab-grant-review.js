@@ -62,8 +62,7 @@ async function approve(){
  if(busy||!selected||!approvedReady)return;
  const input=document.getElementById('wfGrantConfirm');
  if(input.value!==approvalPhrase)return;
- // A clear second confirmation; server separately rechecks eligibility and role.
- if(!window.confirm('Activate this purchased Lab Account for its verified company? This will change customer access.'))return;
+ // Explicit typed confirmation; the backend independently rechecks the grant and role.
  setBusy(true);message('Rechecking eligibility and submitting approval…');
  try{
   const data=await invoke('approve',{grant_id:selected,confirmation:approvalPhrase});
@@ -84,7 +83,7 @@ async function start(){
   if(button.dataset.grantAction==='approve')approve();
  });
  root.addEventListener('input',event=>{
-  if(event.target.id==='wfGrantConfirm')setBusy(false);
+  if(event.target.id==='wfGrantConfirm'){const button=document.getElementById('wfGrantApprove');if(button)button.disabled=busy||!approvedReady||event.target.value!==approvalPhrase;}
  });
  await load();
 }
