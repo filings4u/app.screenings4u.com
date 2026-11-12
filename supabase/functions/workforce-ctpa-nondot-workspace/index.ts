@@ -259,10 +259,11 @@ Deno.serve(async(req:Request)=>{
     ]);
     if(employee.error||program.error)throw employee.error||program.error;
     if(!employee.data||!program.data)return send({error:"Employee and NON-DOT program must belong to the selected employer"},403);
+    if(!uuid(v.client_request_id))return send({error:"A unique order request identifier is required"},400);
     const types=new Set(["drug","alcohol"]);
     if(!types.has(String(v.test_type)))return send({error:"Choose a supported testing type"},400);
     value={employer_id:v.employer_id,employee_id:v.employee_id,program_id:v.program_id,
-      test_type:v.test_type,reason:"other"};
+      test_type:v.test_type,reason:"other",client_request_id:v.client_request_id};
    }else if(requestedAction==="save_pool"){
     if(!uuid(v.program_id)||!clean(v.name))return send({error:"A valid NON-DOT program and pool name are required"},400);
     const program=await db.from("workforce_programs").select("id,employer_id").eq("id",v.program_id)
