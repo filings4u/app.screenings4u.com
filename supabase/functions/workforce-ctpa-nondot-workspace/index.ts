@@ -80,6 +80,7 @@ Deno.serve(async(req:Request)=>{
    save_program:{section:"programs",permission:"programs"},
    save_pool:{section:"pools",permission:"consortium_pools"},
    create_test_order:{section:"testing",permission:"testing_orders"},
+   update_test_deadline:{section:"testing",permission:"testing_orders"},
    update_employee:{section:"people",permission:"employee_management"},
    update_program:{section:"programs",permission:"programs"},
    update_pool:{section:"pools",permission:"consortium_pools"},
@@ -161,6 +162,40 @@ Deno.serve(async(req:Request)=>{
      .select("id").maybeSingle();
     if(updated.error)throw updated.error;
     if(!updated.data)return send({error:"Draft pool was changed or is unavailable"},409);
+    return send({ok:true,saved:true,section,action:requestedAction});
+   }
+   // Only adjust an unfulfilled NON-DOT order's collection deadline.
+   // Billing, fulfillment, results and all other order fields are intentionally untouched.
+   if(requestedAction==="update_test_deadline"){
+    const v=body.test;
+    if(!v||typeof v!=="object"||Array.isArray(v)||!uuid(v.id))
+     return send({error:"Choose an existing NON-DOT order"},400);
+    if(typeof v.collection_deadline!=="string"||
+       !/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$/.test(v.collection_deadline))
+     return send({error:"A valid UTC collection deadline is required"},400);
+    const deadline=new Date(v.collection_deadline),now=Date.now();
+    if(!Number.isFinite(deadline.getTime())||deadline.getTime()<=now||
+       deadline.getTime()>now+366*24*60*60*1000)
+     return send({error:"Collection deadline must be in the next 366 days"},400);
+    const order=await db.from("workforce_testing_orders")
+     .select("id,employer_id,status").eq("id",v.id)
+     .eq("program_type","NON_DOT").eq("business_surface","workforce")
+     .eq("status","created").maybeSingle();
+    if(order.error)throw order.error;
+    if(!order.data||!uuid(order.data.employer_id))
+     return send({error:"Only newly created NON-DOT orders may be edited"},403);
+    const employer=await db.from("workforce_employers").select("id")
+     .eq("id",order.data.employer_id).eq("ctpa_id",ctpaId)
+     .eq("workforce_classification","NON_DOT").is("archived_at",null).maybeSingle();
+    if(employer.error)throw employer.error;
+    if(!employer.data)return send({error:"Order employer is outside this C/TPA"},403);
+    const update=await db.from("workforce_testing_orders")
+     .update({collection_deadline:deadline.toISOString(),updated_at:new Date().toISOString()})
+     .eq("id",v.id).eq("employer_id",employer.data.id).eq("status","created")
+     .eq("program_type","NON_DOT").eq("business_surface","workforce")
+     .select("id").maybeSingle();
+    if(update.error)throw update.error;
+    if(!update.data)return send({error:"Order was changed or is no longer editable"},409);
     return send({ok:true,saved:true,section,action:requestedAction});
    }
    if(requestedAction==="add_pool_member"||requestedAction==="remove_pool_member"){
@@ -277,7 +312,7 @@ Deno.serve(async(req:Request)=>{
     employers:company,
     employees:(data.employees||[]).slice(0,250).map((x:any)=>({id:x.id,employer_id:x.employer_id,first_name:x.first_name,last_name:x.last_name})),
     programs:(data.programs||[]).slice(0,250).map((x:any)=>({id:x.id,employer_id:x.employer_id,name:x.name})),
-    orders:(data.testing_orders||data.orders||[]).slice(0,250).map((x:any)=>({id:x.id,order_number:x.order_number,employer_id:x.employer_id,created_at:x.created_at,status:x.status}))
+    orders:(data.testing_orders||data.orders||[]).slice(0,250).map((x:any)=>({id:x.id,order_number:x.order_number,employer_id:x.employer_id,created_at:x.created_at,collection_deadline:x.collection_deadline,status:x.status}))
    }:{
     reports:(data.result_reports||data.reports||data.results||[]).slice(0,250).map((x:any)=>({id:x.id,report_number:x.report_number,order_number:x.order_number,status:x.status,report_status:x.report_status,result_status:x.result_status,updated_at:x.updated_at,released_at:x.released_at}))
    };
