@@ -18,9 +18,9 @@ const [profile,roles,access]=await Promise.all([
  db.from("staff_business_access").select("access_level,assigned_customers_only,business_unit_code").eq("user_id",user.id).eq("active",true).in("business_unit_code",["workforce","dot"]).limit(30)
 ]);
 if(profile.error||roles.error||access.error)throw profile.error||roles.error||access.error;
-if(profile.data?.employment_status!=="active"||!roles.data?.length||!access.data?.length)return respond({error:"Active Workforce staff authorization required"},403);
+if(profile.data?.employment_status!=="active"||!roles.data?.length||!access.data?.some(x=>!x.assigned_customers_only))return respond({error:"Active Workforce staff authorization required"},403);
 const body=await req.json().catch(()=>({})),action=cut(body.action,30);
-const write=access.data.some(x=>["admin","manager","editor"].includes(cut(x.access_level,40).toLowerCase()));
+const write=access.data.some(x=>!x.assigned_customers_only&&["admin","manager","editor"].includes(cut(x.access_level,40).toLowerCase()));
 const tickets=db.from("workforce_ctpa_support_tickets_v2"),messages=db.from("workforce_ctpa_support_messages_v2");
 const ping=async()=>{
  const r=await db.from("workforce_admin_presence_v2").upsert({user_id:user.id,heartbeat_at:new Date().toISOString()},{onConflict:"user_id"});
