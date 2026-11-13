@@ -57,14 +57,36 @@ Deno.serve(async req=>{
   if(!uuid(b.id))return send({error:"Choose a demo request"},400);
   const status=clean(b.status,20);
   if(!["requested","confirmed","cancelled","completed"].includes(status))return send({error:"Invalid request status"},400);
-  const existing=await db.from("ctpa_demo_requests").select("id,status").eq("id",b.id).maybeSingle();
+  const existing=await db.from("ctpa_demo_requests").select("id,status,contact_email,requested_date,requested_time,timezone,demo_topic,meeting_url").eq("id",b.id).maybeSingle();
   if(existing.error)throw existing.error;if(!existing.data)return send({error:"Demo request not found"},404);
   if(existing.data.status==="completed"||existing.data.status==="cancelled")return send({error:"Completed and cancelled requests cannot be reopened"},409);
   const meeting=clean(b.meeting_url,500);
   if(meeting&&(!/^https:\/\/[^ ]+$/i.test(meeting)))return send({error:"Meeting URL must use HTTPS"},400);
   const update={status,updated_at:new Date().toISOString(),...(meeting?{meeting_url:meeting,meeting_provider:"Workforce meeting"}:{}),...(status==="confirmed"?{confirmed_at:new Date().toISOString()}:{}) ,...(status==="cancelled"?{cancelled_at:new Date().toISOString()}:{})};
   const r=await db.from("ctpa_demo_requests").update(update).eq("id",b.id).select("id").single();
-  if(r.error)throw r.error;return send({ok:true});
+  if(r.error)throw r.error;
+  const previousStatus=existing.data.status,recipient=clean(existing.data.contact_email,240).toLowerCase();
+  let emailSent=false;
+  if(previousStatus!==status&&["confirmed","cancelled","completed"].includes(status)&&recipient){
+    const dedupe="ctpa-demo-update-v2:"+existing.data.id+":"+status;
+    const inserted=await db.from("workforce_mail_delivery_v2").upsert({dedupe_key:dedupe,kind:"demo_status",recipient,subject:"Workforce Demo "+status,status:"pending"},{onConflict:"dedupe_key",ignoreDuplicates:true}).select("id").maybeSingle();
+    if(inserted.error)console.error("demo email log",inserted.error);
+    const key=Deno.env.get("RESEND_API_KEY")||"",sender=Deno.env.get("WORKFORCE_FROM_EMAIL")||Deno.env.get("SCREENINGS4U_FROM_EMAIL")||"Workforce <notifications@screenings4u.com>";
+    if(inserted.data&&key){
+      try{
+        const meetingUrl=meeting||existing.data.meeting_url||"";
+        const email=await fetch("https://api.resend.com/emails",{method:"POST",headers:{"Authorization":"Bearer "+key,"Content-Type":"application/json","Idempotency-Key":dedupe},body:JSON.stringify({
+          from:sender,to:[recipient],subject:"Workforce | Demo "+status.charAt(0).toUpperCase()+status.slice(1),
+          html:'<div style="background:#01122F;padding:22px"><img src="https://ctpa.screenings4u.com/images/logo2.png" alt="Workforce" width="175"></div><div style="font:14px Arial;padding:25px;color:#01122F"><h2>Demo '+status+'</h2><p>Your Workforce demonstration request has been updated.</p><p><b>Date:</b> '+clean(existing.data.requested_date,20)+'<br><b>Time:</b> '+clean(existing.data.requested_time,12)+' ('+clean(existing.data.timezone,60)+')<br><b>Topic:</b> '+clean(existing.data.demo_topic,150).replace(/[<>&]/g,"")+'</p>'+(status==="confirmed"&&/^https:\/\//.test(meetingUrl)?'<p><a href="'+meetingUrl.replace(/[<>"']/g,"")+'">Join your meeting</a></p>':"")+'<p><a href="https://ctpa.screenings4u.com/unified.html?page=demo_sessions">View Demo Request</a></p></div>'
+        })});
+        const payload=await email.json().catch(()=>({}));
+        const logged=await db.from("workforce_mail_delivery_v2").update({status:email.ok?"sent":"failed",attempt_count:1,provider_message_id:payload.id||null,last_error:email.ok?null:clean(payload.message||"Provider rejected email",280),updated_at:new Date().toISOString()}).eq("id",inserted.data.id);
+        if(logged.error)console.error("demo email log update",logged.error);
+        emailSent=email.ok;
+      }catch(err){console.error("demo status email",err)}
+    }
+  }
+  return send({ok:true,email_sent:emailSent});
  }
  return send({error:"Unknown demo management operation"},400);
  }catch(e){console.error("[Workforce demo management]",e);return send({error:"Unable to manage demo schedule"},500)}
