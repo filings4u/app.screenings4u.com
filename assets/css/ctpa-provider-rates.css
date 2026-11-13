@@ -1,0 +1,32 @@
+*{box-sizing:border-box}
+body{margin:0;background:#f2f5f9;color:#01122F;font:14px/1.5 Arial,Helvetica,sans-serif}
+#providerInitialLoading{padding:45px}
+.ctpa-rate-page{width:100%;max-width:1450px;margin:auto;padding:22px 24px 60px}
+.ctpa-rate-hero{background:#fff;border:1px solid #dce5ee;border-radius:15px;padding:26px;margin-bottom:20px}
+.ctpa-rate-hero small{color:#637c96;font-size:11px;font-weight:bold;letter-spacing:.08em}
+.ctpa-rate-hero h1{margin:7px 0;font-size:27px;color:#01122F}
+.ctpa-rate-hero p{color:#60748a;max-width:850px;margin:0;line-height:1.65}
+.ctpa-rate-panel{background:#fff;border:1px solid #dbe4ef;border-radius:14px;padding:24px;margin-top:17px}
+.ctpa-rate-panel h2{font-size:19px;margin:0 0 8px}.ctpa-rate-panel>p{color:#64768b;margin:0 0 20px}
+.ctpa-rate-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.ctpa-rate-grid label{display:grid;gap:7px;font-size:12px;color:#455d78;font-weight:700}
+.ctpa-rate-grid input,.ctpa-rate-grid select,.ctpa-rate-grid textarea,.ctpa-rate-filter input{border:1px solid #cbd8e6;border-radius:8px;padding:12px;background:#fff;color:#01122F;font:inherit;min-width:0;width:100%}
+.ctpa-rate-grid textarea{resize:vertical;min-height:85px}
+.ctpa-rate-grid .span2{grid-column:span 2}
+.ctpa-rate-controls{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-top:18px}
+.ctpa-rate-page button{background:#01122F;color:white;border:1px solid #01122F;border-radius:8px;padding:11px 16px;font-weight:700;cursor:pointer}
+.ctpa-rate-page button.secondary{background:#fff;color:#01122F;border-color:#cbd8e6}
+.ctpa-rate-page button:disabled{opacity:.45;cursor:not-allowed}
+.ctpa-rate-status{min-height:20px;color:#365777;font-size:12px;margin-top:12px}
+.ctpa-rate-scroll{overflow:auto;border:1px solid #e6ecf3;border-radius:11px}
+.ctpa-rate-scroll table{border-collapse:collapse;min-width:840px;width:100%;text-align:left}
+.ctpa-rate-scroll th{background:#f6f8fb;padding:12px 13px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:#677f96}
+.ctpa-rate-scroll td{padding:14px 13px;border-bottom:1px solid #edf1f5;font-size:13px;vertical-align:middle;color:#3f5673}
+.ctpa-rate-scroll td strong{color:#01122F}.ctpa-rate-scroll td small{display:block;color:#7b8ba1;margin-top:4px}
+.ctpa-rate-scroll input,.ctpa-rate-scroll select{width:140px;max-width:100%;padding:9px;border:1px solid #cbd8e6;border-radius:7px;background:white}
+.ctpa-rate-scroll .rate-entry{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ctpa-rate-filter{margin:0 0 16px;max-width:440px}
+.ctpa-rate-pending{padding:18px;color:#64748b}
+.ctpa-rate-disclaimer{font-size:12px;color:#63768d;margin-top:18px}
+@media(max-width:850px){.ctpa-rate-page{padding:14px}.ctpa-rate-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ctpa-rate-hero{padding:20px}}
+@media(max-width:600px){.ctpa-rate-grid{grid-template-columns:1fr}.ctpa-rate-grid .span2{grid-column:auto}.ctpa-rate-panel{padding:15px}.ctpa-rate-hero h1{font-size:22px}}
