@@ -44,8 +44,8 @@ Deno.serve(async req=>{
    const name=str(body.name,160),code=str(body.service_code,80).toLowerCase(),category=str(body.category,100),description=str(body.description,900),unit=str(body.unit,80)||"per service",context=str(body.operating_context,12),status=str(body.status,20);
    const amount=rateValue(body.default_rate);
    if(!name||!category||!/^[a-z][a-z0-9-]{2,79}$/.test(code)||!["dot","nondot","both"].includes(context)||!["draft","published","inactive"].includes(status))return reply({error:"Valid name, code, category, context and status required"},400);
-   if(amount!==null&&(!Number.isFinite(amount)||amount<0||amount>100000||Math.round(amount*100)!==amount*100))return reply({error:"Invalid default rate"},400);
-   if(status==="published"&&amount===null)return reply({error:"Enter an approved default rate before publishing"},400);
+   if(amount!==null&&(!Number.isFinite(amount)||amount<0||amount>100000||Math.abs(amount*100-Math.round(amount*100))>1e-7))return reply({error:"Invalid default rate"},400);
+   
    const values={name,service_code:code,category,description,unit,operating_context:context,status,default_rate:amount,updated_by:user.id,updated_at:new Date().toISOString()};
    if(action==="create_service"){
     const out=await db.from("workforce_ctpa_provider_services").insert({...values,created_by:user.id}).select("id").single();
@@ -68,7 +68,7 @@ Deno.serve(async req=>{
    if(!service.data)return reply({error:"Service not found"},404);
    const status=str(body.status,20),amount=rateValue(body.rate);
    if(!["inherit","published","hidden"].includes(status))return reply({error:"Invalid rate status"},400);
-   if(status==="published"&&(amount===null||!Number.isFinite(amount)||amount<0||amount>100000||Math.round(amount*100)!==amount*100))return reply({error:"Valid contracted rate required"},400);
+   if(status==="published"&&(amount===null||!Number.isFinite(amount)||amount<0||amount>100000||Math.abs(amount*100-Math.round(amount*100))>1e-7))return reply({error:"Valid contracted rate required"},400);
    const out=await db.from("workforce_ctpa_provider_rates").upsert({tenant_id:body.tenant_id,service_id:body.service_id,rate:status==="published"?amount:null,status,notes:str(body.notes,500),updated_by:user.id,updated_at:new Date().toISOString()},{onConflict:"tenant_id,service_id"}).select("id").single();
    if(out.error)throw out.error;
    return reply({ok:true,id:out.data.id});
