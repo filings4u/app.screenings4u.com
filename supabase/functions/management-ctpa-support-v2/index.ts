@@ -72,7 +72,7 @@ for(const member of memberships.data||[]){
  const dedupe="support:"+msg.data.id+":ctpa:"+targetId;
  const tracked=await db.from("workforce_mail_delivery_v2").upsert({dedupe_key:dedupe,kind:"support",recipient:to,subject:record.data.subject,status:"pending"},{onConflict:"dedupe_key",ignoreDuplicates:true}).select("id").maybeSingle();
  if(tracked.error)throw tracked.error;if(!tracked.data)continue;
- const emailKey=Deno.env.get("RESEND_API_KEY"),from=Deno.env.get("WORKFORCE_EMAIL_FROM")||"Workforce <notifications@screenings4u.com>";
+ const emailKey=Deno.env.get("RESEND_API_KEY"),from=Deno.env.get("WORKFORCE_FROM_EMAIL")||Deno.env.get("SCREENINGS4U_FROM_EMAIL")||"Workforce <notifications@screenings4u.com>";
  if(!emailKey)continue;
  try{
   const result=await fetch("https://api.resend.com/emails",{method:"POST",headers:{"Authorization":"Bearer "+emailKey,"Content-Type":"application/json","Idempotency-Key":dedupe},body:JSON.stringify({from,to:[to],subject:"Workforce Support Update: "+record.data.subject,html:'<div style="padding:22px;background:#01122F;color:white;font-size:22px;font-weight:bold">Workforce</div><div style="font-family:Arial,sans-serif;padding:24px"><h2>New response from Workforce</h2><p>Your support ticket has a new message.</p><p><a href="https://ctpa.screenings4u.com/unified.html?page=support">View Support</a></p></div>'})});
